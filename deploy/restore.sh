@@ -21,7 +21,9 @@ done
 [ -n "$IDENTITY" ] && [ -f "$IDENTITY" ] || { echo "need --identity <age private key file>" >&2; exit 2; }
 [ -n "$FILE" ] && [ -f "$FILE" ] || { echo "need a backup file (*.dump.age)" >&2; exit 2; }
 
-HERE="$(cd "$(dirname "$0")" && pwd)"
+# pwd -W gives a native path under Git Bash on Windows (docker.exe cannot read /d/...); plain pwd elsewhere.
+absdir() { (cd "$1" && { pwd -W 2>/dev/null || pwd; }); }
+HERE="$(absdir "$(dirname "$0")")"
 RUN_ID="restore-$(date +%s)-$$"
 PG="csfr-$RUN_ID-db"
 NET="csfr-$RUN_ID"
@@ -54,9 +56,9 @@ done
 docker exec "$PG" pg_isready -U postgres -d csfr >/dev/null
 
 echo "==> decrypting and restoring"
-IDENTITY_ABS="$(cd "$(dirname "$IDENTITY")" && pwd)/$(basename "$IDENTITY")"
-FILE_ABS="$(cd "$(dirname "$FILE")" && pwd)/$(basename "$FILE")"
-docker run --rm -i --entrypoint age -v "$IDENTITY_ABS:/identity:ro" "$IMG" -d -i /identity < "$FILE_ABS" \
+IDENTITY_ABS="$(absdir "$(dirname "$IDENTITY")")/$(basename "$IDENTITY")"
+FILE_ABS="$FILE"
+docker run --rm -i --user "$(id -u):$(id -g)" --entrypoint age -v "$IDENTITY_ABS:/identity:ro" "$IMG" -d -i /identity < "$FILE_ABS" \
   | docker exec -i "$PG" pg_restore -U postgres -d csfr --no-owner --exit-on-error
 
 echo "==> checks"
