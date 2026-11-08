@@ -15,7 +15,7 @@ mv "${out}.tmp" "$out"
 echo "wrote ${out} ($(stat -c %s "$out") bytes)"
 
 if [ -n "${BACKUP_REMOTE:-}" ]; then
-  rclone copyto --s3-no-head --no-check-dest "$out" "${BACKUP_REMOTE}/media/daily/${name}"
+  rclone copyto --s3-no-head --no-check-dest --s3-no-check-bucket "$out" "${BACKUP_REMOTE}/media/daily/${name}"
   echo "uploaded to ${BACKUP_REMOTE}"
 fi
 

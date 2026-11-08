@@ -20,8 +20,8 @@ mv "${out}.tmp" "$out"
 echo "wrote ${out} ($(stat -c %s "$out") bytes)"
 
 if [ -n "${BACKUP_REMOTE:-}" ]; then
-  # --s3-no-head / --no-check-dest: the B2 key is write-only, so rclone must not read or list.
-  up() { rclone copyto --s3-no-head --no-check-dest "$out" "${BACKUP_REMOTE}/db/$1/${name}"; }
+  # --s3-no-head / --no-check-dest / --s3-no-check-bucket: the B2 key is write-only, so rclone must not read, list or create buckets.
+  up() { rclone copyto --s3-no-head --no-check-dest --s3-no-check-bucket "$out" "${BACKUP_REMOTE}/db/$1/${name}"; }
   up hourly
   if [ "$(date -u +%H)" = "00" ]; then
     up daily
