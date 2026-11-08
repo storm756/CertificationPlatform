@@ -1,0 +1,12 @@
+Hello {{ consent.guardian_name }},
+
+{{ learner.certificate_name }} has asked to join the Community Cyber First Responder
+programme (CyberPeace Foundation and SAKEC). Because they are under 18, we need your
+consent first.
+
+Please open this link to read what data we collect and why, and to confirm:
+
+{{ url }}
+
+The link works for a limited time. If you did not expect this email, ignore it and
+no account will be activated.

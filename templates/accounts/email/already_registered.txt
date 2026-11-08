@@ -1,0 +1,5 @@
+Someone (hopefully you) tried to register for {{ site }} with this email address,
+but an account already exists.
+
+If it was you, sign in, or use "Forgot password" on the sign-in page.
+If it was not you, you can ignore this email.

@@ -614,3 +614,22 @@ Rules that follow:
 ## 20. Build order
 
 See `docs/build-stages.md` (stages 0–10).
+
+---
+
+## 21. Stage 1 implementation notes (accounts, batches, registration)
+
+Where the build made a choice the design left open. Each is a one-line change if the team decides otherwise.
+
+* **Public allauth sign-up is closed** (`BudgetedAccountAdapter.is_open_for_signup`), and `/accounts/signup/` redirects to `/register`. This is what makes D9 true for every entry point.
+* `is_accepting` also requires `status == active` (an archived batch never accepts, even if left switched on).
+* **2FA keys on role, not `is_staff`:** `accounts.rules.requires_mfa` is true for staff, mentors and admins. Mentors never need `is_staff`. The 12-hour session applies to them too.
+* **Email budget:** pools are registration 150 (verification + the "you already have an account" note), reset + guardian 100, reserve 50 (admin alerts). The admin alert fires once a day when the **total sent** reaches 150 (`EMAIL_ALERT_AT`). Every allauth email passes the same gate via the account adapter, so the per-address limit also covers password reset. If the registration pool is empty, `/register` refuses before creating anything.
+* **Guardian link** is valid for 14 days (`GUARDIAN_LINK_DAYS`); the learner's waiting page can send a fresh link (5 per hour), which kills the old one. Only a hash of the token is stored.
+* **Mentor reset link**: hash only stored, 1 hour, single use. Using it sets `Profile.mentor_reset_at`, ends all the learner's sessions, shows a dismissible banner, and blocks `POST /accounts/email/` for 7 days.
+* **Seats** count verified enrolments plus unverified ones younger than 48 h; moves by a mentor do not check the target's seat limit.
+* **Batch codes** are generated as `B02`, `B03`, ... (the next free number). The catch-all pool is created by migration with code `OPEN`, closed.
+* `purge_unverified` (management command) deletes learner accounts unverified after 7 days. It is not scheduled yet.
+* **Audit**: `apps.audit.AuditEvent` + `audit()`; the migration revokes UPDATE/DELETE/TRUNCATE from `csfr_app` (skipped where that role doesn't exist, e.g. dev and CI).
+* `accounts.rules.may_track_time(user, today)` is the single question the Stage 4 heartbeat must ask (false under 18).
+* After sign-in everyone goes through `/start/`: pending learners to the waiting page, mentors to their batches, learners to a welcome page whose pre-test prompt is a placeholder until Stage 5.

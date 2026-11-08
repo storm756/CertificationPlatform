@@ -36,3 +36,25 @@ input[type=text], input[type=email], input[type=password], select {
 a { color: var(--teal); }
 .messages { list-style: none; padding: .75rem 1rem; background: var(--mustard); border-radius: .5rem; }
 .errorlist { color: var(--terracotta); padding-left: 1rem; }
+
+/* Forms, cards and tables (Stage 1) */
+input[type=date], input[type=datetime-local], input[type=number], textarea {
+  width: 100%; min-height: 48px; padding: .5rem .75rem; border: 2px solid var(--navy);
+  border-radius: .5rem; font: inherit; background: #fff;
+}
+label { display: block; margin-top: 1rem; font-weight: 600; }
+.checkbox-label { display: flex; gap: .75rem; align-items: flex-start; font-weight: 400; }
+.checkbox-label input { width: 1.75rem; height: 1.75rem; flex: none; }
+.help { font-size: .95rem; opacity: .85; margin: .25rem 0 0; }
+.card { background: #fff; border: 2px solid var(--navy); border-radius: .75rem; padding: 1rem; margin: 1rem 0; }
+.notice { background: var(--mustard); padding: .75rem 1rem; border-radius: .5rem; margin-bottom: 1rem; }
+.preview { background: var(--mustard); padding: .6rem .9rem; border-radius: .5rem; font-weight: 700; margin-top: .5rem; min-height: 3rem; }
+.btn-danger { background: var(--terracotta); }
+.btn-small { min-height: 40px; padding: .3rem .9rem; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 1rem; }
+th, td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid #d9d2bd; }
+.tag { display: inline-block; padding: 0 .5rem; border-radius: .4rem; background: var(--teal); color: #fff; font-size: .85rem; }
+.tag-warn { background: var(--terracotta); }
+.hidden { display: none; }
+.linkbox { word-break: break-all; background: #fff; border: 2px dashed var(--navy); padding: .75rem; border-radius: .5rem; }

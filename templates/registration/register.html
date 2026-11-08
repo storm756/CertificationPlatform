@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static %}
+{% block head_title %}Register{% endblock %}
+{% block content %}
+  <h1>Join the programme</h1>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <label for="{{ form.certificate_name.id_for_label }}">{{ form.certificate_name.label }}</label>
+    {{ form.certificate_name }}
+    {{ form.certificate_name.errors }}
+    <p class="help">{{ form.certificate_name.help_text }}</p>
+    <div class="preview" id="name-preview" aria-live="polite"></div>
+
+    <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+    {{ form.email }}{{ form.email.errors }}
+
+    <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+    {{ form.password }}{{ form.password.errors }}
+    <p class="help">At least 10 characters.</p>
+
+    <label for="{{ form.preferred_language.id_for_label }}">{{ form.preferred_language.label }}</label>
+    {{ form.preferred_language }}{{ form.preferred_language.errors }}
+
+    <label for="{{ form.date_of_birth.id_for_label }}">{{ form.date_of_birth.label }}</label>
+    {{ form.date_of_birth }}{{ form.date_of_birth.errors }}
+    <p class="help">You must be 16 or older. If you are 16 or 17, your guardian must agree.</p>
+
+    <div id="guardian-fields" class="card {% if not form.guardian_name.errors and not form.guardian_email.errors %}hidden{% endif %}">
+      <p><strong>Guardian details</strong>: we will email your guardian to ask for consent.</p>
+      <label for="{{ form.guardian_name.id_for_label }}">{{ form.guardian_name.label }}</label>
+      {{ form.guardian_name }}{{ form.guardian_name.errors }}
+      <label for="{{ form.guardian_email.id_for_label }}">{{ form.guardian_email.label }}</label>
+      {{ form.guardian_email }}{{ form.guardian_email.errors }}
+    </div>
+
+    <label for="{{ form.batch.id_for_label }}">{{ form.batch.label }}</label>
+    {{ form.batch }}{{ form.batch.errors }}
+
+    <label class="checkbox-label">{{ form.accept_privacy }}
+      <span>I have read and accept the <a href="{% url 'privacy' %}" target="_blank" rel="noopener">privacy notice</a>.</span>
+    </label>
+    {{ form.accept_privacy.errors }}
+
+    <p><button type="submit">Register</button></p>
+  </form>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/register.js' %}" defer></script>{% endblock %}

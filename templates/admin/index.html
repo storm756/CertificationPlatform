@@ -1,0 +1,24 @@
+{% extends 'admin/base.html' %}
+{% load i18n %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+  {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+  <div class="mb-6 p-4 border rounded-md bg-white dark:bg-base-900" id="email-today">
+    <h2 class="text-lg font-semibold mb-2">Emails sent today</h2>
+    <p>
+      <strong>{{ email_today.total }}</strong> of 300 (Brevo daily limit).
+      Registration {{ email_today.registration }}/{{ email_budget.registration }} ·
+      Reset &amp; guardian {{ email_today.reset_guardian }}/{{ email_budget.reset_guardian }} ·
+      Reserve {{ email_today.reserve }}/{{ email_budget.reserve }}.
+    </p>
+    {% if email_today.total >= email_alert_at %}
+      <p class="text-red-600 font-semibold">Alert level ({{ email_alert_at }}) reached.</p>
+    {% endif %}
+  </div>
+  {% include "unfold/helpers/dashboard_default.html" %}
+{% endblock %}

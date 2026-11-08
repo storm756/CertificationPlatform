@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block head_title %}Reset link{% endblock %}
+{% block content %}
+  <h1>Reset link for {{ learner.profile.certificate_name }}</h1>
+  <p>Give this link to the learner in person. It works once, for 1 hour. <strong>It is shown only now.</strong></p>
+  <p class="linkbox">{{ url }}</p>
+  <p><a href="{% url 'mentor_learner' learner.pk %}">&larr; Back to the learner</a></p>
+{% endblock %}
