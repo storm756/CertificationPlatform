@@ -1,0 +1,306 @@
+# Build stages
+
+**How to run a stage:**
+1. Start a **new** Claude Code session in the repo.
+2. Paste that stage's prompt.
+3. Let Claude plan, then build, until every "Done when" item passes.
+4. Open a PR named `Stage N: <name>`.
+
+Each stage builds on the previous one, so don't skip ahead. Use Opus for stages 2, 3, 5 and 7 (integrity-critical) and Sonnet for the rest.
+
+**VPS:** Hostinger KVM 2, Ubuntu 24.04, IP `189.72.144.197`, hostname `srv2130801.hstgr.cloud`. The lead gives you SSH access (key only).
+
+---
+
+## Stage 0: Foundation and server
+
+**Build**
+- Repo layout as in architecture §4:
+  - Django 5.2
+  - settings split into dev, staging and prod, read from env vars
+  - **custom `User` with email login in the very first migration**
+  - `ruff`, `pytest-django`
+  - GitHub Actions CI running lint and tests against Postgres
+- Packages: django-allauth (+ `allauth.mfa`), django-unfold, django-simple-history, django-ratelimit, sentry-sdk.
+- `deploy/compose.dev.yml` (web, db, mailpit) and `deploy/compose.yml` (caddy, web/gunicorn, db, cron). Containers run as non-root.
+- The Postgres roles `csfr_owner` (migrations) and `csfr_app` (runtime).
+- **Server hardening:**
+  - a non-root `deploy` user
+  - SSH keys only (root login and passwords off)
+  - `ufw` allows 22, 80 and 443
+  - fail2ban, unattended-upgrades, Docker
+- **DNS** (the lead does this in Hostinger DNS Manager): A records for `cyberfirstresponse.io`, `www` and `staging` → `189.72.144.197`. Caddy gets the TLS certificates.
+- Staging and prod as separate stacks, with separate `.env` files (separate SECRET_KEY, DB and email settings). Staging email goes to Mailpit, never Brevo.
+- `deploy/deploy.sh <staging|prod>`: pull → build → migrate (as owner) → collectstatic → restart. Prod takes a DB dump first.
+- **Backups:**
+  - `cron` runs an hourly `pg_dump`, encrypted with `age` to a public key, uploaded off-site (Backblaze B2 bucket with object lock, write-only key)
+  - a nightly media sync
+  - `deploy/restore.sh` restores into a throwaway stack
+- Staff must set up TOTP (allauth.mfa) before reaching the admin.
+
+**Done when**
+- [ ] `https://staging.cyberfirstresponse.io` loads with HTTPS. Login, signup and logout work. An admin login forces 2FA setup.
+- [ ] CI is green. `ssh root@…` is refused.
+- [ ] A backup appears off-site, and `restore.sh` restores it into a throwaway stack.
+
+**Prompt**
+> Read CLAUDE.md, docs/decisions.md and docs/architecture.md §2–§4, §16–§17. Implement Stage 0 from docs/build-stages.md: project skeleton,
+> custom email User, allauth + MFA, unfold admin, Docker Compose for dev/staging/prod with Caddy, server hardening script, deploy script, encrypted
+> off-site backups with a restore script, and CI. Ask me for anything you need from the server or DNS.
+
+---
+
+## Stage 1: Accounts, batches, registration
+
+**Build** (architecture §5, §6 People/Batches, §7)
+- `Profile` (certificate_name, date of birth, language), `ConsentRecord`, `GuardianConsent`.
+- `Batch`, `BatchMentor`, `Enrolment`. `batches/rules.py::is_accepting(batch, now)`. `batches/scoping.py::batches_for(user)`.
+- The registration flow from §7.2:
+  - "closed" page when nothing is open
+  - the server re-checks inside a locked transaction
+  - an age gate: under 16 is refused, 16–17 waits for the guardian
+  - the certificate-name preview
+  - email normalisation as a setting (on in prod, off on staging)
+- The guardian email → confirmation page → activate.
+- Email budgets (§7.2), and a "sent today" counter on the admin dashboard.
+- Mentor pages:
+  - my batches
+  - create a batch
+  - open/close, window, seats
+  - roster with new sign-ups
+  - move a learner (only between their own batches)
+  - a one-time reset link (§7.4)
+  - change the certificate name
+- Audit events for all of the above.
+
+**Done when**
+- [ ] Journeys 1–4 in architecture §18 pass as automated tests.
+- [ ] A test proves a mentor can't see or move learners in another batch.
+- [ ] Posting the form to a closed batch is refused.
+
+**Prompt**
+> Read CLAUDE.md, docs/decisions.md and docs/architecture.md §5–§7. Implement Stage 1 from docs/build-stages.md: profiles, consent, guardian consent for
+> 16–17, batches with is_accepting(), the registration flow, email budgets, and the mentor batch pages, with tests for journeys 1–4.
+
+---
+
+## Stage 2: Questions and MCQ assessments
+
+**Build** (§6 Questions/Assessments, §9, §13.2)
+- `Question` and `QuestionVersion` (immutable versions), with a pydantic schema for `mcq`.
+- XLSX import with django-import-export:
+  - columns as in §13.2
+  - dry run with row errors
+  - hint required, exactly one correct option
+- The legacy importer for the 405 MCQs (`docs/legacy-sources.md`).
+- `AssessmentPart` (marks, counted, selection, draw_n, min_per_tag, pool), and `validate_part()`.
+- `Attempt` and `AttemptItem`, with the unique and partial-unique constraints.
+- `assessments/services.py`:
+  - `start()`: lock the user, resume an existing attempt, draw with min-per-PC, shuffle, give one-off tokens
+  - `save_answer()`
+  - `submit()`: idempotent, scores with the frozen versions, all_answered, gate
+- The attempt page (HTMX). Autosave with retry and a "Saved / Saving / Offline" pill. A count-up timer.
+- The result page: score, ✓/✗, **hint**, **no correct option**.
+- Auto-submit for attempts with no save for 7 days (a cron management command).
+
+**Done when**
+- [ ] Journeys 5, 6 and 9 pass.
+- [ ] A test proves the attempt page HTML/JSON contains no keys.
+- [ ] Two parallel `start()` calls create one attempt.
+
+**Prompt**
+> Read CLAUDE.md, docs/decisions.md and docs/architecture.md §6, §9, §13.2. Implement Stage 2 from docs/build-stages.md: Question/QuestionVersion,
+> MCQ schema, XLSX import, legacy MCQ importer, AssessmentPart with validate_part, and the full attempt lifecycle (start/answer/submit) with
+> server-side scoring and a result page that shows hints but never correct options. Include concurrency and no-key-leak tests.
+
+---
+
+## Stage 3: Interactive engine (13 formats)
+
+**Build** (§9.2, §9.6, `docs/legacy-sources.md`)
+- A pydantic schema per format: mc, cards, spot, hotspot, sort, match, order, pick, build, settings, dial, chat, crossword (practice only).
+  The schema includes `hint`, `why` (the practice explanation) and gate flags with `gateReason`.
+- `client_projection()` per format (§9.2 table). **A parameterised test over every legacy fixture** asserts that no key, marker, risky-segment flag, hotspot
+  answer or canonical order is present.
+- Scorers per format, ported from `engine.js`. Run the JS once in Node to freeze the expected scores as fixtures, then assert the Python matches.
+- Importer for the legacy `questions.js` files.
+- `engine/` in TypeScript: renderers for all formats (port the visuals from the old engine, minus the scoring). It posts answers to the server.
+  Chat fetches the next step after each answer. Bundled with esbuild.
+- Gate handling: a gated attempt is shown but not counted, with its message.
+
+**Done when**
+- [ ] Every legacy challenge imports and renders.
+- [ ] The projection and scorer tests pass for all fixtures.
+- [ ] Journeys 8 and 10 pass.
+
+**Prompt**
+> Read CLAUDE.md, docs/decisions.md, docs/architecture.md §9 and docs/legacy-sources.md. Implement Stage 3: pydantic schemas, client_projection
+> and Python scorers for all 13 interactive formats (parity with the legacy engine.js via frozen fixtures), the legacy questions.js importer, and the
+> TypeScript renderer bundle. Projection tests must prove no answer data reaches the browser.
+
+---
+
+## Stage 4: Learning content
+
+**Build** (§6 Content, §8, §13.1)
+- `Module` (counted flag), `Unit`, `UnitVersion` (blocks JSON with a pydantic schema; block types in §13.1), `MediaAsset`.
+- Block rendering templates in the handbook style, mobile-first.
+- Importers: `booklet_text.json` + `modules.php`/`modules_ext.json` → reading units. Handout PDFs.
+- The video unit:
+  - YouTube ID → `youtube-nocookie.com` embed
+  - the IFrame API marks the unit complete at 80%
+  - `cc_lang_pref` for subtitles
+  - MP4 fallback (≤150 MB) with HTML5 video
+- DOCX upload → mammoth → nh3 → blocks (draft). Image upload (resize, strip EXIF). Upload limits and type sniffing.
+- Draft → publish (admin, or a mentor with the "Content publisher" permission), and restore of earlier versions.
+- `UnitProgress` completion rules (§8.3).
+- `POST /learn/check`: practice-pool questions only, rate-limited, returns the full answer.
+- The `TimeLog` heartbeat for adults only, with the caps (§8.3).
+- The module page (§8.1).
+
+**Done when**
+- [ ] All 9 modules show their imported text, films (or placeholders), handouts and practice checks.
+- [ ] A DOCX upload becomes a draft unit.
+- [ ] A minor generates no TimeLog rows.
+- [ ] `/learn/check` refuses quiz and final questions.
+
+**Prompt**
+> Read CLAUDE.md, docs/decisions.md, docs/architecture.md §6, §8, §13.1 and docs/legacy-sources.md. Implement Stage 4: modules, units with versioned
+> blocks, legacy text import, YouTube/MP4 video units with completion, DOCX/image upload to draft, publish/restore, unit progress, the practice-only
+> learn-check endpoint and the adult-only time-on-task heartbeat. Use the handbook visual style from CLAUDE.md.
+
+---
+
+## Stage 5: Results, final exam, pre-test, learner dashboard
+
+**Build** (§10, §11, §15 learner column)
+- `results/policy.py`: constants, `round1()`, `compute_results(user_ids)`, with tests for the §10.3 worked example and the boundary values.
+- `ProgrammeAssessment` for the final and the pre-test: the blueprint, anchors, the cooldown setting (0).
+- Final unlock rules (§10.2), the bands on the final result (§9.5), the knowledge-gain calculation (first final attempt vs pre-test, anchors only).
+- The pre-test prompt after the first login (it can be postponed, but the final stays locked until it's done).
+- A rule that a question can't move into the final pool once it has been shown in a non-final attempt.
+- The learner "My progress" dashboard:
+  - the overall ring
+  - module cards with parts
+  - final state
+  - blockers in plain words
+  - weakest PCs
+  - hours
+  - a certificate card placeholder
+
+**Done when**
+- [ ] The worked example test passes exactly.
+- [ ] Journeys 7 and 11 pass.
+- [ ] The dashboard renders for a learner at each stage: new, mid-way, eligible.
+
+**Prompt**
+> Read CLAUDE.md, docs/decisions.md and docs/architecture.md §9.5, §10, §11, §15. Implement Stage 5: the results policy with Decimal rounding and the
+> worked-example tests, the final exam and pre-test with blueprint, anchors and bands, unlock rules, knowledge gain, and the learner My progress dashboard.
+
+---
+
+## Stage 6: Staff tools
+
+**Build** (§5, §10.4, §13, §15 mentor/admin columns)
+- The mentor dashboard:
+  - roster, heatmap, stuck learners
+  - awaiting approval / issued this week
+  - the auto-issue switch
+  - CSV export (audited, with formula-injection-safe cells)
+- Unfold admin actions: open/close registration, move a learner, approve, revoke.
+- The final-pool permission (admins only).
+- Interactive question editing with django-jsonform driven by the pydantic schemas, plus "preview as learner".
+- The mark-split editor per module, with the **impact preview** using `compute_results`, a confirmation step and audit.
+- The admin report page: totals per batch, knowledge gain vs 25%, item statistics (also per language), the email budget.
+- `audit()` on every domain event, and simple-history on Batch, Enrolment, Question and AssessmentPart.
+
+**Done when**
+- [ ] Journeys 14 and 15 pass.
+- [ ] A mentor can't open final-pool questions (403).
+- [ ] The CSV opens safely in Excel.
+
+**Prompt**
+> Read CLAUDE.md, docs/decisions.md and docs/architecture.md §5, §10.4, §13, §15. Implement Stage 6: mentor dashboard, admin actions and report page,
+> question editing with schema forms and preview, the mark-split editor with impact preview, audit logging and CSV export.
+
+---
+
+## Stage 7: Certificates
+
+**Build** (§12)
+- `Certificate` with a DB sequence for `certificate_no`, a random `verify_code`, and a partial unique index (one issued certificate per user).
+- `issue(user)`: lock, re-check, snapshot, a WeasyPrint PDF (English; **url_fetcher allowlist**), a segno QR, a sha256. Plus `revoke()`.
+- Auto-issue on submit when the batch switch is on. Mentor "Approve all" for waiting learners. Switching the switch on does **not** bulk-issue.
+- The learner certificate card and download (owner only).
+- The public `/verify/<code>`: name, qualification, grade, date, status. Rate-limited. No lookup by number. Handles the erased-holder case.
+- An `nsqf_approved` setting for the wording.
+- Certificate design: port the look of `landing/img/cert-front.jpg` from the old repo.
+
+**Done when**
+- [ ] Journeys 12 and 13 pass.
+- [ ] Names and certificate text cannot inject anything into the PDF (test).
+- [ ] A revoked certificate shows "Revoked".
+
+**Prompt**
+> Read CLAUDE.md, docs/decisions.md and docs/architecture.md §12. Implement Stage 7: certificate issue/revoke with sequence numbers and random verify
+> codes, WeasyPrint PDF with a locked-down url_fetcher, QR, auto-issue and mentor approval, the learner download and the public verify page.
+
+---
+
+## Stage 8: Multilingual
+
+**Build** (§14)
+- gettext for all UI strings, with locale files for hi, mr and gu, and django-rosetta for staff.
+- The `Translation` table and `t(key, lang)` with the key grammar, the source-hash staleness and the draft/reviewed rules (no drafts in assessments).
+- XLSX export/import per module, validating markers, placeholders, `<>` and blank-over-existing. A Reviewer permission per language (can't review own uploads).
+- The language switch in the header, saved to the profile, with safe mid-attempt switching.
+- Self-hosted fonts: Baloo 2, Hind (Latin + Devanagari), Hind Vadodara (Gujarati). Check line heights for Indic scripts.
+- Load the team's reviewed sheets.
+
+**Done when**
+- [ ] Journey 16 passes.
+- [ ] Every page renders in all 4 languages with no English left except stale or missing strings.
+- [ ] A changed English line shows as stale.
+
+**Prompt**
+> Read CLAUDE.md, docs/decisions.md and docs/architecture.md §14. Implement Stage 8: gettext + Rosetta for UI strings, the Translation table with
+> source-hash staleness and reviewer workflow, XLSX round trip with validation, the language switch, and Indic fonts.
+
+---
+
+## Stage 9: Landing page and public pages
+
+**Build**
+- Port the old `landing/` design to Django templates: hero, about, partners, certificate showcase, and an "enrol" call to action → `/register`.
+- A privacy notice page (the text comes from CyberPeace; use a placeholder until then), grievance contact, terms, and a help/FAQ page.
+- A 404 and 500 page in the same style. Favicon and social preview image.
+
+**Done when**
+- [ ] The public pages are responsive, available in 4 languages, and Lighthouse accessibility is ≥ 90.
+
+**Prompt**
+> Read CLAUDE.md and docs/legacy-sources.md. Implement Stage 9: port the old landing page design to Django templates, plus privacy, grievance,
+> terms, FAQ and error pages, all translated and mobile-first.
+
+---
+
+## Stage 10: Launch hardening
+
+**Build**
+- A strict CSP (self plus the youtube-nocookie frame), HSTS, and a security headers check.
+- Rate limits on login, register, reset, `/learn/check`, `/verify`, and answer/submit.
+- A load test (locust or k6): 60 learners take the final at the same time on staging, with p95 under 1 s.
+- A restore drill from a real backup, timed, with a note of how long it took.
+- Sentry and an uptime pinger.
+- All 17 journeys automated in Playwright.
+- `docs/runbook.md`: deploy, roll back, restore, rotate secrets, incident (72 h DPDP notice), and adding an admin.
+- Then: the lead's security audit → fixes → deploy to prod → create the real batches.
+
+**Done when**
+- [ ] Every Playwright journey passes on staging.
+- [ ] The load test and the restore drill pass.
+- [ ] The lead signs off.
+
+**Prompt**
+> Read CLAUDE.md and docs/architecture.md §16–§18. Implement Stage 10: CSP and security headers, rate limits, a 60-user load test, a timed restore drill,
+> monitoring, Playwright tests for all journeys in §18, and docs/runbook.md.
