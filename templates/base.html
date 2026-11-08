@@ -1,0 +1,30 @@
+{% load static %}<!doctype html>
+<html lang="{{ LANGUAGE_CODE|default:'en' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block head_title %}Cyber First Response{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/site.css' %}">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">Cyber First Response</a>
+    <nav>
+      {% if user.is_authenticated %}
+        <form method="post" action="{% url 'account_logout' %}">{% csrf_token %}
+          <button class="btn btn-ghost" type="submit">Sign out</button>
+        </form>
+      {% else %}
+        <a class="btn btn-ghost" href="{% url 'account_login' %}">Sign in</a>
+        <a class="btn" href="{% url 'account_signup' %}">Sign up</a>
+      {% endif %}
+    </nav>
+  </header>
+  <main class="wrap">
+    {% if messages %}
+      <ul class="messages">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

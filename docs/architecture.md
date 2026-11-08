@@ -98,7 +98,7 @@ csfr-platform/                (git repo, cloned to D:\ locally — not OneDrive)
 ├── importers/                one-time import of the existing material (booklet text, 405 MCQs, 90 challenges, films)
 ├── templates/ static/ locale/
 ├── tests/                    pytest (unit, integration) · Playwright (journeys in §18)
-├── deploy/                   compose files, Caddyfile, backup + restore scripts, server bootstrap
+├── deploy/                   compose.yml (per-env stack), compose.edge.yml (shared Caddy), compose.dev.yml, Caddyfile, backup/ + restore.sh, server/bootstrap.sh
 └── docs/design/              these documents
 ```
 
@@ -552,6 +552,7 @@ content strings → t(key, lang):  key grammar  q:<question>:<field.path>  ·  b
 | --- | --- |
 | Pipeline | git push → GitHub Actions (ruff, pytest with Postgres, Playwright) → deploy script over SSH to **staging** → manual check → same script to **prod** (DB dump taken first) |
 | Deploy script | `git pull → docker compose build → migrate (as csfr_owner) → collectstatic → restart`. **No content loading.** |
+| Stacks | Staging and prod are two separate instances of `deploy/compose.yml` (own project name, `.env`, DB, volumes). One shared Caddy (`deploy/compose.edge.yml`) owns ports 80/443 and routes by host name over the `csfr-edge` network. See `docs/server-setup.md`. |
 | One-time import | `importers/` loads the existing material once. It refuses to run if any content version was edited in the app. |
 | Backups | Hourly `pg_dump` + nightly media to off-site storage with **write-only credentials and object lock**. Encrypted to a public key; the **private key is held offline by two named people**. Kept for 48 hours (hourly), 14 days (daily) and 8 weeks (weekly). |
 | Restore drill | In a throwaway stack (never staging), before launch and every term |
