@@ -1,0 +1,50 @@
+# Local development. Run from the repo root:
+#   docker compose -f deploy/compose.dev.yml up
+name: csfr-dev
+
+x-web-env: &web-env
+  DJANGO_SETTINGS_MODULE: config.settings.dev
+  DJANGO_SECRET_KEY: dev-only-not-a-secret
+  DB_HOST: db
+  DB_NAME: csfr
+  DB_USER: postgres # superuser in dev so pytest can create its test database
+  DB_PASSWORD: dev
+  EMAIL_HOST: mailpit
+  EMAIL_PORT: "1025"
+
+services:
+  web:
+    build:
+      context: ..
+      args:
+        REQUIREMENTS: requirements-dev.txt
+    command: python manage.py runserver 0.0.0.0:8000
+    environment: *web-env
+    volumes:
+      - ..:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: csfr
+    volumes:
+      - dev-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d csfr"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025" # web UI
+
+volumes:
+  dev-db:

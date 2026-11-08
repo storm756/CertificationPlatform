@@ -1,0 +1,10 @@
+# Pinned (first resolved 2026-11-08). Bump deliberately.
+Django==5.2.19
+django-allauth[mfa]==65.21.1
+django-unfold==0.110.1
+django-simple-history==3.13.0
+django-ratelimit==4.1.0
+sentry-sdk==2.74.0
+argon2-cffi==25.1.0
+psycopg[binary]==3.3.8
+gunicorn==26.2.0

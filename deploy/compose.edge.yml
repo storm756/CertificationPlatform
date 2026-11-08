@@ -1,0 +1,42 @@
+# The shared front door: Caddy owns ports 80/443, gets the TLS certificates and routes by host name
+# to the staging and prod stacks. Started by deploy.sh (idempotent).
+name: csfr-edge
+
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      PROD_DOMAIN: ${PROD_DOMAIN:-cyberfirstresponse.io}
+      STAGING_DOMAIN: ${STAGING_DOMAIN:-staging.cyberfirstresponse.io}
+      # Local testing only: set to "http://" to disable HTTPS (never on the server).
+      SCHEME: ${SCHEME:-}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+      - prod-static:/srv/prod/static:ro
+      - staging-static:/srv/staging/static:ro
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: ["no-new-privileges:true"]
+    networks: [edge]
+
+networks:
+  edge:
+    name: csfr-edge
+    external: true # created by deploy.sh
+
+volumes:
+  caddy-data:
+  caddy-config:
+  prod-static:
+    external: true
+    name: csfr-prod_static
+  staging-static:
+    external: true
+    name: csfr-staging_static

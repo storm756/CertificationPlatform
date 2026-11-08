@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>Community Cyber First Responder</h1>
+  {% if user.is_authenticated %}
+    <p>Signed in as <strong>{{ user.email }}</strong>.</p>
+  {% else %}
+    <p>The certification programme by CyberPeace Foundation and SAKEC.</p>
+  {% endif %}
+{% endblock %}

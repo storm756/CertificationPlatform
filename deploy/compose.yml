@@ -1,0 +1,98 @@
+# One application stack (web + db + cron). Staging and prod are two separate instances of this
+# file, each with its own project name, .env file, database, volumes and secrets.
+# deploy/deploy.sh sets CSFR_ENV (staging|prod) and CSFR_ENV_FILE. Do not run by hand.
+#
+# Caddy is shared by both stacks (only one process can own ports 80/443), so it lives in
+# compose.edge.yml and reaches each web container over the external network "csfr-edge".
+name: csfr-${CSFR_ENV:?set by deploy.sh}
+
+services:
+  web:
+    build:
+      context: ..
+    image: csfr-web:${CSFR_ENV}
+    env_file: ${CSFR_ENV_FILE:?set by deploy.sh}
+    restart: unless-stopped
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    volumes:
+      - static:/app/staticfiles
+      - media:/app/media
+    environment:
+      MEDIA_ROOT: /app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      default: {}
+      edge:
+        aliases: ["web-${CSFR_ENV}"]
+    healthcheck:
+      # Host header must be an allowed host; first entry of DJANGO_ALLOWED_HOSTS
+      test:
+        - CMD
+        - python
+        - -c
+        - |
+          import os, urllib.request
+          host = os.environ["DJANGO_ALLOWED_HOSTS"].split(",")[0]
+          urllib.request.urlopen(urllib.request.Request("http://127.0.0.1:8000/healthz/", headers={"Host": host}), timeout=4)
+      interval: 15s
+      timeout: 6s
+      retries: 5
+      start_period: 20s
+
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    # Database secrets live in their own file so the web container never holds the owner password.
+    env_file: ${CSFR_DB_ENV_FILE:?set by deploy.sh}
+    environment:
+      POSTGRES_DB: csfr
+      POSTGRES_USER: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init-roles.sh:/docker-entrypoint-initdb.d/10-init-roles.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d csfr"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    # No ports published: reachable only on this stack's private network.
+
+  cron:
+    build:
+      context: backup
+    image: csfr-backup:${CSFR_ENV}
+    restart: unless-stopped
+    env_file: ${CSFR_ENV_FILE}
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    volumes:
+      - backups:/backups
+      - media:/media:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  mailpit: # staging only (deploy.sh enables the profile); staging mail never goes to Brevo
+    profiles: [mailpit]
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MAILPIT_PORT:-8025}:8025" # view through an SSH tunnel
+
+networks:
+  edge:
+    name: csfr-edge
+    external: true
+
+volumes:
+  static:
+  media:
+  pgdata:
+  backups:
