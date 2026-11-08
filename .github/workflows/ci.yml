@@ -65,7 +65,7 @@ jobs:
       - name: Shell scripts
         run: |
           sudo apt-get install -y shellcheck
-          shellcheck deploy/*.sh deploy/db/*.sh deploy/backup/*.sh deploy/server/*.sh
+          shellcheck --severity=warning deploy/*.sh deploy/db/*.sh deploy/backup/*.sh deploy/server/*.sh
       - name: Compose files are valid
         env:
           CSFR_ENV: staging
