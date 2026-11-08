@@ -57,3 +57,15 @@ def test_signup_verify_login_logout(client):
     assert client.get(reverse("account_logout")).status_code == 200  # confirmation page
     client.post(reverse("account_logout"))
     assert "_auth_user_id" not in client.session
+
+
+def test_site_record_matches_settings(settings):
+    from django.contrib.sites.models import Site
+
+    from apps.core.apps import sync_site
+
+    settings.SITE_DOMAIN = "staging.example.test"
+    settings.SITE_NAME = "Staging"
+    sync_site(sender=None)
+    site = Site.objects.get(pk=settings.SITE_ID)
+    assert (site.domain, site.name) == ("staging.example.test", "Staging")

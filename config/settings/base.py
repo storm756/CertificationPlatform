@@ -91,6 +91,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # --- Accounts ---
 AUTH_USER_MODEL = "accounts.User"
 SITE_ID = 1
+SITE_DOMAIN = env("SITE_DOMAIN", "localhost:8000")
+SITE_NAME = env("SITE_NAME", "Cyber First Response")
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
