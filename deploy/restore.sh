@@ -58,8 +58,8 @@ docker exec "$PG" pg_isready -U postgres -d csfr >/dev/null
 echo "==> decrypting and restoring"
 IDENTITY_ABS="$(absdir "$(dirname "$IDENTITY")")/$(basename "$IDENTITY")"
 FILE_ABS="$FILE"
-docker run --rm -i --user "$(id -u):$(id -g)" --entrypoint age -v "$IDENTITY_ABS:/identity:ro" "$IMG" -d -i /identity < "$FILE_ABS" \
-  | docker exec -i "$PG" pg_restore -U postgres -d csfr --no-owner --exit-on-error
+docker run --rm -i --user root --entrypoint age -v "$IDENTITY_ABS:/identity:ro" "$IMG" -d -i /identity < "$FILE_ABS" \
+  | docker exec -i "$PG" pg_restore -U postgres -d csfr --no-owner --no-privileges --exit-on-error
 
 echo "==> checks"
 q() { docker exec "$PG" psql -U postgres -d csfr -tAc "$1"; }
