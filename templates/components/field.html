@@ -1,0 +1,33 @@
+{% comment %}
+  A form field with label, hint and error, in the prototype's style.
+  Usage: {% include "components/field.html" with field=form.email %}
+  Optional: label_text (replaces the label), label_link_url + label_link_text (a link at the right of
+  the label, e.g. "Forgot your password?"), hide_hint (do not print help_text).
+{% endcomment %}
+{% load i18n ccfr %}
+<div class="field{% if field.errors %} field--error{% endif %}">
+  {% if field|is_checkbox %}
+    <label class="check" for="{{ field.id_for_label }}">{{ field|as_input }}<span>{{ label_text|default:field.label }}</span></label>
+  {% else %}
+    {% if label_link_url %}
+      <div class="field__label-row">
+        <label for="{{ field.id_for_label }}">{{ label_text|default:field.label }}</label>
+        <a class="link" href="{{ label_link_url }}">{{ label_link_text }}</a>
+      </div>
+    {% else %}
+      <label for="{{ field.id_for_label }}">{{ label_text|default:field.label }}</label>
+    {% endif %}
+    {% if field|is_password %}
+      <div class="password-wrap">
+        {{ field|as_input }}
+        <button type="button" data-reveal-pw aria-controls="{{ field.id_for_label }}" aria-pressed="false" data-show-label="{% translate 'Show' %}" data-hide-label="{% translate 'Hide' %}">{% translate "Show" %}</button>
+      </div>
+    {% else %}
+      {{ field|as_input }}
+    {% endif %}
+  {% endif %}
+  {% if field.help_text and not hide_hint %}<p class="hint" id="{{ field.auto_id }}-hint">{{ field.help_text }}</p>{% endif %}
+  {% for error in field.errors %}
+    <p class="field-error" id="{{ field.auto_id }}-err">{% icon "alert" "sm" %}<span>{{ error }}</span></p>
+  {% endfor %}
+</div>

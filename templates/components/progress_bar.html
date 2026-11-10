@@ -1,0 +1,5 @@
+{% comment %}Progress bar. value is 0-100. The width comes from a data attribute that
+  ccfr-shell.js copies into the --v custom property, because the CSP forbids inline styles.
+  Usage: {% include "components/progress_bar.html" with value=40 label="Module 1" %}{% endcomment %}
+{% load ccfr %}
+<div class="bar" role="progressbar" aria-label="{{ label }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ value|pct }}" data-v="{{ value|pct }}"><i></i></div>

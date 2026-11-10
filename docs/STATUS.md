@@ -20,8 +20,8 @@ If two of these still disagree, or something is missing, **stop and ask in chat*
 | Stage | State | Notes |
 | --- | --- | --- |
 | 0. Foundation and server | ✅ **Done, merged (PR #1)** | Django 5.2 + Postgres 17 + Caddy on the VPS. `staging.cyberfirstresponse.io` serves HTTPS. Key-only SSH. Encrypted off-site backups. Staff 2FA. The CSP is set by Caddy. |
-| 1. Accounts, batches, registration | 🟡 **Finish items done and checked** (`stage-1-finish`, c646170, with `origin/main` merged in) | Items 1 and 2 are built and tested (results below). A person reviews and merges the PR and deploys staging. |
-| 1.5. UI shell and components | ⬜ **Next** | Port the approved frontend prototype into Django templates. |
+| 1. Accounts, batches, registration | ✅ **Merged into `main`** (6b95bdc) · 🟡 **staging check still open** | Finish items 1 and 2 are done and were checked before the merge (results below). On the last check `https://staging.cyberfirstresponse.io/register/` still returned **404**: a person must deploy `main` to staging and confirm `/register/` loads before Stage 1 counts as verified on staging. |
+| 1.5. UI shell and components | 🟡 **Ready for a PR** (`stage-1-5-review`, from `origin/main` + a02123e; `stage-1-5-ui` kept as a backup) | Design tokens, self-hosted fonts incl. Gujarati, shared base template and components, `/styleguide`, language wiring, `tools/screenshots.mjs`, every Stage 0–1 page restyled. Review results below. |
 | 2 to 10 | ⬜ | In order. One stage = one branch = one PR. |
 
 **Live addresses:**
@@ -94,7 +94,7 @@ left out of the copy. The review fixes are listed in `build-stages.md` under Sta
 | Item | Owner | Until then |
 | --- | --- | --- |
 | ~~Programme name~~ **Decided: Community Cyber First Responder (CCFR)** (D23) | — | Use `settings.PROGRAMME_NAME` / `PROGRAMME_SHORT`. |
-| CCFR's own emblem (wanted) | Lead | An emblem slot that shows "CCFR" in text |
+| CCFR's own emblem (wanted) | Lead | The header's emblem slot (`.brand-emblem`) shows "CCFR" in text. Put the artwork in `templates/components/header.html` when it exists. |
 | Certificate qualification title, wording, signatories and certificate-number prefix (D28) | Lead + HOD (before Stage 7) | Stage 7 asks the lead before building the PDF template |
 | Consent from the three people whose photos are on the landing page | Lead (being arranged) | Their photos stay out of git, in `content-data/people/` only |
 | Privacy notice, terms, grievance officer, guardian-consent method (DPDP) | CyberPeace legal | Placeholder pages, marked "draft" |

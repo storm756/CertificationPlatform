@@ -1,49 +1,80 @@
 {% extends "base.html" %}
-{% load static %}
-{% block head_title %}Register{% endblock %}
-{% block content %}
-  <h1>Join the programme</h1>
-  <form method="post" novalidate>
-    {% csrf_token %}
-    {{ form.non_field_errors }}
+{% load static i18n ccfr %}
+{% block head_title %}{% translate "Register" %}{% endblock %}
+{% block body_attrs %} data-page="register"{% endblock %}
+{% block body %}
+<main id="main" class="auth" tabindex="-1">
+  <aside class="auth__aside">
+    <div class="accent-bars" aria-hidden="true"><i></i><i></i><i></i></div>
+    <h2>{% translate "Become a Community Cyber" %} <span>{% translate "First Responder." %}</span></h2>
+    <p>{% translate "Nine modules and a capstone, with practical challenges along the way and a certificate anyone can verify." %}</p>
+    <ul class="ticks">
+      <li>{% icon "award" %} {% translate "Pass every module and the final with 50% or more." %}</li>
+      <li>{% icon "shield" %} {% translate "All marking happens on the server, so it is fair for everyone." %}</li>
+      <li>{% icon "download" %} {% translate "Your certificate is downloaded from the site, never emailed." %}</li>
+    </ul>
+  </aside>
 
-    <label for="{{ form.certificate_name.id_for_label }}">{{ form.certificate_name.label }}</label>
-    {{ form.certificate_name }}
-    {{ form.certificate_name.errors }}
-    <p class="help">{{ form.certificate_name.help_text }}</p>
-    <div class="preview" id="name-preview" aria-live="polite"></div>
+  <div class="auth__main">
+    <section class="auth-card auth-card--wide stack" aria-labelledby="reg-title">
+      <div>
+        <p class="eyebrow">{% translate "Free to join" %}</p>
+        <h1 id="reg-title">{% translate "Join the programme" %}</h1>
+        <p class="muted">{% translate "Already have an account?" %} <a class="link" href="{% url 'account_login' %}">{% translate "Sign in" %}</a></p>
+      </div>
+      {% include "components/form_errors.html" with form=form %}
+      <form method="post" novalidate class="stack">
+        {% csrf_token %}
 
-    <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
-    {{ form.email }}{{ form.email.errors }}
+        <fieldset class="form-section">
+          <legend>1 · {% translate "Your certificate name" %}</legend>
+          {% include "components/field.html" with field=form.certificate_name %}
+          <div class="cert-preview" id="name-preview" aria-live="polite"><span class="muted">{% translate "Your certificate will read:" %}</span> <strong data-cert-preview>—</strong></div>
+          <p class="muted note">{% icon "lock" "sm" %} {% translate "After you register, only your mentor or an admin can change this name." %}</p>
+        </fieldset>
 
-    <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
-    {{ form.password }}{{ form.password.errors }}
-    <p class="help">At least 10 characters.</p>
+        <fieldset class="form-section">
+          <legend>2 · {% translate "Your account" %}</legend>
+          {% include "components/field.html" with field=form.email label_text=_("Email address") %}
+          <div>
+            {% include "components/field.html" with field=form.password %}
+            <div class="pw-meter" data-pw-meter data-score="0" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <p class="hint" aria-live="polite" data-pw-text data-short="{% translate 'Too short' %}" data-levels="{% translate 'Too simple' %}|{% translate 'Getting there' %}|{% translate 'Good' %}|{% translate 'Strong' %}">{% translate "At least 10 characters. A short sentence works well." %}</p>
+          </div>
+          <div class="grid-2">
+            {% include "components/field.html" with field=form.date_of_birth %}
+            {% include "components/field.html" with field=form.preferred_language label_text=_("Preferred language") %}
+          </div>
+          <p class="hint">{% translate "You must be 16 or older. If you are 16 or 17, your guardian must agree." %}</p>
+        </fieldset>
 
-    <label for="{{ form.preferred_language.id_for_label }}">{{ form.preferred_language.label }}</label>
-    {{ form.preferred_language }}{{ form.preferred_language.errors }}
+        <fieldset id="guardian-fields" class="form-section {% if not form.guardian_name.errors and not form.guardian_email.errors %}hidden{% endif %}">
+          <legend>{% translate "Parent or guardian" %}</legend>
+          <p class="muted">{% translate "Because you are 16 or 17, a parent or guardian needs to confirm by email before your account starts. We don't track time-on-task for learners under 18." %}</p>
+          {% include "components/field.html" with field=form.guardian_name %}
+          {% include "components/field.html" with field=form.guardian_email %}
+        </fieldset>
 
-    <label for="{{ form.date_of_birth.id_for_label }}">{{ form.date_of_birth.label }}</label>
-    {{ form.date_of_birth }}{{ form.date_of_birth.errors }}
-    <p class="help">You must be 16 or older. If you are 16 or 17, your guardian must agree.</p>
+        <fieldset class="form-section">
+          <legend>3 · {% translate "Your batch" %}</legend>
+          {% include "components/field.html" with field=form.batch %}
+          <p class="muted note">{% icon "users" "sm" %} {% translate "Only batches accepting registrations are listed. Seats and dates come from the batch your mentor opened." %}</p>
+        </fieldset>
 
-    <div id="guardian-fields" class="card {% if not form.guardian_name.errors and not form.guardian_email.errors %}hidden{% endif %}">
-      <p><strong>Guardian details</strong>: we will email your guardian to ask for consent.</p>
-      <label for="{{ form.guardian_name.id_for_label }}">{{ form.guardian_name.label }}</label>
-      {{ form.guardian_name }}{{ form.guardian_name.errors }}
-      <label for="{{ form.guardian_email.id_for_label }}">{{ form.guardian_email.label }}</label>
-      {{ form.guardian_email }}{{ form.guardian_email.errors }}
-    </div>
+        <fieldset class="form-section">
+          <legend>4 · {% translate "Consent" %}</legend>
+          <div class="field{% if form.accept_privacy.errors %} field--error{% endif %}">
+            <label class="check" for="{{ form.accept_privacy.id_for_label }}">{{ form.accept_privacy|as_input }}
+              <span>{% translate "I have read and accept the" %} <a class="link" href="{% url 'privacy' %}" target="_blank" rel="noopener">{% translate "privacy notice" %}</a>.</span>
+            </label>
+            {% for error in form.accept_privacy.errors %}<p class="field-error">{% icon "alert" "sm" %}<span>{{ error }}</span></p>{% endfor %}
+          </div>
+        </fieldset>
 
-    <label for="{{ form.batch.id_for_label }}">{{ form.batch.label }}</label>
-    {{ form.batch }}{{ form.batch.errors }}
-
-    <label class="checkbox-label">{{ form.accept_privacy }}
-      <span>I have read and accept the <a href="{% url 'privacy' %}" target="_blank" rel="noopener">privacy notice</a>.</span>
-    </label>
-    {{ form.accept_privacy.errors }}
-
-    <p><button type="submit">Register</button></p>
-  </form>
+        <button class="btn btn-accent btn-lg btn-block" type="submit">{% translate "Create my account" %} {% icon "arrow" %}</button>
+      </form>
+    </section>
+  </div>
+</main>
 {% endblock %}
 {% block scripts %}<script src="{% static 'js/register.js' %}" defer></script>{% endblock %}

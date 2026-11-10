@@ -1,0 +1,58 @@
+{% load static i18n ccfr %}
+<header class="site-header" data-header>
+  <div class="header-inner">
+    <a class="brand-lockup" href="{% url 'home' %}" aria-label="{{ PROGRAMME_NAME }} — {% translate 'Home' %}">
+      <img class="brand-logo brand-logo--anchor blend" src="{% static 'img/shah-anchor-logo.png' %}" width="245" height="254" alt="SAKEC (Shah &amp; Anchor)">
+      <span class="brand-rule" aria-hidden="true"></span>
+      <img class="brand-logo brand-logo--cyberpeace" src="{% static 'img/cyberpeace-logo.png' %}" width="284" height="284" alt="CyberPeace">
+      <span class="brand-copy">A Shah &amp; Anchor × CyberPeace<br>initiative for community cybersecurity</span>
+    </a>
+    <div class="header-tools">
+      {# Programme emblem slot (D23). Shows the short name until the emblem artwork exists. #}
+      <a class="brand-emblem" href="{% url 'home' %}" aria-label="{{ PROGRAMME_SHORT }}: {{ PROGRAMME_NAME }}" data-emblem>{{ PROGRAMME_SHORT }}</a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="{% translate 'Menu' %}">
+        <span class="nav-toggle__label">{% translate "Menu" %}</span>
+        <span class="nav-toggle__lines" aria-hidden="true"><i></i><i></i><i></i></span>
+      </button>
+    </div>
+    <nav class="primary-nav" id="primary-nav" aria-label="{% translate 'Primary' %}">
+      <ul class="nav-links">
+        {% url 'home' as home_url %}
+        <li><a href="{{ home_url }}"{% if request.path == home_url %} aria-current="page"{% endif %}>{% icon "home" %}{% translate "Home" %}</a></li>
+        {% if user.role == 'mentor' or user.role == 'admin' %}
+          {% url 'mentor_home' as mentor_url %}
+          <li><a href="{{ mentor_url }}"{% if mentor_url in request.path %} aria-current="page"{% endif %}>{% icon "users" %}{% translate "My batches" %}</a></li>
+        {% endif %}
+        {% if user.is_authenticated and user.role == 'learner' %}
+          {% url 'start' as start_url %}
+          <li><a href="{{ start_url }}"{% if request.path == start_url %} aria-current="page"{% endif %}>{% icon "chart" %}{% translate "My progress" %}</a></li>
+        {% endif %}
+        {% url 'privacy' as privacy_url %}
+        <li><a href="{{ privacy_url }}"{% if request.path == privacy_url %} aria-current="page"{% endif %}>{% icon "shield" %}{% translate "Privacy" %}</a></li>
+      </ul>
+      <div class="nav-actions">
+        <form class="lang-form" method="post" action="{% url 'set_language' %}" data-lang-form>
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <label class="lang-select">{% icon "globe" %}<span class="sr-only">{% translate "Language" %}</span>
+            <select name="language" data-lang-select>
+              {% for code, name in LANGUAGE_CHOICES %}<option value="{{ code }}" lang="{{ code }}"{% if code == CURRENT_LANGUAGE %} selected{% endif %}>{{ name }}</option>{% endfor %}
+            </select>{% icon "chevron" "sm" %}</label>
+          <noscript><button class="btn btn-outline btn-sm" type="submit">{% translate "Change" %}</button></noscript>
+        </form>
+        {% if user.is_authenticated %}
+          <a class="user-chip" href="{% if user.role == 'learner' %}{% url 'start' %}{% else %}{% url 'mentor_home' %}{% endif %}">
+            <span class="avatar" aria-hidden="true">{% if user.profile %}{{ user.profile.certificate_name|initials }}{% else %}{{ user.email|initials }}{% endif %}</span>
+            <span>{% if user.profile %}{{ user.profile.certificate_name|truncatewords:1 }}{% else %}{{ user.email }}{% endif %}</span>
+          </a>
+          <form method="post" action="{% url 'account_logout' %}">{% csrf_token %}
+            <button class="btn btn-outline btn-sm" type="submit">{% icon "logout" %}{% translate "Sign out" %}</button>
+          </form>
+        {% else %}
+          <a class="btn btn-outline" href="{% url 'account_login' %}">{% translate "Sign in" %}</a>
+          <a class="btn btn-primary" href="{% url 'register' %}">{% translate "Enrol now" %}</a>
+        {% endif %}
+      </div>
+    </nav>
+  </div>
+</header>

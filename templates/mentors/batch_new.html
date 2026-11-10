@@ -1,14 +1,12 @@
 {% extends "base.html" %}
-{% block head_title %}New batch{% endblock %}
+{% load i18n %}
+{% block head_title %}{% translate "New batch" %}{% endblock %}
 {% block content %}
-  <h1>Create a batch</h1>
+  <h1>{% translate "Create a batch" %}</h1>
   <p class="help">A new batch starts with registration closed. You open it on the next page.</p>
-  <form method="post" novalidate>{% csrf_token %}
-    {{ form.non_field_errors }}
-    {% for field in form %}
-      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-      {{ field }}{{ field.errors }}
-    {% endfor %}
-    <p><button type="submit">Create batch</button></p>
+  <form class="form-stack" method="post" novalidate>{% csrf_token %}
+    {% include "components/form_errors.html" with form=form %}
+    {% for field in form %}{% include "components/field.html" with field=field %}{% endfor %}
+    <button class="btn btn-primary btn-lg" type="submit">{% translate "Create batch" %}</button>
   </form>
 {% endblock %}

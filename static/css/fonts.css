@@ -1,0 +1,14 @@
+/* Self-hosted fonts (SIL Open Font License; licences are OFL-*.txt next to the files).
+   Latin + Devanagari come from the prototype; Gujarati subsets are from Google Fonts. */
+@font-face { font-family: "Baloo 2"; src: url("../fonts/baloo2-latin.woff2") format("woff2"); font-weight: 400 800; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+20B9, U+2122, U+2190-2199, U+2212; }
+@font-face { font-family: "Baloo 2"; src: url("../fonts/baloo2-devanagari.woff2") format("woff2"); font-weight: 400 800; font-display: swap; unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+25CC, U+A830-A839, U+A8E0-A8FF; }
+@font-face { font-family: "Hind"; src: url("../fonts/hind-latin-400.woff2") format("woff2"); font-weight: 400; font-display: swap; unicode-range: U+0000-00FF, U+2000-206F, U+20B9, U+2190-2199; }
+@font-face { font-family: "Hind"; src: url("../fonts/hind-devanagari-400.woff2") format("woff2"); font-weight: 400; font-display: swap; unicode-range: U+0900-097F, U+200C-200D, U+25CC, U+A8E0-A8FF; }
+@font-face { font-family: "Hind"; src: url("../fonts/hind-latin-500.woff2") format("woff2"); font-weight: 500; font-display: swap; unicode-range: U+0000-00FF, U+2000-206F, U+20B9, U+2190-2199; }
+@font-face { font-family: "Hind"; src: url("../fonts/hind-devanagari-500.woff2") format("woff2"); font-weight: 500; font-display: swap; unicode-range: U+0900-097F, U+200C-200D, U+25CC, U+A8E0-A8FF; }
+@font-face { font-family: "Hind"; src: url("../fonts/hind-latin-600.woff2") format("woff2"); font-weight: 600 700; font-display: swap; unicode-range: U+0000-00FF, U+2000-206F, U+20B9, U+2190-2199; }
+@font-face { font-family: "Hind"; src: url("../fonts/hind-devanagari-600.woff2") format("woff2"); font-weight: 600 700; font-display: swap; unicode-range: U+0900-097F, U+200C-200D, U+25CC, U+A8E0-A8FF; }
+@font-face { font-family: "Baloo Bhai 2"; src: url("../fonts/baloobhai2-gujarati-500-800.woff2") format("woff2"); font-weight: 500 800; font-display: swap; unicode-range: U+0951-0952, U+0964-0965, U+0A80-0AFF, U+200C-200D, U+20B9, U+25CC, U+A830-A839; }
+@font-face { font-family: "Hind Vadodara"; src: url("../fonts/hindvadodara-gujarati-400.woff2") format("woff2"); font-weight: 400; font-display: swap; unicode-range: U+0951-0952, U+0964-0965, U+0A80-0AFF, U+200C-200D, U+20B9, U+25CC, U+A830-A839; }
+@font-face { font-family: "Hind Vadodara"; src: url("../fonts/hindvadodara-gujarati-500.woff2") format("woff2"); font-weight: 500; font-display: swap; unicode-range: U+0951-0952, U+0964-0965, U+0A80-0AFF, U+200C-200D, U+20B9, U+25CC, U+A830-A839; }
+@font-face { font-family: "Hind Vadodara"; src: url("../fonts/hindvadodara-gujarati-600.woff2") format("woff2"); font-weight: 600; font-display: swap; unicode-range: U+0951-0952, U+0964-0965, U+0A80-0AFF, U+200C-200D, U+20B9, U+25CC, U+A830-A839; }

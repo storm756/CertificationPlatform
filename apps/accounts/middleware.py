@@ -13,7 +13,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 
 from .models import UserStatus
 from .rules import requires_mfa
@@ -27,6 +27,7 @@ _GUARDIAN_WAIT_PREFIXES = (
     "/waiting/",
     "/guardian/",
     "/privacy/",
+    "/i18n/",
 )
 EMAIL_CHANGE_BLOCK = timedelta(days=7)
 
@@ -77,3 +78,35 @@ def _email_change_blocked(user) -> bool:
     profile = getattr(user, "profile", None)
     reset_at = profile.mentor_reset_at if profile else None
     return bool(reset_at and timezone.now() < reset_at + EMAIL_CHANGE_BLOCK)
+
+
+class ProfileLanguageMiddleware:
+    """Signed-in learners get their saved language on a new device (D7).
+
+    Guests use the cookie that Django's set_language view sets. A signed-in learner who has no
+    language cookie yet gets Profile.preferred_language instead, and the cookie is set so the
+    next request is cheap. Choosing a language later (apps.core.views.set_language) updates both.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        chosen = None
+        user = request.user
+        if user.is_authenticated and settings.LANGUAGE_COOKIE_NAME not in request.COOKIES:
+            profile = getattr(user, "profile", None)
+            if profile and profile.preferred_language in dict(settings.LANGUAGES):
+                chosen = profile.preferred_language
+                translation.activate(chosen)
+                request.LANGUAGE_CODE = chosen
+        response = self.get_response(request)
+        if chosen:
+            response.set_cookie(
+                settings.LANGUAGE_COOKIE_NAME,
+                chosen,
+                max_age=settings.LANGUAGE_COOKIE_AGE,
+                samesite=settings.LANGUAGE_COOKIE_SAMESITE,
+                secure=settings.LANGUAGE_COOKIE_SECURE,
+            )
+        return response

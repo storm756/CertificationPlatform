@@ -1,5 +1,10 @@
 {% extends "base.html" %}
+{% load i18n ccfr %}
+{% block head_title %}{% translate "Thank you" %}{% endblock %}
 {% block content %}
-  <h1>Thank you</h1>
-  <p>Your consent is recorded. The learner can now sign in and start.</p>
+  <div class="state-panel accent--teal">
+    <span class="big-icon">{% icon "check-circle" %}</span>
+    <h1>{% translate "Thank you" %}</h1>
+    <p>{% translate "Your consent is recorded. The learner can now sign in and start." %}</p>
+  </div>
 {% endblock %}

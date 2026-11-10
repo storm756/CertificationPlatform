@@ -1,10 +1,14 @@
 {% extends "base.html" %}
-{% block head_title %}Welcome{% endblock %}
+{% load i18n ccfr %}
+{% block head_title %}{% translate "Welcome" %}{% endblock %}
 {% block content %}
-  <h1>Welcome, {{ user.profile.certificate_name }}</h1>
-  <p>You are registered in <strong>{{ user.enrolment.batch.name }}</strong>.</p>
-  <div class="card">
-    <h2>Next: the short pre-test</h2>
-    <p>The pre-test will appear here soon. It shows what you already know before you start.</p>
+  <div>
+    <p class="eyebrow">{{ PROGRAMME_SHORT }}</p>
+    <h1>Welcome, {{ user.profile.certificate_name }}</h1>
+    <p class="muted">You are registered in <strong>{{ user.enrolment.batch.name }}</strong>.</p>
   </div>
+  <section class="card card--edge accent--teal stack">
+    <h2>{% translate "Next: the short pre-test" %}</h2>
+    <p>{% translate "The pre-test will appear here soon. It shows what you already know before you start." %}</p>
+  </section>
 {% endblock %}

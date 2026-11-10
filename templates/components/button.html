@@ -1,0 +1,8 @@
+{% comment %}
+  Button or link. variant: primary (mustard) | outline (secondary) | ghost (quiet) | danger.
+  Usage: {% include "components/button.html" with label="Save" variant="primary" %}
+         {% include "components/button.html" with label="Back" href="/" variant="outline" size="sm" %}
+  Optional: type (default submit for buttons), size (sm|lg), block (true), icon (sprite name).
+{% endcomment %}
+{% load ccfr %}
+{% if href %}<a class="btn btn-{{ variant|default:'primary' }}{% if size %} btn-{{ size }}{% endif %}{% if block %} btn-block{% endif %}" href="{{ href }}">{% if icon %}{% icon icon %}{% endif %}{{ label }}</a>{% else %}<button class="btn btn-{{ variant|default:'primary' }}{% if size %} btn-{{ size }}{% endif %}{% if block %} btn-block{% endif %}" type="{{ type|default:'submit' }}">{% if icon %}{% icon icon %}{% endif %}{{ label }}</button>{% endif %}

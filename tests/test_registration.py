@@ -52,7 +52,7 @@ def test_journey1_nothing_open_means_no_form(client, make_batch):
     response = client.get(reverse("register"))
     assert response.status_code == 200
     assert b"closed right now" in response.content
-    assert b"<form" not in response.content.split(b"<main")[1]
+    assert b"<form" not in response.content.split(b"<main")[1].split(b"</main>")[0]
 
 
 def test_journey1_the_open_pool_is_closed_by_default(client, db):

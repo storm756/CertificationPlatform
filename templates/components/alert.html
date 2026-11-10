@@ -1,0 +1,7 @@
+{% comment %}Alert / notice. tone: teal | mustard | terracotta | danger | plum (default blue).
+  Usage: {% include "components/alert.html" with tone="mustard" icon="info" title="Heads up" text="..." %}{% endcomment %}
+{% load ccfr %}
+<div class="notice{% if tone %} notice--{{ tone }}{% endif %}"{% if tone == "danger" %} role="alert"{% endif %}>
+  {% icon icon|default:"info" %}
+  <div>{% if title %}<h2 class="notice__title">{{ title }}</h2>{% endif %}<p>{{ text }}</p></div>
+</div>

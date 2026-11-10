@@ -1,0 +1,15 @@
+{% load i18n ccfr %}
+<footer class="site-footer">
+  <div class="shell footer-inner">
+    <div class="footer-brand"><p><strong>{{ PROGRAMME_NAME }}</strong><br>{% translate "Practical cyber first-response skills for every community." %}</p></div>
+    <nav class="footer-nav" aria-label="{% translate 'Policies' %}"><h2>{% translate "Policies" %}</h2>
+      <a href="{% url 'privacy' %}">{% translate "Privacy notice" %}</a>
+      <a href="mailto:{{ SUPPORT_EMAIL }}">{% icon "mail" "sm" %} {{ SUPPORT_EMAIL }}</a></nav>
+    <div class="footer-col"><h2>{% translate "Languages" %}</h2>
+      <form method="post" action="{% url 'set_language' %}" class="footer-langs">{% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        {% for code, name in LANGUAGE_CHOICES %}<button class="link" type="submit" name="language" value="{{ code }}" lang="{{ code }}">{{ name }}</button>{% if not forloop.last %} · {% endif %}{% endfor %}
+      </form></div>
+    <div class="footer-base"><p>{% translate "A joint initiative of CyberPeace Foundation and SAKEC." %}</p></div>
+  </div>
+</footer>

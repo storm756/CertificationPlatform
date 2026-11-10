@@ -1,9 +1,13 @@
 {% extends "base.html" %}
-{% block head_title %}Waiting for your guardian{% endblock %}
+{% load i18n ccfr %}
+{% block head_title %}{% translate "Waiting for your guardian" %}{% endblock %}
 {% block content %}
-  <h1>Waiting for your guardian</h1>
-  <p>Because you are under 18, your guardian must agree before you can start. We emailed them at <strong>{{ consent.guardian_email }}</strong>.</p>
-  <form method="post" action="{% url 'resend_guardian' %}">{% csrf_token %}
-    <button type="submit">Send the email again</button>
-  </form>
+  <div class="state-panel accent--mustard">
+    <span class="big-icon">{% icon "clock" %}</span>
+    <h1>{% translate "Waiting for your guardian" %}</h1>
+    <p>Because you are under 18, your guardian must agree before you can start. We emailed them at <strong>{{ consent.guardian_email }}</strong>.</p>
+    <form method="post" action="{% url 'resend_guardian' %}">{% csrf_token %}
+      <button class="btn btn-outline" type="submit">{% icon "mail" %}{% translate "Send the email again" %}</button>
+    </form>
+  </div>
 {% endblock %}
