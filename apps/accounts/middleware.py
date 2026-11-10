@@ -81,11 +81,13 @@ def _email_change_blocked(user) -> bool:
 
 
 class ProfileLanguageMiddleware:
-    """Signed-in learners get their saved language on a new device (D7).
+    """A signed-in learner always gets their saved language (D7).
 
-    Guests use the cookie that Django's set_language view sets. A signed-in learner who has no
-    language cookie yet gets Profile.preferred_language instead, and the cookie is set so the
-    next request is cheap. Choosing a language later (apps.core.views.set_language) updates both.
+    Guests use the cookie that Django's set_language view sets. A signed-in learner's
+    Profile.preferred_language wins over a cookie left by a guest visit, another account on the
+    same device or an older choice, and the cookie is brought into line so the next request is
+    cheap. Choosing a language (apps.core.views.set_language) saves both, and that request is left
+    alone so the new choice is not overwritten by the old saved one.
     """
 
     def __init__(self, get_response):
@@ -94,14 +96,14 @@ class ProfileLanguageMiddleware:
     def __call__(self, request):
         chosen = None
         user = request.user
-        if user.is_authenticated and settings.LANGUAGE_COOKIE_NAME not in request.COOKIES:
+        if user.is_authenticated and request.path != reverse("set_language"):
             profile = getattr(user, "profile", None)
             if profile and profile.preferred_language in dict(settings.LANGUAGES):
                 chosen = profile.preferred_language
                 translation.activate(chosen)
                 request.LANGUAGE_CODE = chosen
         response = self.get_response(request)
-        if chosen:
+        if chosen and request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME) != chosen:
             response.set_cookie(
                 settings.LANGUAGE_COOKIE_NAME,
                 chosen,

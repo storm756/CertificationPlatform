@@ -698,3 +698,6 @@ Where the build made a choice the design left open. Each is a one-line change if
 **Importer.** `import_legacy_interactive` is create-only and refuses after edits. It prints counts and ids only and creates drafts (legacy challenges have no hint). See `docs/STATUS.md` for the content calls.
 
 **Renderer.** `engine/src` (strict TypeScript, `textContent` only, no `innerHTML`) is bundled by `tools/build_engine.mjs` (type-check, then esbuild, iife, es2019) into the committed `static/js/engine.js`; styles are in `static/css/engine.css`. Colour triage is four large labelled buttons in fixed colour order with a "✓ Your choice" text cue. It works under the production CSP (no inline script or style).
+
+**Review fixes (accounts, language, auto-submit).** `purge.py` decides each group *after* locking the `EmailAddress` and `GuardianConsent` rows of the candidates (`_stale_ids`), so a verification in flight wins. `guardian.resend()` replaces the stored link hash only after the email is sent (`send_request(..., new_hash=)`); a budget refusal or mail error keeps the old link and returns False. `ProfileLanguageMiddleware` applies `Profile.preferred_language` on every signed-in request (it beats the cookie) except on the `set_language` request itself. `services.submit(..., stale_before=)` makes the auto-submit job recheck `last_saved_at` under the attempt lock.
+
