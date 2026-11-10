@@ -158,6 +158,73 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1366, height: 900 
     await ctx.close();
   }
 
+  // --- 6. a refused answer, then Review and submit: the learner stays on the quiz ----------------------
+  for (const when of ["after the error", "while the save is still in progress"]) {
+    const { ctx, page } = await fresh(viewport);
+    const last = seed.mcq_count;
+    await open(page, seed.mcq, last);
+    const quizUrl = page.url();
+    if (when === "after the error") {
+      await page.route(ANSWER, (route) => route.fulfill({ status: 400, body: "" }));
+      await page.locator(".opt").nth(1).click();
+      await waitPill(page, "error");
+    } else {
+      await page.route(ANSWER, async (route) => { await new Promise((r) => setTimeout(r, 1200)); await route.fulfill({ status: 400, body: "" }); });
+      await page.locator(".opt").nth(1).click();
+    }
+    await page.locator(".qnav a.btn-primary").click();  // "Review and submit"
+    await page.waitForTimeout(2500);
+    check(`${tag}refused answer, Review clicked ${when}: still on the quiz`, page.url() === quizUrl && !/\/review\//.test(page.url()), page.url());
+    check(`${tag}refused answer, Review clicked ${when}: the pill says Not saved and has focus`,
+      (await pill(page)) === "error" && (await page.evaluate(() => document.activeElement?.id)) === "save-status");
+    await ctx.close();
+  }
+
+  // --- 8. the refused answer is on an earlier question: Review shows that question ---------------------
+  {
+    const { ctx, page } = await fresh(viewport);
+    const last = seed.mcq_count;
+    await open(page, seed.mcq, last - 1);
+    await page.route(ANSWER, (route) => route.fulfill({ status: 400, body: "" }));
+    await page.locator(".opt").nth(1).click();
+    await waitPill(page, "error");
+    await page.unroute(ANSWER);
+    await next(page);
+    await onQuestion(page, last);
+    await page.locator(".qnav a.btn-primary").click();  // "Review and submit"
+    await onQuestion(page, last - 1).catch(() => {});
+    check(`${tag}Review with an earlier refused answer shows that question and stays on the quiz`,
+      !/\/review\//.test(page.url()) && (await position(page)) === String(last - 1) && (await pill(page)) === "error", await position(page));
+    await ctx.close();
+  }
+
+  // --- 7. closing or reloading the tab with an unsaved answer: the browser asks first --------------------
+  {
+    const { ctx, page } = await fresh(viewport);
+    await open(page, seed.mcq, 1);
+    await page.route(ANSWER, (route) => route.abort("internetdisconnected"));
+    await page.locator(".opt").nth(1).click();
+    await waitPill(page, "offline");
+    let asked = false;
+    page.on("dialog", async (d) => { if (d.type() === "beforeunload") asked = true; await d.dismiss(); });
+    await page.close({ runBeforeUnload: true });
+    await new Promise((r) => setTimeout(r, 800));
+    check(`${tag}leaving with an unsaved answer asks the learner first`, asked);
+    await ctx.close();
+  }
+  {
+    const { ctx, page } = await fresh(viewport);
+    await open(page, seed.mcq, 1);
+    await page.locator(".opt").nth(1).click();
+    await waitPill(page, "saved");
+    let asked = false;
+    page.on("dialog", async (d) => { asked = true; await d.dismiss(); });
+    await page.close({ runBeforeUnload: true });
+    await new Promise((r) => setTimeout(r, 800));
+    check(`${tag}leaving with everything saved does not ask`, !asked);
+    await ctx.close();
+  }
+
   // --- 4. Review and submit clicked straight after answering the last question -----------------------
   {
     const { ctx, page } = await fresh(viewport);

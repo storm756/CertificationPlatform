@@ -425,3 +425,32 @@ def test_a_link_that_expires_before_confirm_cannot_approve(make_user):
     )
     assert guardian.confirm(seen, "Ravi Desai") is False
     assert GuardianConsent.objects.get(user=user).confirmed_at is None
+
+
+def test_a_consent_record_removed_between_lookup_and_confirm_shows_the_invalid_link_page(
+    client, make_user, monkeypatch
+):
+    user, raw = pending_minor(make_user, link_sent_days_ago=1)
+    real_find = guardian.find_by_token
+
+    def find_then_the_account_is_cleaned_up(raw_token, now=None):
+        consent = real_find(raw_token, now)
+        if consent is not None:
+            User.objects.filter(pk=consent.user_id).delete()  # the purge job removes it meanwhile
+        return consent
+
+    monkeypatch.setattr(guardian, "find_by_token", find_then_the_account_is_cleaned_up)
+    response = client.post(
+        reverse("guardian_consent", args=[raw]),
+        {"guardian_name": "Ravi Desai", "declaration": "on"},
+    )
+    assert response.status_code == 404  # the existing invalid-link page, not a server error
+    assert "This link is not valid" in response.content.decode()
+    assert events("guardian.confirmed").count() == 0
+
+
+def test_confirm_returns_false_when_the_record_is_gone(make_user):
+    user, raw = pending_minor(make_user, link_sent_days_ago=1)
+    seen = guardian.find_by_token(raw)
+    GuardianConsent.objects.filter(pk=seen.pk).delete()
+    assert guardian.confirm(seen, "Ravi Desai") is False
