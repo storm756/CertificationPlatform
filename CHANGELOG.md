@@ -63,3 +63,7 @@
 - A signed-in learner's saved language now wins over a stale language cookie, and choosing a language no longer has its cookie reset to the old saved one on a new device. Why: D7.
 - `submit()` takes `stale_before`: the auto-submit job rechecks the last save under the attempt lock, so a quiz saved after the job looked is left open. Why: §9.3.
 - A regression test for each (`tests/test_review_fixes.py`).
+
+## 2026-11-10: Guardian send result and auto-submit count
+- `guardian.send_request()` treats `send_mail()` returning 0 as a failed send: the old link keeps working (and keeps its original expiry), nothing is recorded against the email budget. Why: D16.
+- `submit()` marks the attempt it returns with `just_closed`, decided under the attempt lock. `auto_submit_stale()` counts and audits only the attempts this call really closed, so a manual submit that won the race, or another worker's auto-submit, is not counted. Why: §9.3, audit accuracy.

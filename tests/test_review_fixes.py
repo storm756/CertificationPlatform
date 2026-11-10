@@ -225,3 +225,95 @@ def test_the_recheck_never_blocks_a_manual_submit(make_part, learner):
     attempt = stale_attempt(make_part, learner)
     result = services.submit(attempt.pk, learner.pk)  # no stale_before: the learner chose to submit
     assert result.status == AttemptStatus.SUBMITTED
+
+
+# --- send_mail() returning 0 is a failed send ----------------------------------------------------
+
+
+def test_a_send_that_reports_zero_messages_keeps_the_old_link_and_records_nothing(
+    make_user, monkeypatch
+):
+    user, old = pending_minor(make_user, link_sent_days_ago=1)
+    before = GuardianConsent.objects.get(user=user)
+    monkeypatch.setattr(guardian, "send_mail", lambda *args, **kwargs: 0)
+    assert guardian.resend(user) is False
+    assert guardian.find_by_token(old) is not None  # the old link still works
+    after = GuardianConsent.objects.get(user=user)
+    assert after.token_hash == before.token_hash and after.sent_at == before.sent_at
+    assert EmailLog.objects.count() == 0  # no successful send against the budget
+
+
+def test_a_zero_send_does_not_extend_the_old_links_life(make_user, monkeypatch):
+    user, old = pending_minor(make_user, link_sent_days_ago=13)
+    monkeypatch.setattr(guardian, "send_mail", lambda *args, **kwargs: 0)
+    assert guardian.resend(user) is False
+    in_two_days = timezone.now() + timedelta(days=2)
+    assert guardian.find_by_token(old) is not None
+    assert guardian.find_by_token(old, now=in_two_days) is None  # expires on its original date
+
+
+# --- the auto-submit count only includes what this call really closed -----------------------------
+
+
+def events(action):
+    from apps.audit.models import AuditEvent
+
+    return AuditEvent.objects.filter(action=action)
+
+
+def test_a_normal_stale_attempt_is_submitted_counted_and_audited_once(make_part, learner):
+    attempt = stale_attempt(make_part, learner)
+    assert services.auto_submit_stale() == 1
+    attempt.refresh_from_db()
+    assert attempt.status == AttemptStatus.AUTO_SUBMITTED
+    assert events("attempt.auto_submitted").count() == 1
+    assert events("system.auto_submit_stale").get().data == {"count": 1}
+    assert services.auto_submit_stale() == 0  # nothing left to do
+    assert events("system.auto_submit_stale").count() == 1
+
+
+def test_a_manual_submit_that_wins_the_race_is_not_counted_as_an_auto_submit(
+    make_part, learner, monkeypatch
+):
+    attempt = stale_attempt(make_part, learner)
+    real = services.submit
+
+    def learner_submits_first(attempt_id, user_id, **kwargs):
+        real(attempt_id, user_id)  # the learner pressed Submit after the job picked the attempt
+        return real(attempt_id, user_id, **kwargs)
+
+    monkeypatch.setattr(services, "submit", learner_submits_first)
+    assert services.auto_submit_stale() == 0
+    attempt.refresh_from_db()
+    assert attempt.status == AttemptStatus.SUBMITTED  # still their manual submission
+    assert events("attempt.submitted").count() == 1
+    assert events("attempt.auto_submitted").count() == 0
+    assert events("system.auto_submit_stale").count() == 0
+
+
+def test_a_second_job_that_finds_the_attempt_already_auto_submitted_does_not_count_it(
+    make_part, learner, monkeypatch
+):
+    attempt = stale_attempt(make_part, learner)
+    real = services.submit
+
+    def other_worker_first(attempt_id, user_id, **kwargs):
+        first = real(attempt_id, user_id, **kwargs)  # another worker closes it first
+        assert first.just_closed is True
+        return real(attempt_id, user_id, **kwargs)  # this job's own call finds it closed
+
+    monkeypatch.setattr(services, "submit", other_worker_first)
+    assert services.auto_submit_stale() == 0
+    attempt.refresh_from_db()
+    assert attempt.status == AttemptStatus.AUTO_SUBMITTED
+    assert events("attempt.auto_submitted").count() == 1  # graded and audited once
+    assert events("system.auto_submit_stale").count() == 0  # this job counted nothing
+
+
+def test_submit_reports_whether_this_call_closed_the_attempt(make_part, learner):
+    attempt, _ = services.start(learner, make_part())
+    first = services.submit(attempt.pk, learner.pk)
+    again = services.submit(attempt.pk, learner.pk)  # a safe retry
+    assert first.just_closed is True and again.just_closed is False
+    assert again.status == AttemptStatus.SUBMITTED and again.score == first.score
+    assert events("attempt.submitted").count() == 1

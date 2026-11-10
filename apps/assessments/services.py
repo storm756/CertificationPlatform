@@ -206,9 +206,14 @@ def submit(attempt_id, user_id, *, auto=False, now=None, stale_before=None) -> A
 
     `stale_before` is for the automatic job: once the attempt is locked, the last save is checked
     again, and an attempt saved since the job looked is left open for the learner.
+
+    The returned attempt carries `just_closed`: True only when *this* call moved it from in
+    progress to closed, decided while the lock is held (a retry, a manual submit that won the
+    race, or another worker's auto-submit all give False).
     """
     User.objects.select_for_update().get(pk=user_id)
     attempt = Attempt.objects.select_for_update().get(pk=attempt_id, user_id=user_id)
+    attempt.just_closed = False
     if not attempt.is_open:
         return attempt
     if stale_before is not None and attempt.last_saved_at >= stale_before:
@@ -243,6 +248,7 @@ def submit(attempt_id, user_id, *, auto=False, now=None, stale_before=None) -> A
         all_answered=attempt.all_answered,
         gate_breached=gate,
     )
+    attempt.just_closed = True
     return attempt
 
 
@@ -262,7 +268,7 @@ def auto_submit_stale(now=None) -> int:
     for attempt_id, user_id in stale:
         try:
             submitted = submit(attempt_id, user_id, auto=True, now=now, stale_before=cutoff)
-            done += 0 if submitted.is_open else 1
+            done += 1 if getattr(submitted, "just_closed", False) else 0
         except Exception:
             logger.exception("auto-submit of attempt %s failed", attempt_id)
     if done:
