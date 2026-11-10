@@ -282,3 +282,29 @@ def test_after_a_mentor_reset_a_banner_shows_and_email_change_is_blocked(
 
 def test_user_model_password_helper_sanity(world):
     assert User.objects.get(pk=world["my_learner"].pk).check_password(PASSWORD)
+
+
+# --- move learner responses ---------------------------------------------------------------
+
+
+@pytest.mark.parametrize("data", [{}, {"batch": ""}])
+def test_move_with_no_batch_chosen_shows_form_again_with_400(mentor_client, world, data):
+    learner = world["my_learner"]
+    response = mentor_client.post(reverse("mentor_learner_move", args=[learner.pk]), data)
+    assert response.status_code == 400
+    assert "Pick a batch." in response.content.decode()
+    assert Enrolment.objects.get(user=learner).batch == world["mine"]
+    assert not AuditEvent.objects.filter(action="learner.moved").exists()
+    assert not AuditEvent.objects.filter(action="access.denied").exists()
+
+
+def test_move_to_unknown_or_foreign_batch_gives_the_same_403_and_audits(mentor_client, world):
+    learner = world["my_learner"]
+    url = reverse("mentor_learner_move", args=[learner.pk])
+    foreign = mentor_client.post(url, {"batch": world["theirs"].pk})
+    unknown = mentor_client.post(url, {"batch": 999999})
+    garbage = mentor_client.post(url, {"batch": "not-a-number"})
+    assert foreign.status_code == unknown.status_code == garbage.status_code == 403
+    assert foreign.content == unknown.content == garbage.content
+    assert AuditEvent.objects.filter(action="access.denied").count() == 3
+    assert Enrolment.objects.get(user=learner).batch == world["mine"]

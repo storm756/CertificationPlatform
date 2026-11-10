@@ -1,5 +1,6 @@
 from django import forms
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from apps.accounts.forms import clean_person_name
 from apps.batches.models import Batch, BatchStatus
@@ -57,7 +58,12 @@ class RegistrationSettingsForm(forms.Form):
 
 
 class MoveLearnerForm(forms.Form):
-    batch = forms.ModelChoiceField(queryset=Batch.objects.none(), empty_label=None, label="Move to")
+    batch = forms.ModelChoiceField(
+        queryset=Batch.objects.none(),
+        empty_label=None,
+        label="Move to",
+        error_messages={"required": _("Pick a batch.")},
+    )
 
     def __init__(self, *args, mentor, current_batch, **kwargs):
         super().__init__(*args, **kwargs)

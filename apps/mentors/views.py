@@ -136,12 +136,23 @@ def learner_detail(request, learner_id):
 @require_POST
 def learner_move(request, learner_id):
     enrolment = services.scoped_enrolment(request.user, learner_id, request)
+    if not request.POST.get("batch", "").strip():
+        # Nothing chosen is an honest mistake: show the form again with a message.
+        form = MoveLearnerForm(request.POST, mentor=request.user, current_batch=enrolment.batch)
+        form.is_valid()  # fills the translatable "Pick a batch." error
+        return render(
+            request,
+            "mentors/learner.html",
+            _learner_context(request, enrolment, move_form=form),
+            status=400,
+        )
     form = MoveLearnerForm(request.POST, mentor=request.user, current_batch=enrolment.batch)
     if form.is_valid():
         services.move_learner(request.user, enrolment, form.cleaned_data["batch"], request)
         messages.success(request, "Learner moved.")
         return redirect("mentor_learner", learner_id=learner_id)
-    # A target outside the mentor's own batches fails validation (not in the queryset).
+    # Any other value is a batch that doesn't exist or isn't this mentor's. Both get the same
+    # 403 and the response never says which.
     audit(
         "access.denied",
         actor=request.user,

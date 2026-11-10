@@ -19,7 +19,7 @@
     <h2>Move to another batch</h2>
     {% if move_form.fields.batch.queryset %}
       <form method="post" action="{% url 'mentor_learner_move' learner.pk %}">{% csrf_token %}
-        {{ move_form.batch }}
+        {{ move_form.batch.errors }}{{ move_form.batch }}
         <p><button type="submit">Move</button></p>
       </form>
     {% else %}

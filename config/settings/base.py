@@ -191,3 +191,8 @@ GUARDIAN_LINK_DAYS = 14
 EMAIL_DAILY_BUDGET = {"registration": 150, "reset_guardian": 100, "reserve": 50}
 EMAIL_ALERT_AT = 150
 UNVERIFIED_ACCOUNT_DAYS = 7
+
+# Daily jobs run by `manage.py run_periodic` (D27) at this Asia/Kolkata time (after the backup).
+from datetime import time as _time  # noqa: E402
+
+PERIODIC_RUN_AT = _time(3, 0)

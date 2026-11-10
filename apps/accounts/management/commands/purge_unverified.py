@@ -1,29 +1,17 @@
-from datetime import timedelta
-
-from allauth.account.models import EmailAddress
-from django.conf import settings
 from django.core.management.base import BaseCommand
-from django.db.models import Exists, OuterRef
-from django.utils import timezone
 
-from apps.accounts.models import Role, User
-from apps.audit.services import audit
+from apps.accounts.purge import purge_stale_accounts
 
 
 class Command(BaseCommand):
     help = (
-        "Delete learner accounts that never verified their email within 7 days (architecture 7.2)."
+        "Delete learner accounts that never verified their email, or whose guardian never "
+        "confirmed, 7 days after the deadline (architecture 7.2). Also run daily by run_periodic."
     )
 
     def handle(self, *args, **options):
-        cutoff = timezone.now() - timedelta(days=settings.UNVERIFIED_ACCOUNT_DAYS)
-        verified = EmailAddress.objects.filter(user=OuterRef("pk"), verified=True)
-        stale = User.objects.filter(role=Role.LEARNER, created_at__lt=cutoff).exclude(
-            Exists(verified)
+        counts = purge_stale_accounts()
+        self.stdout.write(
+            f"Deleted {counts['count']} account(s): {counts['unverified']} unverified, "
+            f"{counts['guardian_expired']} guardian consent expired."
         )
-        count = 0
-        for user in stale:
-            audit("account.purged_unverified", target=user, user_id=user.pk)
-            user.delete()
-            count += 1
-        self.stdout.write(f"Deleted {count} unverified account(s).")

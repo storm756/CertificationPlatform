@@ -16,3 +16,9 @@
 - Mentor pages under `/mentor/`: my batches, create batch, open/close + window + seats, roster with new sign-ups, move learner, one-time reset link, change certificate name; all audited and scoped through `batches_for()`. Why: §5, §7.4.
 - 2FA is now required for mentors and admins by role, not only `is_staff`. Why: mentors use the mentor pages, not Django admin.
 - Tests for journeys 1-4, scoping, reset links, budgets and the mentor 2FA redirect.
+
+## 2026-11-10: Stage 1 finish items
+- Added the `tasks` service (web image, non-root, `csfr_app` role) to `compose.yml` and `compose.dev.yml`, running `manage.py run_periodic`: wakes every 10 minutes, runs due jobs at 03:00 Asia/Kolkata, stores the last success in `core.PeriodicRun` so a restart catches up once, and logs a failing job without stopping the loop. `deploy.sh` restarts `tasks` with `web`. Why: D27, data minimisation.
+- `purge_unverified` now also deletes learners still waiting for guardian consent 7 days after their link expired, sends no email, and writes one count-only `system.purge_unverified` audit event (replaces the per-account event). Why: DPDP data minimisation, STATUS item 1.
+- Dev database now creates the real `csfr_app` role (`deploy/db/dev-grants.sh`) so `tasks` connects as it in development too. Existing dev databases need `docker compose -f deploy/compose.dev.yml down -v` once.
+- Mentor "Move learner": no batch chosen returns 400 with "Pick a batch."; an unknown or not-yours batch returns 403 and an `access.denied` audit event, identical in both cases. Why: STATUS item 2.
