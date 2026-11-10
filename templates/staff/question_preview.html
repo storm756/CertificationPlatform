@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load static i18n ccfr %}
+{% block head_title %}{% translate "Preview" %} {{ question.stable_id }}{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/engine.css' %}">{% endblock %}
+{% block content %}
+  <p><a class="link" href="{% url 'staff_question' question.pk %}">{% icon "arrow-left" "sm" %} {{ question.stable_id }}</a></p>
+  {% include "components/alert.html" with tone="mustard" icon="eye" title=_("Preview as learner") text=_("Nothing is saved and nothing is scored. This is exactly what a learner's browser receives: no answers.") %}
+  <form class="qcard">
+    {% if interactive %}
+      <h2>{{ q.title|default:q.ask }}</h2>
+      {% if q.title and q.ask %}<p class="qcard__ask">{{ q.ask }}</p>{% endif %}
+      <input type="hidden" name="response" value="" data-response>
+      <div class="engine" data-engine data-q="{{ q_json }}"></div>
+    {% else %}
+      <h2>{{ q.stem }}</h2>
+      <div class="opts" role="radiogroup">{% for o in q.options %}<label class="opt"><input type="radio" name="choice" value="{{ o.token }}"><span class="opt__key" aria-hidden="true">{{ forloop.counter0|letter }}</span><span>{{ o.text }}</span></label>{% endfor %}</div>
+    {% endif %}
+  </form>
+  <details class="card"><summary>{% translate "Staff only: hint and explanation" %}</summary><p><strong>{% translate "Hint" %}:</strong> {{ staff_hint }}</p>{% if staff_why %}<p><strong>{% translate "Why" %}:</strong> {{ staff_why }}</p>{% endif %}</details>
+{% endblock %}
+{% block scripts %}{% if interactive %}<script src="{% static 'js/engine.js' %}" defer></script>{% endif %}{% endblock %}

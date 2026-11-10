@@ -26,7 +26,8 @@ If two of these still disagree, or something is missing, **stop and ask in chat*
 | 3. Interactive engine (13 formats) | 🟡 **Built locally** (`stage-3`, not pushed) | The 13 formats (mc, cards, spot, hotspot, sort, match, order, pick, build, settings, dial, chat, crossword) plus colour triage, with pydantic bodies, allow-list projections, random per-attempt tokens, Decimal scorers and safety gates ported from the legacy `engine.js` (parity proved on 128 frozen cases), a private legacy importer, safe hotspot images, and a TypeScript/esbuild renderer (`engine/`, bundle `static/js/engine.js`). Journeys 8 and 10 pass. **The 104 real legacy challenges validate but are not imported, and none can go live: they have no hints.** See "Stage 3: what to know" below. |
 | 4. Learning content | 🟡 **Built locally** (`stage-4`, from `stage-3` f375771, not pushed) | `/learn/` shows all 9 modules: overview, the 55 imported reading topics (each with an inline interaction), a film page per module (poster + English/Hindi transcript), a handout web page and a myth-or-fact check. Versioned blocks, publish/restore, DOCX and image upload, unit progress, `/learn/check` (practice only) and the adult-only time heartbeat. See "Stage 4: what to know". |
 | 5. Results, final exam, pre-test, dashboard | 🟡 **Built locally** (`stage-5`, from `stage-4`, not pushed) | `compute_results` with Decimal rounding and the §10.3 worked example as a test, the pre-test (anchors, once, resumable) and the final (blueprint draw with anchors, unlock rules, cooldown setting), bands, knowledge gain, the pool rule, and the **My progress** dashboard. See "Stage 5: what to know". |
-| 6 to 10 | ⬜ | In order. One stage = one branch = one PR. |
+| 6. Staff tools | 🟡 **Built locally** (`stage-6`, from `stage-5`, not pushed) | Mentor dashboard (roster, module heatmap, stuck learners, awaiting approval, auto-issue switch, audited formula-safe CSV), question editing with preview, the mark-split editor with an impact preview, the admin report page, batch admin actions and simple-history. Certificates (approve, issue, revoke) wait for Stage 7. See "Stage 6: what to know". |
+| 7 to 10 | ⬜ | In order. One stage = one branch = one PR. |
 
 **Live addresses:**
 * Staging: `https://staging.cyberfirstresponse.io`. It runs Stage 0 code; Stage 1 isn't deployed yet, so `/register` returns 404.
@@ -173,3 +174,15 @@ left out of the copy. The review fixes are listed in `build-stages.md` under Sta
   * A question that has been shown in any non-final attempt cannot be moved into the final pool (`Question.save` raises `PoolLocked`). Anchors are written directly in the final pool, so showing them in the pre-test is allowed.
   * The practice mock has no page yet (a placeholder step on the journey strip).
   * `eligible` does not yet check for an issued certificate (Stage 7 sets `already_issued`).
+
+## Stage 6: what to know (read before Stage 7)
+
+* **Certificates are Stage 7.** "Awaiting approval" shows eligible learners, "issued this week" is 0, and the admin actions **approve** and **revoke** are not built yet (there is no certificate table). The auto-issue switch is stored and audited now.
+* **Where:** mentors use `/mentor/batches/<id>/` (dashboard, CSV) and `/staff/questions/`; admins also have `/staff/marks/` (mark split with impact preview) and `/staff/report/`. Batch open/close are actions in the Django admin; moving a learner is on the learner page (admins can move between any batches).
+* **Design calls made in Stage 6** (tell the lead if one is wrong):
+  * Question editing is a **JSON editor checked against the format's pydantic schema** on save (readable errors), not django-jsonform: it adds no dependency and cannot drift from the schemas. A schema-driven form can replace it later without changing the pages' rules.
+  * A mentor's edit (or an admin's, unless they tick "keep live") adds a new version and sends a live question back to **draft**; only an admin publishes. Mentors cannot select the final pool, and the pool rule (§11) still applies in the editor.
+  * The impact preview counts who **meets every requirement** with and without the change (it ignores missing course content, which is reported separately as "course set-up would still be incomplete"). Marks over 100 are refused; confirming recomputes the impact, saves, and audits the counts.
+  * Stuck learner = no activity for 7+ days, or below 50% on a part after 3 attempts.
+  * CSV cells that start with `=`, `+`, `-`, `@`, tab or CR (also after leading spaces) get a leading apostrophe; the file is UTF-8 with a BOM and is a POST-only, no-store download.
+* **Verified:** mentors get 403 (and an audit line) for another batch's dashboard, learner, export and auto-issue, and for final-pool questions (list, edit, preview, publish, or posting `pool=final`); the Django-admin question list hides the final pool from non-admin staff.

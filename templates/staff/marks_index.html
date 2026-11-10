@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% load i18n ccfr %}
+{% block head_title %}{% translate "Mark split" %}{% endblock %}
+{% block content %}
+  <header class="stack"><p class="eyebrow">{% translate "Admin" %}</p><h1>{% translate "Mark split by module" %}</h1><p class="muted">{% translate "Change a module's marks or which parts count. You see who would gain or lose eligibility before anything is saved." %}</p></header>
+  <ul class="result-list">{% for m in modules %}<li class="result-item"><span><strong>{% translate "Module" %} {{ m.number }}</strong> · {{ m.display_title }}</span><a class="btn btn-sm btn-outline" href="{% url 'staff_marks_edit' m.number %}">{% translate "Edit marks" %}</a></li>{% endfor %}</ul>
+{% endblock %}

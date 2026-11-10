@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static i18n ccfr %}
+{% block head_title %}{% translate "Mark split" %} · {% translate "Module" %} {{ module.number }}{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/staff.css' %}">{% endblock %}
+{% block content %}
+  <p><a class="link" href="{% url 'staff_marks' %}">{% icon "arrow-left" "sm" %} {% translate "All modules" %}</a></p>
+  <header class="stack"><h1>{% translate "Module" %} {{ module.number }}: {{ module.display_title }}</h1></header>
+  {% if errors %}{% include "components/alert.html" with tone="danger" icon="alert" title=_("Please fix this") text="" %}<ul class="ticks">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+  <form class="form-stack" method="post">{% csrf_token %}
+    <label class="check"><input type="checkbox" name="module_counted"{% if module_counted %} checked{% endif %}><span>{% translate "This module counts towards the certificate" %}</span></label>
+    <div class="table-wrap"><table class="table"><thead><tr><th scope="col">{% translate "Part" %}</th><th scope="col">{% translate "Marks" %}</th><th scope="col">{% translate "Counted" %}</th><th scope="col">{% translate "Published" %}</th></tr></thead><tbody>
+      {% for r in rows %}<tr><th scope="row">{{ r.part.name }}</th><td><input class="input" type="number" min="0" max="100" name="marks_{{ r.part.pk }}" value="{{ r.marks }}" aria-label="{% translate 'Marks for' %} {{ r.part.name }}"></td><td><input type="checkbox" name="counted_{{ r.part.pk }}"{% if r.counted %} checked{% endif %} aria-label="{% translate 'Counted:' %} {{ r.part.name }}"></td><td>{% if r.part.is_published %}{% translate "yes" %}{% else %}{% translate "no" %}{% endif %}</td></tr>{% empty %}<tr><td colspan="4">{% translate "This module has no assessment parts yet." %}</td></tr>{% endfor %}
+    </tbody></table></div>
+    <div><button class="btn btn-primary" type="submit">{% translate "Preview the impact" %}</button></div>
+  </form>
+
+  {% if impact %}
+    <section class="card card--edge accent--mustard stack impact" aria-labelledby="impact">
+      <h2 id="impact">{% translate "Impact preview" %}</h2>
+      <p>{% blocktranslate with n=impact.learners lose=impact.lose|length gain=impact.gain|length %}{{ n }} learners: <strong>{{ lose }}</strong> lose eligibility, <strong>{{ gain }}</strong> gain it.{% endblocktranslate %}</p>
+      <p class="muted">{% blocktranslate with b=impact.eligible_before a=impact.eligible_after c=impact.overall_changed %}Meeting every requirement: {{ b }} now, {{ a }} after. Overall score changes for {{ c }} learners. Issued certificates never change.{% endblocktranslate %}</p>
+      {% if impact.gaps_after %}<p>{% icon "alert-triangle" %} {% translate "After this change the course set-up would still be incomplete:" %}</p><ul class="ticks">{% for g in impact.gaps_after %}<li>{{ g }}</li>{% endfor %}</ul>{% endif %}
+      {% if lose_names %}<p><strong>{% translate "Lose eligibility" %}:</strong> {{ lose_names|join:", " }}</p>{% endif %}
+      {% if gain_names %}<p><strong>{% translate "Gain eligibility" %}:</strong> {{ gain_names|join:", " }}</p>{% endif %}
+      <form method="post">{% csrf_token %}
+        <input type="hidden" name="confirm" value="1">
+        {% if module_counted %}<input type="hidden" name="module_counted" value="on">{% endif %}
+        {% for r in rows %}<input type="hidden" name="marks_{{ r.part.pk }}" value="{{ r.marks }}">{% if r.counted %}<input type="hidden" name="counted_{{ r.part.pk }}" value="on">{% endif %}{% endfor %}
+        <button class="btn btn-accent" type="submit">{% translate "Confirm and save" %}</button>
+      </form>
+    </section>
+  {% endif %}
+{% endblock %}

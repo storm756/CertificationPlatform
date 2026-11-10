@@ -34,6 +34,13 @@ class QuestionAdmin(ImportMixin, ModelAdmin):
     inlines = [VersionInline]
     actions = ["publish_selected", "retire_selected"]
 
+    def get_queryset(self, request):
+        """Final-pool questions are admin-only here too (§5)."""
+        from apps.accounts.rules import can_access_final_pool
+
+        qs = super().get_queryset(request)
+        return qs if can_access_final_pool(request.user) else qs.exclude(pool="final")
+
     @admin.display(boolean=True, description="Hint")
     def has_hint(self, obj):
         version = obj.current_version

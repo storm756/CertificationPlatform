@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load static i18n ccfr %}
+{% block head_title %}{% translate "Report" %}{% endblock %}
+{% block page_class %} page--wide{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/staff.css' %}">{% endblock %}
+{% block content %}
+  <header class="stack"><p class="eyebrow">{% translate "Admin" %}</p><h1>{% translate "Report" %}</h1></header>
+  <section class="stack" aria-labelledby="batches"><h2 id="batches">{% translate "Batches" %}</h2>
+    <div class="table-wrap" tabindex="0" role="region" aria-label="{% translate 'Batches' %}"><table class="table"><thead><tr><th scope="col">{% translate "Batch" %}</th><th scope="col">{% translate "Registered" %}</th><th scope="col">{% translate "Active" %}</th><th scope="col">{% translate "Eligible" %}</th><th scope="col">{% translate "Issued" %}</th><th scope="col">{% translate "Knowledge gain" %} ({% translate "target" %} {{ target }}%)</th></tr></thead><tbody>
+      {% for b in batches %}<tr><th scope="row">{{ b.batch.code }}</th><td>{{ b.registered }}</td><td>{{ b.active }}</td><td>{{ b.eligible }}</td><td>{{ b.issued }}</td><td>{% if b.gain is None %}—{% else %}<strong>{{ b.gain|floatformat:1 }} pts</strong> <small class="muted">({{ b.gain_n }} {% translate "learners" %})</small>{% endif %}</td></tr>{% endfor %}
+    </tbody></table></div></section>
+  <section class="stack" aria-labelledby="items"><h2 id="items">{% translate "Item statistics (hardest first)" %}</h2>
+    <div class="table-wrap" tabindex="0" role="region" aria-label="{% translate 'Item statistics' %}"><table class="table"><thead><tr><th scope="col">ID</th><th scope="col">{% translate "% correct" %}</th><th scope="col">{% translate "Answers" %}</th><th scope="col">{% translate "By language" %}</th></tr></thead><tbody>
+      {% for i in items %}<tr><th scope="row">{{ i.id }}</th><td>{{ i.percent }}</td><td>{{ i.n }}</td><td>{% for lang, v in i.languages.items %}{{ lang }} {{ v }}{% if not forloop.last %} · {% endif %}{% endfor %}</td></tr>{% empty %}<tr><td colspan="4">{% translate "No counted attempts yet." %}</td></tr>{% endfor %}
+    </tbody></table></div></section>
+  <section class="card stack" aria-labelledby="email"><h2 id="email">{% translate "Email budget today" %}</h2>
+    <p>{% translate "Registration" %}: {{ email.registration }} / {{ email_limits.registration }} · {% translate "Reset and guardian" %}: {{ email.reset_guardian }} / {{ email_limits.reset_guardian }} · {% translate "Reserve" %}: {{ email.reserve }} / {{ email_limits.reserve }} · <strong>{% translate "Total" %}: {{ email.total }}</strong></p></section>
+{% endblock %}
