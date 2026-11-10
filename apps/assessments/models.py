@@ -49,6 +49,7 @@ class AssessmentPart(models.Model):
 class ProgrammeAssessmentKind(models.TextChoices):
     FINAL = "final", "Final exam"
     PRETEST = "pretest", "Pre-test"
+    MOCK = "mock", "Practice mock"
 
 
 class ProgrammeAssessment(models.Model):
@@ -136,6 +137,7 @@ class Attempt(models.Model):
 class AttemptItem(models.Model):
     attempt = models.ForeignKey(Attempt, on_delete=models.CASCADE, related_name="items")
     position = models.PositiveIntegerField()  # 1-based
+    format = models.CharField(max_length=12, default="mcq")  # frozen with the version
     question_version = models.ForeignKey(
         "questions.QuestionVersion", on_delete=models.PROTECT, related_name="+"
     )
@@ -143,7 +145,7 @@ class AttemptItem(models.Model):
     # {"order": [token, ...], "tokens": {token: internal option id}}: server side only.
     option_map = models.JSONField()
     response = models.JSONField(null=True, blank=True)  # {"choice": token, "flag": bool}
-    score = models.DecimalField(max_digits=3, decimal_places=2, null=True, blank=True)  # 0..1
+    score = models.DecimalField(max_digits=30, decimal_places=20, null=True, blank=True)  # 0..1
     gate_flag = models.BooleanField(default=False)
 
     class Meta:
@@ -161,4 +163,9 @@ class AttemptItem(models.Model):
 
     @property
     def answered(self):
-        return bool(self.response and self.response.get("choice"))
+        """Complete for its format (an MCQ has a choice; a sort has every item placed; ...)."""
+        from apps.questions import formats
+
+        return formats.complete(
+            self.format, self.question_version.body, self.option_map, self.response
+        )

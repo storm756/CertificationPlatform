@@ -1,23 +1,22 @@
-"""Server-side scorers, one per format (architecture §9.6). The browser never scores anything."""
+"""Server-side scorers (architecture §9.6). The browser never scores anything.
+
+The per-format rules live in apps/questions/formats.py, next to the token maps and projections.
+"""
 
 from decimal import Decimal
 
-ZERO = Decimal("0")
-ONE = Decimal("1")
+from apps.questions import formats
+
+
+def score_item(
+    fmt: str, body: dict, option_map: dict, response: dict | None
+) -> tuple[Decimal, bool]:
+    """(score from 0 to 1, whether a safety-gate choice was made) for one attempt item."""
+    return formats.score(fmt, body, option_map, response)
 
 
 def score_mcq(body: dict, option_map: dict, response: dict | None) -> tuple[Decimal, bool]:
-    """Right or wrong (1 or 0), and whether the chosen option is a safety-gate option (D25).
-
-    The learner's response is a one-off token. It is mapped back to the internal option id here,
-    on the server. Unanswered or an unknown token scores 0 and never raises the gate.
-    """
-    token = (response or {}).get("choice")
-    key = option_map["tokens"].get(token) if token else None
-    if key is None:
-        return ZERO, False
-    gate = key in body.get("gate", {})
-    return (ONE if key == body["correct"] else ZERO), gate
+    return formats.score("mcq", body, option_map, response)
 
 
-SCORERS = {"mcq": score_mcq}
+SCORERS = {name: (lambda b, m, r, _n=name: formats.score(_n, b, m, r)) for name in formats.FORMATS}

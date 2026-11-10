@@ -3,6 +3,7 @@
 from collections import Counter
 
 from apps.audit.services import audit
+from apps.questions import formats
 from apps.questions.models import Question, QuestionStatus
 
 from .models import AssessmentPart, PartFamily, Selection
@@ -16,24 +17,20 @@ class PartInvalid(Exception):
 
 def live_questions(part: AssessmentPart):
     """Live questions this part draws from: its module's pool, in the part's format family."""
-    fmt = "mcq" if part.family == PartFamily.MCQ else None
     qs = Question.objects.filter(
         module=part.module, pool=part.pool, status=QuestionStatus.LIVE
     ).select_related("module")
-    return qs.filter(format=fmt) if fmt else qs.exclude(format="mcq")
+    return qs.filter(format="mcq") if part.family == PartFamily.MCQ else qs.exclude(format="mcq")
 
 
 def _stem(question) -> str:
     version = question.current_version
-    return " ".join(version.body.get("stem", "").casefold().split()) if version else ""
+    return " ".join(formats.label(version.body).casefold().split()) if version else ""
 
 
 def validate_part(part: AssessmentPart) -> list[str]:
     """Every reason this part can't be published yet. Empty means it can."""
     errors: list[str] = []
-    if part.family != PartFamily.MCQ:
-        errors.append("Only multiple-choice parts can be published until Stage 3 (interactive).")
-        return errors
 
     # Counted marks in a module never exceed 100. Reaching exactly 100 needs the module's other
     # part (interactive, Stage 3), so that is reported by module_marks_total(), not blocked here.
@@ -57,9 +54,9 @@ def validate_part(part: AssessmentPart) -> list[str]:
                 f"{2 * part.draw_n} (twice draw_n)."
             )
         per_tag = Counter(q.tags.get("pc") for q in questions)
-        if None in per_tag:
+        if part.family == PartFamily.MCQ and None in per_tag:
             errors.append("Some live questions have no PC tag.")
-        if part.min_per_tag:
+        if part.min_per_tag and part.family == PartFamily.MCQ:
             for tag, count in sorted((t, c) for t, c in per_tag.items() if t):
                 if count < part.min_per_tag:
                     errors.append(

@@ -7,9 +7,17 @@
   <input type="hidden" name="position" value="{{ position }}">
   <input type="hidden" name="flag_present" value="1">
   <div class="qcard__meta">
-    <span class="qcard__format">{% icon "square-check" %}{% translate "Multiple choice" %}</span>
+    <span class="qcard__format">{% icon "square-check" %}{% if interactive %}{% translate "Interactive" %}{% else %}{% translate "Multiple choice" %}{% endif %}</span>
     <span class="muted">{{ position }} / {{ total }}</span>
   </div>
+  {% if interactive %}
+    <h2 id="q-title" tabindex="-1">{{ q.title|default:q.ask }}</h2>
+    {% if q.title and q.ask %}<p class="qcard__ask">{{ q.ask }}</p>{% endif %}
+    <input type="hidden" name="response" value="" data-response>
+    {# The TypeScript renderer draws the question here from the projection in data-q (text and random tokens only). #}
+    <div class="engine" data-engine data-q="{{ q_json }}" data-data-url="{{ data_url }}"{% if image_url %} data-image-url="{{ image_url }}"{% endif %}></div>
+    <noscript><p class="notice notice--mustard">{% translate "This kind of question needs JavaScript. Please turn it on, or ask your mentor for help." %}</p></noscript>
+  {% else %}
   <h2 id="q-title" tabindex="-1">{{ q.stem }}</h2>
   <p class="qcard__ask">{% translate "Choose one answer." %}</p>
   <div class="opts" role="radiogroup" aria-labelledby="q-title">
@@ -22,8 +30,9 @@
       </label>
     {% endfor %}
   </div>
+  {% endif %}
   <label class="check"><input type="checkbox" name="flag"{% if flagged %} checked{% endif %}><span>{% translate "Mark for review" %}</span></label>
-  <noscript><button class="btn btn-primary" type="submit">{% translate "Save answer" %}</button></noscript>
+  {% if not interactive %}<noscript><button class="btn btn-primary" type="submit">{% translate "Save answer" %}</button></noscript>{% endif %}
 </form>
 <div class="qnav">
   {% if prev_pos %}<a class="btn btn-outline" href="{% url 'attempt_question' attempt.pk prev_pos %}" hx-get="{% url 'attempt_question' attempt.pk prev_pos %}" hx-target="#question-panel">{% icon "arrow-left" %}{% translate "Previous" %}</a>{% else %}<span></span>{% endif %}
