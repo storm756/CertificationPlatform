@@ -504,3 +504,10 @@ fieldset.form-section { margin: 0; }
 .sw-bg { background: var(--bg); } .sw-surface { background: var(--surface); } .sw-surface-3 { background: var(--surface-3); }
 .styleguide .swatch i { display: block; width: 6rem; height: 3rem; border-radius: var(--r-sm); border: 1px solid var(--line-strong); }
 .auth-card form { display: grid; gap: 1.1rem; }
+
+.auth-card--wide { width: min(100%, 38rem); }
+.form-section .note { font-size: .92rem; display: flex; gap: .4rem; align-items: flex-start; }
+.form-section .note .icon { margin-top: .2rem; flex: none; }
+.auth__main { align-content: start; }
+.form-section .pw-meter { margin-top: .6rem; }
+.form-section > .hint, .form-section > div > .hint { font-size: .9rem; color: var(--ink-muted); margin-top: .35rem; }
