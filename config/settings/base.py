@@ -28,6 +28,7 @@ CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
 
 INSTALLED_APPS = [
     "unfold",  # must come before django.contrib.admin
+    "unfold.contrib.import_export",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -39,11 +40,15 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.mfa",
     "simple_history",
+    "import_export",
     "apps.core",
     "apps.audit",
     "apps.accounts",
     "apps.batches",
     "apps.mentors",
+    "apps.content",
+    "apps.questions",
+    "apps.assessments",
 ]
 
 MIDDLEWARE = [
@@ -93,6 +98,8 @@ DATABASES = {
         "CONN_MAX_AGE": 60,
     }
 }
+# django-import-export: dry runs write inside a transaction that is rolled back.
+IMPORT_EXPORT_USE_TRANSACTIONS = True
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # --- Accounts ---
@@ -197,6 +204,8 @@ GUARDIAN_LINK_DAYS = 14
 EMAIL_DAILY_BUDGET = {"registration": 150, "reset_guardian": 100, "reserve": 50}
 EMAIL_ALERT_AT = 150
 UNVERIFIED_ACCOUNT_DAYS = 7
+# An attempt with no save for this long is submitted with its saved answers (architecture 9.3).
+STALE_ATTEMPT_DAYS = 7
 
 # Daily jobs run by `manage.py run_periodic` (D27) at this Asia/Kolkata time (after the backup).
 from datetime import time as _time  # noqa: E402

@@ -27,8 +27,18 @@ def _purge_unverified():
     )
 
 
-# Add new daily jobs here (Stage 2 adds auto-submit of stale attempts).
-JOBS = {"purge_unverified": _purge_unverified}
+def _auto_submit_stale_attempts():
+    from apps.assessments.services import auto_submit_stale
+
+    count = auto_submit_stale()
+    logger.info("auto_submit_stale_attempts: submitted %d attempt(s)", count)
+
+
+# Add new daily jobs here.
+JOBS = {
+    "purge_unverified": _purge_unverified,
+    "auto_submit_stale_attempts": _auto_submit_stale_attempts,
+}
 
 
 def scheduled_time_today(now):

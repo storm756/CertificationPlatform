@@ -8,3 +8,5 @@ sentry-sdk==2.74.0
 argon2-cffi==25.1.0
 psycopg[binary]==3.3.8
 gunicorn==26.2.0
+django-import-export[xlsx]==4.4.5
+pydantic==2.14.3

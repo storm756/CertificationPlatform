@@ -32,3 +32,12 @@
 - Staff-only `/styleguide` showing every component in every state, with hard-coded Hindi, Marathi and Gujarati samples. Added `tools/screenshots.mjs` (390px and 1366px screenshots, sideways-scroll check, axe). Why: Stage 1.5 done-when.
 - Review fixes: the question map tells "answered" and "marked for review" apart by shape as well as colour; "Answer every question" is running text, not a flex row. Small contrast fixes found by axe. Why: Stage 1.5 review items.
 - Folded decisions D20–D30 into `docs/architecture.md` and added §22. Why: Stage 1.5.
+
+## 2026-11-10: Stage 2, questions and MCQ assessments
+- Added `Question` and immutable `QuestionVersion` (model guard plus a database trigger), the MCQ pydantic schema (exactly one correct option, hint required to go live, safety-gate options with reasons) and `client_projection()`. Why: D11, D13, D25, §6, §9.2.
+- XLSX import of MCQs in the admin with a dry run and row errors; the real import is all-or-nothing. Added `import_legacy_mcq`, a create-only importer for the private legacy bank that prints counts only. The 405 legacy questions load as drafts because the bank has no hints. Why: §13.2, `docs/legacy-sources.md`.
+- Added `AssessmentPart` with `validate_part()` and `publish_part()`, and `Attempt` / `AttemptItem` with the unique and partial-unique constraints. Added a minimal seeded `Module` table (1–10) and `apps/results/policy.py` (`round1`, `percent`, `PASS_MARK`). Why: §6, D26.
+- Attempt lifecycle in `assessments/services.py`: `start()` (user row lock, resume, draw with min-per-tag, shuffle, random per-attempt option tokens, frozen versions), `save_answer()`, idempotent `submit()` scored on the server. Why: §9.
+- Attempt, review and result pages (htmx, vendored and CSP-safe): autosave, retry when offline, Saved / Saving / Offline pill, count-up timer, question map, mark for review. The result shows score, ✓/✗ and hints, never the correct option. Why: D13, §9.5.
+- Daily `auto_submit_stale_attempts` job in `run_periodic`. Why: §9.3, D27.
+- New dependencies: `django-import-export[xlsx]` and `pydantic`. Why: architecture §3.

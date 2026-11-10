@@ -78,7 +78,10 @@ def start(request):
         return redirect("waiting_for_guardian")
     if user.role in (Role.MENTOR, Role.ADMIN):
         return redirect("mentor_home")
-    return render(request, "accounts/welcome.html")
+    from apps.assessments.models import AssessmentPart
+
+    parts = AssessmentPart.objects.filter(is_published=True).select_related("module")
+    return render(request, "accounts/welcome.html", {"parts": parts})
 
 
 @login_required
