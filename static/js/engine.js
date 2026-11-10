@@ -716,15 +716,17 @@
     crossword: renderCrossword
   };
   function waitForSave(form) {
+    var _a2;
+    const position = (_a2 = form.elements.namedItem("position")) == null ? void 0 : _a2.value;
     return new Promise((resolve) => {
       const handler = (event) => {
         const detail = event.detail;
-        if (detail && detail.successful) {
-          form.removeEventListener("htmx:afterRequest", handler);
+        if (detail && String(detail.position) === position) {
+          document.removeEventListener("ccfr:saved", handler);
           resolve();
         }
       };
-      form.addEventListener("htmx:afterRequest", handler);
+      document.addEventListener("ccfr:saved", handler);
     });
   }
   function mount(root) {
@@ -739,18 +741,14 @@
       root.textContent = "This question can't be shown.";
       return;
     }
-    let timer;
     const ctx = {
       root,
       q,
       imageUrl: root.dataset.imageUrl,
       save(response) {
         ctx.q.response = response;
-        window.clearTimeout(timer);
-        timer = window.setTimeout(() => {
-          field.value = JSON.stringify(response);
-          form.dispatchEvent(new Event("change", { bubbles: true }));
-        }, 120);
+        field.value = JSON.stringify(response);
+        form.dispatchEvent(new Event("change", { bubbles: true }));
       },
       saved: () => waitForSave(form),
       async refetch() {
