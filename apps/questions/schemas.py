@@ -1,14 +1,15 @@
 """Validation schemas for question bodies, one per format (architecture §6, §9.2, §13.2).
 
-Only `mcq` exists in Stage 2. The body is the *server's* record: it holds the key (`correct`), the
-hint and the gate reasons. The browser never sees it: see apps/questions/projections.py.
+`mcq` (Stage 2) and the 13 interactive formats (Stage 3). The body is the *server's* record: it
+holds the key, the hint, the practice explanation (`why`) and the gate reasons. The browser never
+sees it: see apps/questions/formats.py (`project`).
 """
 
 import re
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
-__all__ = ["MCQBody", "MCQOption", "ValidationError", "parse_body", "publish_errors"]
+__all__ = ["MCQBody", "MCQOption", "ValidationError", "parse_body", "publish_errors", "SCHEMAS"]
 
 _CONTROL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 
@@ -64,7 +65,7 @@ class MCQBody(BaseModel):
         return self
 
 
-SCHEMAS = {"mcq": MCQBody}
+SCHEMAS = {"mcq": MCQBody}  # the interactive formats register themselves below
 
 
 def parse_body(fmt: str, data: dict) -> BaseModel:
@@ -85,4 +86,31 @@ def publish_errors(fmt: str, data: dict) -> list[str]:
     errors = []
     if not body.hint.strip():
         errors.append("hint: a hint is required before a question can go live")
+    errors += _gate_errors(fmt, body)
+    if fmt == "hotspot" and body.image_id is None:
+        errors.append("image_id: upload the picture for this hotspot before it can go live")
     return errors
+
+
+def _has_gate(node) -> bool:
+    if isinstance(node, dict):
+        return any(
+            (key == "gate" and value is True) or _has_gate(value) for key, value in node.items()
+        )
+    if isinstance(node, list):
+        return any(_has_gate(x) for x in node)
+    return False
+
+
+def _gate_errors(fmt: str, body) -> list[str]:
+    """Gate options need a reason (D25, §13.2): MCQ keeps one per option, others one message."""
+    data = body.model_dump()
+    if fmt == "mcq":
+        return []  # MCQ's gate dict already requires a reason per option
+    flagged = _has_gate(data) or bool(data.get("gate_if_missed"))
+    if flagged and not data.get("gate_message") and not data.get("gate_if_missed"):
+        return ["gate_message: a safety-gate choice needs a reason (gate_message)"]
+    return []
+
+
+from . import bodies  # noqa: E402,F401  (registers the interactive formats in SCHEMAS)

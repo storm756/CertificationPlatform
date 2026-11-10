@@ -23,7 +23,8 @@ If two of these still disagree, or something is missing, **stop and ask in chat*
 | 1. Accounts, batches, registration | 🟡 **Built, PR #2 open** | Two code items for Claude, then a person reviews, merges and deploys (below). |
 | 1.5. UI shell and components | 🟡 **Built locally** (`stage-1-5-ui`, not pushed) | Design tokens, self-hosted fonts incl. Gujarati, shared base template and components, `/styleguide`, language wiring, `tools/screenshots.mjs`, every Stage 0–1 page restyled. Waits on the Stage 1 PR and the docs update being merged. |
 | 2. Questions and MCQ assessments | 🟡 **Built locally** (`stage-2`, not pushed) | `Question` and immutable `QuestionVersion`, MCQ schema, XLSX import with dry run, private legacy importer (drafts only), `AssessmentPart` + `validate_part()`, attempts with random option tokens, server-side scoring, the HTMX attempt page and result page, auto-submit job. **The 405 legacy MCQs are imported as drafts and none can go live: they have no hints.** See "Stage 2: what to know" below. |
-| 3 to 10 | ⬜ | In order. One stage = one branch = one PR. |
+| 3. Interactive engine (13 formats) | 🟡 **Built locally** (`stage-3`, not pushed) | The 13 formats (mc, cards, spot, hotspot, sort, match, order, pick, build, settings, dial, chat, crossword) plus colour triage, with pydantic bodies, allow-list projections, random per-attempt tokens, Decimal scorers and safety gates ported from the legacy `engine.js` (parity proved on 128 frozen cases), a private legacy importer, safe hotspot images, and a TypeScript/esbuild renderer (`engine/`, bundle `static/js/engine.js`). Journeys 8 and 10 pass. **The 104 real legacy challenges validate but are not imported, and none can go live: they have no hints.** See "Stage 3: what to know" below. |
+| 4 to 10 | ⬜ | In order. One stage = one branch = one PR. |
 
 **Live addresses:**
 * Staging: `https://staging.cyberfirstresponse.io`. It runs Stage 0 code; Stage 1 isn't deployed yet, so `/register` returns 404.
@@ -86,6 +87,7 @@ left out of the copy. The review fixes are listed in `build-stages.md` under Sta
 | Privacy notice, terms, grievance officer, guardian-consent method (DPDP) | CyberPeace legal | Placeholder pages, marked "draft" |
 | YouTube video IDs, and Marathi/Gujarati captions | Teammate B | Poster plus transcript |
 | **Approved hints for all 405 legacy MCQs** (the legacy bank has none; a question can't go live without one, §13.2), the content team's sheet deciding `module_quiz` vs `practice` (today: 30 quiz / 15 practice per module), new final-pool questions, fixed tables (m1.t0, m1.t4, m2.t3, m4.t0, m4.t3), Module 8 replacement challenges | Teammate A | The legacy MCQs sit as drafts. Until hints arrive, no module quiz part can be published, so learners can't take real assessments. Tests use invented questions. |
+| **Approved hints for the 104 legacy interactive challenges** (they have a `why`, the practice explanation, but no hint), the `module_quiz` vs `practice` split, and a decision on the mixed set (below) | Teammate A | Run `import_legacy_interactive` only when the hints are ready. Tests and screenshots use invented questions (`tests/fixtures/legacy_invented.json`). |
 | Reviewed translations | Teammate B + reviewers | Lessons show draft translations with a "draft translation" tag. Assessments show English until a translation is reviewed (architecture §14, D24). |
 | Branch protection on `main` (require a PR and a passing CI, 0 approvals, no force pushes) | Lead (GitHub settings) | Never push to `main` directly |
 
@@ -131,3 +133,16 @@ left out of the copy. The review fixes are listed in `build-stages.md` under Sta
   * Option ids inside a question body (`o1`…) are internal only; the browser gets random per-attempt tokens. Scores are stored with `round1()` (one decimal).
   * The auto-submit job treats an auto-submitted attempt like a submitted one (`counted` unless gated); `all_answered` still says whether it was complete.
 * **htmx** is vendored at `static/js/htmx.min.js` (v2.0.4, BSD-0 licence beside it) and configured without eval or inline styles, so Caddy's CSP is unchanged.
+
+## Stage 3: what to know (read before Stage 5)
+
+* **The Stage 2 legacy MCQ bank was only dry-run checked, not loaded.** The 405 questions stay in the private source file (`content-data/legacy/`). Nothing real is in any database. Hints will be added by the team and imported later. The working MCQ quiz is unchanged.
+* **The legacy interactive set was also dry-run checked only**, with `check_legacy_parity` and the importer's validation (counts only, no content printed): 104 challenges, 0 invalid (build 12, cards 1, chat 12, crossword 6, dial 1, hotspot 1, match 1, mc 32, order 2, pick 11, settings 12, sort 2, spot 11), 80 for module quizzes and 24 for practice. The Python scorers agree with the real legacy engine on 624 of 624 private cases. All 104 lack hints, so they would import as drafts.
+* **Content calls made by the importer** (tell the lead if one is wrong):
+  * Legacy markup is flattened to plain text (content is never HTML). Sort-bin descriptions (`d`) are dropped.
+  * Hotspot art is rasterised from the legacy SVG (rect, text, group only) to a PNG by the importer. Learners get the picture plus numeric regions.
+  * The legacy mixed set (m11) has 18 questions, not 20. It goes to `practice`, and also becomes a `ProgrammeAssessment(kind="mock")`. Mixed questions that name no module go to Module 10.
+  * Module 8 crosswords are practice only.
+  * Interactive questions need no PC tag to be published (only MCQs do).
+* **Rules of the engine:** a blank answer never triggers a safety gate; a gate needs something the learner actually did (and "I'm finished" for spot). Formats with nothing to leave blank use an explicit `done` flag. Untouched pick-free scores 0.5 and untouched settings 1/3, as in the legacy engine.
+* **Verified:** the full test suite, a real-browser end-to-end of all formats at 390px and 1366px under the production CSP (no violations), axe clean on every attempt, review and result page. Screenshots are in `screenshots/stage3/` (not committed).

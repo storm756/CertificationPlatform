@@ -66,8 +66,10 @@ def publish(question: Question) -> Question:
     errors = [] if version else ["no content yet"]
     if version:
         errors += schemas.publish_errors(question.format, version.body)
-    if not question.tags.get("pc"):
+    if question.format == "mcq" and not question.tags.get("pc"):
         errors.append("tags: a PC tag is required")
+    if question.format == "crossword" and question.pool != "practice":
+        errors.append("pool: crosswords are practice only (D26)")
     if not question.pool:
         errors.append("pool: a pool is required")
     if errors:

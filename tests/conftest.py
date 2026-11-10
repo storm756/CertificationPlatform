@@ -182,3 +182,82 @@ def right_token(item):
 def wrong_token(item):
     body = item.question_version.body
     return next(t for t, key in item.option_map["tokens"].items() if key != body["correct"])
+
+
+# --- Stage 3 fixtures: invented interactive questions (tests/fixtures/legacy_invented.json) ----------
+
+import json as _json  # noqa: E402
+from pathlib import Path as _Path  # noqa: E402
+
+_INVENTED = {
+    e["id"]: e["question"]
+    for e in _json.loads(
+        (_Path(__file__).parent / "fixtures" / "legacy_invented.json").read_text("utf-8")
+    )
+}
+
+
+def invented_ids():
+    return list(_INVENTED)
+
+
+def invented_body(case_id, image_id=None):
+    """(format, body) for one invented question, with an invented hint (and gate message)."""
+    from apps.questions import legacy_interactive, schemas
+
+    fmt, body = legacy_interactive.convert(_INVENTED[case_id], image_id=image_id)
+    body["hint"] = f"Invented hint for {case_id}."
+    if (
+        "gate" in _json.dumps(body)
+        and '"gate": true' in _json.dumps(body)
+        or body.get("gate_if_missed")
+    ):
+        body["gate_message"] = (
+            body.get("gate_message") or "Invented: this would endanger a citizen."
+        )
+    return fmt, schemas.parse_body(fmt, body).model_dump()
+
+
+@pytest.fixture
+def make_interactive(db, module1):
+    """Create (and publish) an invented interactive question from the fixture."""
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    from apps.questions import images, legacy_interactive, services
+
+    counter = {"n": 100}
+
+    def make(case_id, *, pool="module_quiz", module=None, publish=True):
+        q = _INVENTED[case_id]
+        image_id = None
+        if q["type"] == "hotspot":
+            png = legacy_interactive.render_png(q["svg"])
+            image_id = images.store_image(SimpleUploadedFile("a.png", png, "image/png")).pk
+        fmt, body = invented_body(case_id, image_id)
+        counter["n"] += 1
+        question = services.create_question(
+            stable_id=f"M1-I{counter['n']}", module=module or module1, fmt=fmt, body=body,
+            tags={}, pool=pool,
+        )  # fmt: skip
+        if publish:
+            services.publish(question)
+        return question
+
+    return make
+
+
+@pytest.fixture
+def interactive_part(db, module1, make_interactive):
+    from apps.assessments import rules
+    from apps.assessments.models import AssessmentPart
+
+    def make(ids=None, name="Part B: interactive"):
+        for case_id in ids or [i for i in invented_ids() if i != "inv-crossword"]:
+            make_interactive(case_id)
+        part = AssessmentPart.objects.create(
+            module=module1, name=name, family="interactive", marks=50, selection="all"
+        )
+        rules.publish_part(part)
+        return part
+
+    return make

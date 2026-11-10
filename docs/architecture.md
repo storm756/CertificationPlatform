@@ -680,3 +680,21 @@ Where the build made a choice the design left open. Each is a one-line change if
 **What the browser gets.** `questions/projections.py::client_projection()` builds the question from an allow-list (stem, options as tokens). Views pass only that plus plain flags to templates. The attempt page is one question at a time: htmx loads each question panel, saves each answer (`hx-trigger="change"`) and refreshes the question map out of band; without JavaScript the same links and a Save button work. `attempt.js` shows Saved / Saving / Offline, retries with a growing delay until the answer is saved, and runs the count-up timer (a guide, never enforced). The result page shows the score, ✓/✗ and the hint for each question and, for a gated attempt, the "doesn't count" message; it never shows the correct option.
 
 **Tests.** Tests use invented questions only (`tests/conftest.py`). They prove, among others: resume (journey 5), double submit (6), the result page (9), two and five simultaneous starts giving one attempt, two simultaneous submits scoring once, that no attempt page, question partial, save response, review page or result page contains a key, hint (before submit), gate reason or internal option id, and that the correct option's markup is identical to the others.
+
+## 24. Stage 3 implementation notes (interactive engine)
+
+**Formats.** `apps/questions/bodies.py` holds a pydantic body per format (mc, cards, spot, hotspot, sort, match, order, pick, build, settings, dial, chat, crossword); `apps/questions/formats.py` holds one class per format (MCQ included) with `make_map`, `project`, `clean_response`, `score` and `complete`. `schemas.publish_errors` also checks gate messages and the hotspot image. The PC tag is required only for MCQ; crosswords are practice only.
+
+**Tokens and projections.** `AttemptItem.option_map` for interactive formats is `{"v":2,"refs":{token:[table,index]},"lists":{table:[tokens in display order]}}`; tokens are `secrets.token_urlsafe(9)`. MCQ keeps `{order, tokens}`. `project()` is an allow-list: text and tokens only, never a key, risky flag, hint, `why`, gate or canonical order, and the echoed response has its `flag` key removed. Tests prove this for every format, on pages, partials, the JSON endpoint and the save response (journey 10).
+
+**Answering.** The question panel is the Stage 2 htmx form with a hidden `response` input holding JSON (max 20000 characters). The TypeScript engine writes it and fires `change` after a 120 ms debounce; the server validates with `formats.clean_response` (unknown tokens raise `InvalidAnswer`). `AttemptItem.answered` uses `formats.complete`. Chat fetches its next step from `q/<pos>/data/` (JSON, no-store) only after the save succeeded.
+
+**Scoring.** `assessments/scoring.py::score_item` delegates to the format scorers. Scores are `Decimal` (`AttemptItem.score` is numeric(30,20)), rounded only by `round1()`. Partial credit shows as "Partly right". Gates come from something the learner did: a blank answer never gates. `ProgrammeAssessmentKind.MOCK` was added.
+
+**Parity.** `tools/legacy_parity.mjs` runs the real legacy `engine.js` in jsdom. `tests/fixtures/legacy_parity_expected.json` freezes 128 cases (25 with gates) from invented questions; `tests/test_scorer_parity.py` asserts the Python matches. `manage.py check_legacy_parity` does the same on the private bank and prints counts only.
+
+**Hotspots.** `QuestionImage` stores an uploaded raster (Pillow re-encodes it, strips metadata, 5 MB and 25 MP caps, SVG rejected). It is served only through `/attempt/<pk>/q/<pos>/image/` to the attempt's owner. Regions are numbers (rect, circle, poly, 0-100); the engine draws them as SVG shapes, never from content markup.
+
+**Importer.** `import_legacy_interactive` is create-only and refuses after edits. It prints counts and ids only and creates drafts (legacy challenges have no hint). See `docs/STATUS.md` for the content calls.
+
+**Renderer.** `engine/src` (strict TypeScript, `textContent` only, no `innerHTML`) is bundled by `tools/build_engine.mjs` (type-check, then esbuild, iife, es2019) into the committed `static/js/engine.js`; styles are in `static/css/engine.css`. Colour triage is four large labelled buttons in fixed colour order with a "✓ Your choice" text cue. It works under the production CSP (no inline script or style).

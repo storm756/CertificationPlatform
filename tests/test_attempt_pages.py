@@ -379,7 +379,7 @@ def test_client_projection_is_an_allow_list_with_no_key(learner, make_part):
 
 def test_the_projection_refuses_formats_it_does_not_know():
     with pytest.raises(ValueError):
-        client_projection("hotspot", {}, {})
+        client_projection("not-a-format", {}, {})
 
 
 def test_the_save_response_never_carries_a_score_or_a_key(learner_client, make_part):

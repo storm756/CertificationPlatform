@@ -41,3 +41,12 @@
 - Attempt, review and result pages (htmx, vendored and CSP-safe): autosave, retry when offline, Saved / Saving / Offline pill, count-up timer, question map, mark for review. The result shows score, ✓/✗ and hints, never the correct option. Why: D13, §9.5.
 - Daily `auto_submit_stale_attempts` job in `run_periodic`. Why: §9.3, D27.
 - New dependencies: `django-import-export[xlsx]` and `pydantic`. Why: architecture §3.
+
+## 2026-11-10: Stage 3, interactive engine (13 formats)
+- Added pydantic bodies, allow-list projections, per-attempt random token maps, `clean_response` validation and Decimal scorers for mc, cards, spot, hotspot, sort, match, order, pick, build, settings, dial, chat and crossword; MCQ moved into the same format registry unchanged. Gates fire only on something the learner did. Why: §9.2, §9.6, D13.
+- Scorer parity with the legacy `engine.js`: 128 frozen cases from invented questions (including gates), plus `check_legacy_parity` for the private bank (counts only). Why: Stage 3 done-when.
+- `AttemptItem.format` and a wider numeric score column; `ProgrammeAssessmentKind.MOCK`; "Partly right" on the result page. Why: partial credit.
+- Hotspots: uploaded raster images (Pillow re-encode, metadata stripped, SVG rejected) served only to the attempt's owner, plus numeric regions drawn by the engine. Why: no raw SVG or HTML from content.
+- `import_legacy_interactive` (create-only, drafts, counts only). The 104 legacy challenges validate but are **not loaded**: they have no hints. The 405 Stage 2 MCQs were also only dry-run checked and stay in the source file. Why: §13.2.
+- TypeScript renderer (`engine/`, esbuild bundle `static/js/engine.js`, `static/css/engine.css`) with colour triage as four labelled buttons; saves through the Stage 2 htmx form; chat fetches its next step after the save. Checked in a real browser at 390px and 1366px under the production CSP, axe clean. Why: D20, Stage 3.
+- New dependency: Pillow. Dev dependencies in `tools/`: esbuild, typescript, jsdom.

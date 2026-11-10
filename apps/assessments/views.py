@@ -5,15 +5,19 @@ plain fields (position, answered, flagged). They never pass an AttemptItem, a Qu
 or an option map to a template, so a key can't leak by a template mistake.
 """
 
+import json
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponse
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from apps.accounts.models import Role
+from apps.questions import formats
+from apps.questions.models import QuestionImage
 from apps.questions.projections import client_projection
 from apps.results.policy import PASS_MARK
 
@@ -39,6 +43,10 @@ def _own_attempt(request, pk) -> Attempt:
     )
 
 
+def _items(attempt):
+    return attempt.items.select_related("question_version")
+
+
 def _palette(attempt, current):
     return [
         {
@@ -47,25 +55,23 @@ def _palette(attempt, current):
             "flagged": bool((item.response or {}).get("flag")),
             "current": item.position == current,
         }
-        for item in attempt.items.all()
+        for item in _items(attempt)
     ]
 
 
 def _first_unanswered(attempt) -> int:
-    for item in attempt.items.all():
+    for item in _items(attempt):
         if not item.answered:
             return item.position
     return 1
 
 
 def _question_context(attempt, position):
-    item = get_object_or_404(
-        attempt.items.select_related("question_version__question"), position=position
-    )
+    item = get_object_or_404(_items(attempt), position=position)
     version = item.question_version
     total = attempt.items.count()
-    projection = client_projection(version.question.format, version.body, item.option_map)
-    return {
+    projection = client_projection(item.format, version.body, item.option_map, item.response)
+    context = {
         "attempt": attempt,
         "position": position,
         "total": total,
@@ -75,8 +81,14 @@ def _question_context(attempt, position):
         "prev_pos": position - 1 if position > 1 else None,
         "next_pos": position + 1 if position < total else None,
         "palette": _palette(attempt, position),
-        "answered_count": sum(1 for i in attempt.items.all() if i.answered),
+        "interactive": item.format != "mcq",
     }
+    if item.format != "mcq":
+        context["q_json"] = json.dumps(projection)  # the allow-listed projection, as an attribute
+        context["data_url"] = reverse("attempt_question_data", args=[attempt.pk, position])
+        if item.format == "hotspot" and projection["image"]["available"]:
+            context["image_url"] = reverse("attempt_image", args=[attempt.pk, position])
+    return context
 
 
 # --- intro, start ------------------------------------------------------------------------------
@@ -168,9 +180,25 @@ def answer(request, pk):
     except ValueError:
         return HttpResponse(status=400)
     flag = ("flag" in request.POST) if "flag_present" in request.POST else None
+    response = None
+    if request.POST.get("response"):  # an interactive question's whole answer, as JSON of tokens
+        raw = request.POST["response"]
+        if len(raw) > 20000:
+            return HttpResponse(status=400)
+        try:
+            response = json.loads(raw)
+        except ValueError:
+            return HttpResponse(status=400)
+        if not isinstance(response, dict):
+            return HttpResponse(status=400)
     try:
         services.save_answer(
-            attempt.pk, request.user, position, choice=request.POST.get("choice") or None, flag=flag
+            attempt.pk,
+            request.user,
+            position,
+            choice=request.POST.get("choice") or None,
+            response=response,
+            flag=flag,
         )
     except services.AttemptClosed:
         response = HttpResponse(status=409)
@@ -187,11 +215,11 @@ def review(request, pk):
     if not attempt.is_open:
         return redirect("attempt_result", pk=attempt.pk)
     items = []
-    for item in attempt.items.select_related("question_version"):
+    for item in _items(attempt):
         items.append(
             {
                 "position": item.position,
-                "stem": item.question_version.body["stem"],
+                "stem": formats.label(item.question_version.body),
                 "answered": item.answered,
                 "flagged": bool((item.response or {}).get("flag")),
             }
@@ -228,17 +256,26 @@ def result(request, pk):
     if attempt.status == AttemptStatus.IN_PROGRESS:
         return redirect("attempt_page", pk=attempt.pk)
     rows = []
-    for item in attempt.items.select_related("question_version"):
+    for item in _items(attempt):
         body = item.question_version.body
-        chosen_key = item.option_map["tokens"].get((item.response or {}).get("choice"))
-        chosen_text = next((o["text"] for o in body["options"] if o["id"] == chosen_key), None)
+        your_answer = None
+        if item.format in ("mcq", "mc"):  # the learner's own pick, never the key
+            token = (item.response or {}).get("choice")
+            if item.format == "mcq":
+                key = item.option_map["tokens"].get(token)
+                your_answer = next((o["text"] for o in body["options"] if o["id"] == key), None)
+            else:
+                index = formats.ref_index(item.option_map, token, "options")
+                your_answer = body["options"][index]["text"] if index is not None else None
+        score = item.score if item.score is not None else 0
         rows.append(
             {
                 "position": item.position,
-                "stem": body["stem"],
-                "right": item.score == 1,
-                "answered": chosen_text is not None,
-                "your_answer": chosen_text,
+                "stem": formats.label(body),
+                "right": score == 1,
+                "partial": 0 < score < 1,
+                "answered": item.answered,
+                "your_answer": your_answer,
                 "hint": body.get("hint", ""),
                 "gated": item.gate_flag,
             }
@@ -256,3 +293,30 @@ def result(request, pk):
             "auto": attempt.status == AttemptStatus.AUTO_SUBMITTED,
         },
     )
+
+
+@learner_required
+def question_data(request, pk, position):
+    """The question as JSON for the TypeScript renderer: the same allow-listed projection, nothing
+    more. Chat uses it to fetch the next step after each answer is saved."""
+    attempt = _own_attempt(request, pk)
+    if not attempt.is_open:
+        return JsonResponse({"closed": True}, status=409)
+    context = _question_context(attempt, position)
+    response = JsonResponse(context["q"])
+    response["Cache-Control"] = "no-store"
+    return response
+
+
+@learner_required
+def image(request, pk, position):
+    """A hotspot's picture, only for the learner who has this item in an attempt of their own."""
+    attempt = _own_attempt(request, pk)
+    item = get_object_or_404(_items(attempt), position=position, format="hotspot")
+    image_id = item.question_version.body.get("image_id")
+    picture = QuestionImage.objects.filter(pk=image_id).first()
+    if picture is None:
+        raise Http404
+    response = FileResponse(picture.file.open("rb"), content_type=f"image/{picture.format}")
+    response["Cache-Control"] = "private, max-age=3600"
+    return response

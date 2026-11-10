@@ -87,3 +87,22 @@ class QuestionVersion(models.Model):
 
     def delete(self, *args, **kwargs):
         raise RuntimeError("A QuestionVersion is never deleted.")
+
+
+class QuestionImage(models.Model):
+    """A picture for a hotspot question: an uploaded raster image, validated and re-encoded.
+
+    Content is never raw SVG or HTML (CLAUDE.md "Never"): the picture is a PNG, JPEG or WebP made
+    by apps/questions/images.py (metadata stripped, size limited), and the tappable regions are a
+    list of shapes in the question body, drawn by our own renderer.
+    """
+
+    file = models.FileField(upload_to="question-images/")
+    sha256 = models.CharField(max_length=64, unique=True)
+    format = models.CharField(max_length=5)  # png / jpeg / webp
+    width = models.PositiveIntegerField()
+    height = models.PositiveIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Image {self.pk} ({self.width}x{self.height} {self.format})"
