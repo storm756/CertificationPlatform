@@ -46,7 +46,7 @@
               <h3><a href="{{ row.href }}">{{ m.title }}</a></h3>
               <p><strong>{{ m.shown }}%</strong> {% if m.parts %}{% if m.passed %}<span class="status status--done">{% icon "check-circle" %}{% translate "Pass" %}</span>{% else %}<span class="status status--todo">{% icon "x" %}{% translate "Not yet" %}</span>{% endif %}{% endif %}</p>
               {% include "components/progress_bar.html" with value=m.shown label=m.title %}
-              <ul class="stack">{% for p in m.parts %}<li class="row"><span>{{ p.name }}: <strong>{% if p.attempts %}{{ p.best|floatformat:1 }}%{% else %}—{% endif %}</strong></span><a class="btn btn-sm btn-outline" href="{% url 'assess_intro' p.part_id %}">{% if p.attempts %}{% translate "Retake" %}{% else %}{% translate "Start" %}{% endif %}</a></li>{% empty %}<li class="muted">{% translate "Assessments are being prepared." %}</li>{% endfor %}</ul>
+              <ul class="stack">{% for p in m.parts %}<li class="row"><span>{{ p.name }}: <strong>{% if p.attempts %}{{ p.best_shown }}%{% else %}—{% endif %}</strong></span><a class="btn btn-sm btn-outline" href="{% url 'assess_intro' p.part_id %}">{% if p.attempts %}{% translate "Retake" %}{% else %}{% translate "Start" %}{% endif %}</a></li>{% empty %}<li class="muted">{% translate "Assessments are being prepared." %}</li>{% endfor %}</ul>
             </article>
           {% endwith %}{% endfor %}
         </div>

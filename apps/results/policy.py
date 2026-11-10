@@ -9,6 +9,8 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from decimal import ROUND_HALF_UP, Decimal
 
+from django.db.models import DecimalField, ExpressionWrapper, F, Sum
+
 PASS_MARK = Decimal("50")  # module and final pass mark, D2
 MODULE_PASS = PASS_MARK
 FINAL_PASS = PASS_MARK
@@ -62,6 +64,10 @@ class PartResult:
     answered: bool = False  # a submitted attempt with every question answered (gated ones count)
     attempts: int = 0
 
+    @property
+    def best_shown(self) -> Decimal:
+        return round1(self.best)
+
 
 @dataclass
 class ModuleResult:
@@ -92,6 +98,7 @@ class Result:
     email_verified: bool = True
     active: bool = True
     already_issued: bool = False
+    setup_gaps: list = field(default_factory=list)
     blockers: list = field(default_factory=list)
 
     @property
@@ -126,7 +133,7 @@ class Result:
 
     @property
     def final_unlocked(self) -> bool:  # §10.2
-        return self.parts_all_answered and self.pretest_done
+        return self.parts_all_answered and self.pretest_done and not self.setup_gaps
 
     @property
     def modules_passed(self) -> bool:
@@ -139,7 +146,8 @@ class Result:
     @property
     def eligible(self) -> bool:  # §10.2
         return (
-            self.email_verified
+            not self.setup_gaps
+            and self.email_verified
             and self.active
             and self.modules_passed
             and self.final_passed
@@ -157,9 +165,40 @@ def _counted_parts():
         module__in=modules, counted=True, is_published=True
     ).order_by("module__order", "pk"):
         parts[part.module_id].append(part)
-    # A module with no published counted part is not counted yet (§10.4): it cannot be taken, so it
-    # neither enters the mean nor blocks eligibility.
-    return [m for m in modules if parts[m.pk]], parts
+    return modules, parts, setup_gaps(modules, parts)
+
+
+def setup_gaps(modules, published_parts) -> list[str]:
+    """Course set-up problems that keep the final locked: a counted module with no published
+    counted assessment, or a counted assessment that is not published yet. Learners cannot fix
+    these, and the missing marks must not be silently treated as zero or as "nothing required"."""
+    from apps.assessments.models import AssessmentPart
+
+    unpublished = defaultdict(list)
+    for part in AssessmentPart.objects.filter(module__in=modules, counted=True, is_published=False):
+        unpublished[part.module_id].append(part.name)
+    gaps = []
+    for module in modules:
+        if not published_parts[module.pk]:
+            gaps.append(f"Module {module.number} has no published assessment yet.")
+        elif unpublished[module.pk]:
+            gaps.append(
+                f"Module {module.number}: {', '.join(unpublished[module.pk])} is not published yet."
+            )
+    return gaps
+
+
+def _raw_percent(attempt):
+    """An attempt's percentage from its saved question-level marks, never rounded.
+
+    Attempt.score is stored rounded to one decimal for display, so combining stored scores can
+    push a result across the pass mark (13/15 and 5/38 average 49.91, not 50.0). Attempts that
+    have no saved items (none exist in practice) fall back to the stored score.
+    """
+    total = getattr(attempt, "total_points", None)
+    if total:
+        return HUNDRED * (attempt.earned_points or ZERO) / total
+    return attempt.score
 
 
 def compute_results(user_ids) -> dict:
@@ -170,11 +209,17 @@ def compute_results(user_ids) -> dict:
     from apps.assessments.models import Attempt, AttemptStatus, ProgrammeAssessmentKind
 
     user_ids = list(user_ids)
-    modules, parts_by_module = _counted_parts()
+    modules, parts_by_module, gaps = _counted_parts()
     submitted = (AttemptStatus.SUBMITTED, AttemptStatus.AUTO_SUBMITTED)
     attempts = defaultdict(list)
-    for a in Attempt.objects.filter(user_id__in=user_ids, status__in=submitted).select_related(
-        "programme_assessment"
+    marks = ExpressionWrapper(
+        F("items__score") * F("items__points"),
+        output_field=DecimalField(max_digits=40, decimal_places=20),
+    )
+    for a in (
+        Attempt.objects.filter(user_id__in=user_ids, status__in=submitted)
+        .select_related("programme_assessment")
+        .annotate(earned_points=Sum(marks), total_points=Sum("items__points"))
     ):
         attempts[a.user_id].append(a)
     verified = set(
@@ -191,7 +236,7 @@ def compute_results(user_ids) -> dict:
             result = ModuleResult(module.number, module.title or f"Module {module.number}")
             for part in parts_by_module[module.pk]:
                 tries = [a for a in mine if a.part_id == part.pk]
-                counted = [a.score for a in tries if a.counted and a.score is not None]
+                counted = [_raw_percent(a) for a in tries if a.counted and a.score is not None]
                 result.parts.append(
                     PartResult(
                         part.pk,
@@ -210,12 +255,13 @@ def compute_results(user_ids) -> dict:
         r = Result(
             user_id=uid,
             modules=module_results,
-            final_best=max((a.score for a in finals if a.counted and a.score is not None), default=ZERO),
+            final_best=max((_raw_percent(a) for a in finals if a.counted and a.score is not None), default=ZERO),
             final_attempts=len(finals),
             pretest_done=any(
                 a.programme_assessment_id and a.programme_assessment.kind == ProgrammeAssessmentKind.PRETEST
                 for a in mine
             ),
+            setup_gaps=gaps,
             email_verified=uid in verified,
             active=statuses.get(uid) == UserStatus.ACTIVE,
         )  # fmt: skip
@@ -227,6 +273,10 @@ def compute_results(user_ids) -> dict:
 def blockers(r: Result) -> list[str]:
     """Plain-language reasons the learner is not eligible yet (§10.2)."""
     out = []
+    if r.setup_gaps:
+        out.append(
+            "Course setup is incomplete, so the final stays locked. " + " ".join(r.setup_gaps)
+        )
     if not r.email_verified:
         out.append("Verify your email address.")
     if not r.active:

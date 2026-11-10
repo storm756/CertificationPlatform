@@ -1,6 +1,7 @@
 """Stage 5: results policy, unlock rules, the pre-test, the final, knowledge gain and the dashboard.
 Invented learners and questions only."""
 
+import re
 from decimal import Decimal
 
 import pytest
@@ -45,6 +46,9 @@ def make_parts(numbers=range(1, 10), published=True):
             )
             for name in ("Part A", "Part B")
         ]
+    # Modules without parts here are not part of this test world (counted modules with no published
+    # assessment would be a course-setup gap, which has its own tests below).
+    Module.objects.exclude(number__in=list(numbers)).update(counted=False)
     return parts
 
 
@@ -207,12 +211,42 @@ def test_a_gated_submission_still_counts_as_answered_for_the_unlock(learner):
     assert r.parts_all_answered and r.modules[0].parts[0].best == 0  # answered, but not counted
 
 
-def test_unpublished_parts_do_not_block_the_unlock(learner):
+def test_unpublished_counted_parts_keep_the_final_locked_as_a_setup_problem(learner):
     make_parts([1], published=False)
+    attempt(learner, kind=ProgrammeAssessmentKind.PRETEST)
     r = compute_results([learner.pk])[learner.pk]
+    assert r.setup_gaps and not r.final_unlocked and not r.eligible
+    reasons = programme.final_locked_reasons(learner)
     assert (
-        r.modules == [] and r.parts_all_answered
-    )  # a module with nothing published is not counted yet
+        len(reasons) == 1
+        and "Course setup is incomplete" in reasons[0]
+        and "Module 1" in reasons[0]
+    )
+    with pytest.raises(programme.Locked, match="Course setup is incomplete"):
+        programme.start_programme(learner, "final")
+
+
+def test_a_counted_module_with_no_published_assessment_keeps_the_final_locked(learner):
+    make_parts([1])  # module 1 is fine; module 2 stays counted but has no parts
+    Module.objects.filter(number=2).update(counted=True)
+    answer_all_parts(learner, {1: AssessmentPart.objects.filter(module__number=1)})
+    attempt(learner, kind=ProgrammeAssessmentKind.PRETEST)
+    attempt(learner, kind=ProgrammeAssessmentKind.FINAL, score="95")
+    r = compute_results([learner.pk])[learner.pk]
+    assert not r.final_unlocked and not r.eligible
+    assert any(
+        "Course setup is incomplete" in b and "Module 2 has no published assessment" in b
+        for b in r.blockers
+    )
+    assert any("Course setup is incomplete" in x for x in programme.final_locked_reasons(learner))
+
+
+def test_the_dashboard_explains_that_course_setup_is_incomplete(learner_client, learner):
+    make_parts([1], published=False)
+    learner.profile.pretest_prompted_at = timezone.now()
+    learner.profile.save()
+    html = learner_client.get(reverse("start")).content.decode()
+    assert "Course setup is incomplete" in html and "Locked" in html
 
 
 # --- eligibility and blockers ----------------------------------------------------------------------------
@@ -534,3 +568,91 @@ def test_mentors_are_not_sent_to_the_dashboard(mentor_client):
 
 
 _ = (HINT, rules)
+
+
+# --- review fixes: unrounded combination, pre-test feedback ---------------------------------------------------
+
+
+def scored_attempt(user, part, right, total, number=1):
+    """An attempt with real question-level marks, stored the way submit() stores it (rounded)."""
+    from apps.questions import services as qservices
+
+    module = part.module
+    a = Attempt.objects.create(
+        user=user, part=part, number=number, status=AttemptStatus.SUBMITTED, counted=True,
+        all_answered=True, submitted_at=timezone.now(),
+        score=policy.percent(D(right), D(total)),
+    )  # fmt: skip
+    for i in range(total):
+        q = qservices.create_question(
+            stable_id=f"M{module.number}-R{part.pk}{number}{i:02d}", module=module, pool="module_quiz",
+            body={
+                "stem": f"Invented {i}?",
+                "options": [{"id": f"o{k}", "text": f"Option {k}"} for k in (1, 2, 3, 4)],
+                "correct": "o1", "hint": "h", "gate": {},
+            },
+            tags={"pc": "PC1", "type": "R"},
+        )  # fmt: skip
+        AttemptItem.objects.create(
+            attempt=a,
+            position=i + 1,
+            question_version=q.current_version,
+            points=D(1),
+            option_map={},
+            score=D(1) if i < right else D(0),
+        )
+    return a
+
+
+def test_combined_results_use_unrounded_marks_13_of_15_and_5_of_38(learner):
+    part_a, part_b = make_parts([1])[1]
+    a = scored_attempt(learner, part_a, 13, 15)
+    b = scored_attempt(learner, part_b, 5, 38)
+    assert (a.score, b.score) == (D("86.7"), D("13.2"))  # stored for display, rounded
+    assert (D("86.7") * 50 + D("13.2") * 50) / 100 == D(
+        "49.95"
+    )  # the stored values would round up to a pass
+    module = compute_results([learner.pk])[learner.pk].modules[0]
+    assert module.raw == (50 * (D(100) * 13 / 15) + 50 * (D(100) * 5 / 38)) / 100
+    assert module.shown == D("49.9") and not module.passed
+    result = compute_results([learner.pk])[learner.pk]
+    assert result.modules_shown == D("49.9") and not result.modules_passed and not result.eligible
+    assert any("Module 1 is at 49.9%" in x for x in result.blockers)
+
+
+def test_the_best_attempt_and_the_final_use_unrounded_marks_too(learner):
+    part_a, part_b = make_parts([1])[1]
+    scored_attempt(learner, part_a, 13, 15, number=1)
+    scored_attempt(learner, part_a, 12, 15, number=2)  # 80.0: lower, so 13/15 stays the best
+    scored_attempt(learner, part_b, 5, 38)
+    r = compute_results([learner.pk])[learner.pk]
+    assert r.modules[0].parts[0].best == D(100) * 13 / 15 and r.modules[0].parts[0].best_shown == D(
+        "86.7"
+    )
+
+
+def test_pretest_feedback_is_the_overall_score_only_even_when_a_gate_was_triggered(
+    learner_client, learner, exam
+):
+    a, _ = programme.start_programme(learner, "pretest")
+    Attempt.objects.filter(pk=a.pk).update(
+        status=AttemptStatus.SUBMITTED, score=D("25.0"), counted=False, gate_breached=True,
+        all_answered=True, submitted_at=timezone.now(),
+    )  # fmt: skip
+    html = learner_client.get(reverse("attempt_result", args=[a.pk])).content.decode()
+    assert "25.0%" in html and "Pre-test done" in html
+    for leak in (
+        "Safety gate",
+        "doesn&#x27;t count",
+        "doesn't count",
+        "citizen",
+        "Hint",
+        "Right",
+    ):
+        assert leak not in html, leak
+    assert not re.search(r">\s*counts\s*<", html)
+    intro = learner_client.get(reverse("programme_intro", args=["pretest"])).content.decode()
+    assert "25.0%" in intro and "count" not in intro.split("Your attempts")[1]
+    assert compute_results([learner.pk])[
+        learner.pk
+    ].pretest_done  # a gated pre-test still counts as done

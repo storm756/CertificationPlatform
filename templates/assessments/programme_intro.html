@@ -45,7 +45,7 @@
       <h2>{% translate "Your attempts" %}</h2>
       <ul class="result-list">
         {% for a in attempts %}
-          <li class="result-item"><span><strong>{% blocktranslate with n=a.number %}Attempt {{ n }}{% endblocktranslate %}</strong> · {% if a.is_open %}{% translate "in progress" %}{% else %}{{ a.score }}%{% if not a.counted %} · {% translate "doesn't count" %}{% endif %}{% endif %}</span>
+          <li class="result-item"><span><strong>{% blocktranslate with n=a.number %}Attempt {{ n }}{% endblocktranslate %}</strong> · {% if a.is_open %}{% translate "in progress" %}{% else %}{{ a.score }}%{% if kind == "final" and not a.counted %} · {% translate "doesn't count" %}{% endif %}{% endif %}</span>
             <a class="link" href="{% if a.is_open %}{% url 'attempt_page' a.pk %}{% else %}{% url 'attempt_result' a.pk %}{% endif %}">{% if a.is_open %}{% translate "Resume" %}{% else %}{% translate "View result" %}{% endif %}</a></li>
         {% endfor %}
       </ul>
