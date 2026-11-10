@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071a3d">
+  <meta name="robots" content="noindex">
+  <title>Verify a certificate · Community Cyber First Responder</title>
+  <script src="js/theme-init.js"></script>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/app.css">
+  <script src="js/i18n.js" defer></script>
+  <script src="js/core.js" defer></script>
+  <script src="js/pages/auth.js" defer></script>
+</head>
+<body data-page="verify" data-nav="verify.html">
+  <div data-shell="header"></div>
+  <main id="main" class="section">
+    <div class="shell stack-lg">
+      <div class="scenario" style="justify-self:center">
+        <span class="badge badge--muted">Frontend preview</span>
+        <div class="seg" role="group" aria-label="Verification result">
+          <button type="button" aria-pressed="true" data-vstate="valid">Valid</button>
+          <button type="button" aria-pressed="false" data-vstate="revoked">Revoked</button>
+          <button type="button" aria-pressed="false" data-vstate="erased">Holder details removed</button>
+          <button type="button" aria-pressed="false" data-vstate="none">No code</button>
+        </div>
+      </div>
+
+      <article class="verify-card" aria-labelledby="v-title" data-verify>
+        <div class="verify-logos">
+          <img class="blend" src="assets/shah-anchor-logo.png" width="245" height="254" alt="Shah &amp; Anchor">
+          <span class="brand-rule" aria-hidden="true"></span>
+          <img src="assets/cyberpeace-logo.png" width="284" height="284" alt="CyberPeace">
+        </div>
+        <div>
+          <p class="eyebrow">Certificate verification</p>
+          <h1 id="v-title" style="font-size:clamp(1.7rem,4vw,2.3rem)">Community Cyber First Responder</h1>
+        </div>
+        <div class="verify-status" role="status" data-v-status></div>
+        <dl data-v-details></dl>
+        <p class="muted" style="font-size:.92rem" data-v-note></p>
+      </article>
+      <p class="muted" style="text-align:center;max-width:36rem;margin-inline:auto;font-size:.92rem">Each certificate has its own QR code that opens this page. To protect holders’ privacy, there is no search by name or certificate number.</p>
+    </div>
+  </main>
+  <div data-shell="footer"></div>
+</body>
+</html>
