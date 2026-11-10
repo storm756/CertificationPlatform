@@ -51,12 +51,14 @@ def send_request(consent: GuardianConsent, raw_token: str, *, new_hash: str | No
         "accounts/email/guardian_request.txt",
         {"consent": consent, "url": consent_url(raw_token), "learner": consent.user.profile},
     )
-    send_mail(
+    sent = send_mail(
         f"Please confirm consent for your child to join {settings.PROGRAMME_NAME}",
         body,
         settings.DEFAULT_FROM_EMAIL,
         [consent.guardian_email],
     )
+    if not sent:  # send_mail() returns how many messages went out; 0 means nothing was sent
+        return False
     fields = ["sent_at", "updated_at"]
     consent.sent_at = timezone.now()
     if new_hash:
