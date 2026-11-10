@@ -1,0 +1,7 @@
+{% comment %}Django messages shown as toasts. Visible without JavaScript; ccfr-shell.js lets people close them.{% endcomment %}
+{% load i18n %}
+<div class="toast-region" role="status" aria-live="polite" data-toast-region>
+  {% for message in messages %}
+    <p class="toast" data-toast><span>{{ message }}</span><button type="button" data-toast-close aria-label="{% translate 'Dismiss' %}">&times;</button></p>
+  {% endfor %}
+</div>

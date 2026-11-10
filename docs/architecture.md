@@ -1,8 +1,8 @@
-# CSFR Certification Platform: Architecture v2 (consolidated)
+# Community Cyber First Responder (CCFR) Certification Platform: Architecture v2 (consolidated)
 
 * **Status:** Approved design. This is the single source of truth.
 * **Date:** 2026-11-07
-* **Binding requirements:** `docs/decisions.md`.
+* **Binding requirements:** `docs/decisions.md`. Decisions D20 and later override this document where they differ; Stage 1.5 folded them in (see §22).
 
 ---
 
@@ -61,7 +61,9 @@ an answer key.**
 | --- | --- | --- |
 | Language / framework | Python 3.12, **Django 5.2 LTS** (security fixes until April 2028) | Batteries included and secure defaults |
 | Database | **PostgreSQL 17** | JSONB for question bodies and answers, partial unique indexes, row locks, data stays in India |
-| Pages | Django templates + **HTMX** | Fast on cheap phones, one codebase |
+| Pages | Django templates + **HTMX**, built from one shared `base.html` and reusable component partials (`templates/components/`) | Fast on cheap phones, one codebase |
+| Look | Shared CSS taken from the approved prototype (D20): `static/css/{tokens,fonts,base,app}.css`. No CSS framework. **One light theme, no night mode (D21).** Fonts self-hosted: Baloo 2 and Hind (Latin, Devanagari), Baloo Bhai 2 and Hind Vadodara (Gujarati) | Matches the approved design on a cheap Android phone on 4G |
+| Browser JS | A few small external files in `static/js/`, no framework, no inline scripts or styles (the CSP from Caddy forbids them) | |
 | Interactive engine | Vanilla **TypeScript** → esbuild → one JS file (a port of the teammates' renderer, without scoring) | |
 | Accounts | **django-allauth** (email login, verification, reset, email change, rate limits) + **allauth.mfa** (staff TOTP) | Proven code for the subtle flows |
 | Admin UI | **Django admin themed with django-unfold** + custom actions | No second hand-built admin panel |
@@ -97,10 +99,14 @@ csfr-platform/                (git repo, cloned to D:\ locally — not OneDrive)
 │   └── audit/                AuditEvent, audit()
 ├── engine/                   TypeScript renderer for the 13 formats
 ├── importers/                one-time import of the existing material (booklet text, 405 MCQs, 90 challenges, films)
-├── templates/ static/ locale/
+├── templates/                base.html, components/ (partials), allauth/ (element overrides), one folder per app
+├── locale/                   our own gettext catalogues (hi, mr, gu; Django ships none for Gujarati)
 ├── tests/                    pytest (unit, integration) · Playwright (journeys in §18)
 ├── deploy/                   compose.yml (per-env stack), compose.edge.yml (shared Caddy), compose.dev.yml, Caddyfile, backup/ + restore.sh, server/bootstrap.sh
-└── docs/design/              these documents
+├── static/                   css/ (tokens, fonts, base, app, stage), js/ (ccfr-shell.js, ...), fonts/ (woff2 + OFL licences), img/ (logos, icons.svg sprite)
+├── design-reference/         the approved frontend prototype: the look only, never code to copy (D20)
+├── tools/                    screenshots.mjs (Playwright screenshots + axe), used by every PR
+└── docs/                     these documents (STATUS.md first, then decisions.md)
 ```
 
 ---
@@ -448,7 +454,7 @@ Every displayed number and every comparison uses round1(x) = Decimal(x).quantize
 issue(user)   ← called by auto-issue (on submit) or by the mentor's "Approve batch" action
   lock user row
   re-run compute_results; not eligible → stop
-  certificate_no = next value of a DB sequence → CCIFR-<year>-<centre>-<6-digit serial>
+  certificate_no = next value of a DB sequence → <CERTIFICATE_PREFIX from settings, today CCIFR>-<year>-<centre>-<6-digit serial>   (D28)
   verify_code    = 10 random chars (Crockford base32)
   snapshot = {certificate_name, batch, centre, dates, module %s, final %, overall %, grade, hours, policy_version}
   PDF = WeasyPrint(template, snapshot)  — url_fetcher allows bundled fonts/logos only; English only
@@ -502,7 +508,7 @@ language = user.preferred_language → ?lang switch → Accept-Language → en
 UI strings      → gettext (.po), edited in Rosetta
 content strings → t(key, lang):  key grammar  q:<question>:<field.path>  ·  blk:<unit>:<block>:<field>
                   reviewed + source_hash matches → shown
-                  draft → shown in learning units with a "draft translation" tag; assessments fall back to English
+                  draft → shown in learning units with a "draft translation" tag; assessments fall back to English until a reviewer approves that wording (D24)
                   stale/missing → English
 ```
 
@@ -515,7 +521,7 @@ content strings → t(key, lang):  key grammar  q:<question>:<field.path>  ·  b
 * Answers are stored as tokens and IDs, so switching language mid-attempt is safe.
 * Per-language item statistics flag translations that make a question easier or harder.
 * **Crossword:** practice mode only. Module 8's graded set needs about 6 replacement challenges (teammates).
-* **Fonts:** Baloo 2 + Hind (Latin and Devanagari), Hind Vadodara (Gujarati), self-hosted.
+* **Fonts:** Baloo 2 + Hind (Latin and Devanagari), Baloo Bhai 2 + Hind Vadodara (Gujarati), self-hosted from Google Fonts (OFL, licences next to the files). Added in Stage 1.5.
 * **Certificate:** English only.
 
 ---
@@ -551,7 +557,7 @@ content strings → t(key, lang):  key grammar  q:<question>:<field.path>  ·  b
 
 | Topic | Plan |
 | --- | --- |
-| Pipeline | git push → GitHub Actions (ruff, pytest with Postgres, Playwright) → deploy script over SSH to **staging** → manual check → same script to **prod** (DB dump taken first) |
+| Pipeline | git push → GitHub Actions (ruff, pytest with Postgres, Playwright) → `deploy/deploy.sh staging`, run **by a person** on the server (D29), → manual check → same script for **prod** (DB dump taken first) |
 | Deploy script | `git pull → docker compose build → migrate (as csfr_owner) → collectstatic → restart`. **No content loading.** |
 | Stacks | Staging and prod are two separate instances of `deploy/compose.yml` (own project name, `.env`, DB, volumes). One shared Caddy (`deploy/compose.edge.yml`) owns ports 80/443 and routes by host name over the `csfr-edge` network. See `docs/server-setup.md`. |
 | One-time import | `importers/` loads the existing material once. It refuses to run if any content version was edited in the app. |
@@ -636,3 +642,23 @@ Where the build made a choice the design left open. Each is a one-line change if
 * **Audit**: `apps.audit.AuditEvent` + `audit()`; the migration revokes UPDATE/DELETE/TRUNCATE from `csfr_app` (skipped where that role doesn't exist, e.g. dev and CI).
 * `accounts.rules.may_track_time(user, today)` is the single question the Stage 4 heartbeat must ask (false under 18).
 * After sign-in everyone goes through `/start/`: pending learners to the waiting page, mentors to their batches, learners to a welcome page whose pre-test prompt is a placeholder until Stage 5.
+
+---
+
+## 22. Stage 1.5 implementation notes (UI shell and components)
+
+**Look (D20, D21).** The approved prototype is the visual target. `static/css/tokens.css` holds its colours, type, spacing, radii and shadows; `base.css` and `app.css` are the prototype's CSS with the night-mode rules and the theme toggle removed; `stage.css` is the Learn → Practise → Assess → Certify strip; `fonts.css` declares the self-hosted fonts with `unicode-range` and `font-display: swap`. Gujarati pages switch the font variables to Baloo Bhai 2 (headings) and Hind Vadodara (text) through `:root:lang(gu)`.
+
+**Shell.** `templates/base.html` has the skip link, the cream header (SAKEC and CyberPeace logos, the programme-emblem slot, nav for guest, learner and mentor, language select, user chip, sign out), a footer, toasts (Django messages) and one shared confirm dialog. The header and footer are in `templates/components/`. The programme name always comes from `settings.PROGRAMME_NAME` / `PROGRAMME_SHORT` through the `apps.core.context.programme` context processor (D23, D30). **The emblem slot shows "CCFR" in text** until the emblem artwork exists (`.brand-emblem`). The sign-in page omits the footer, like the prototype's.
+
+**Components** (`templates/components/`, all shown in `/styleguide`): `field` (label, hint, error, password reveal; widget classes and `aria-*` come from the `as_input` filter), `form_errors`, `button`, `badge`, `alert`, `empty_state`, `progress_bar`, `progress_ring`, `module_card`, `stage_strip`, `question_palette`, `save_pill`, `timer`. Icons come from one SVG sprite (`static/img/icons.svg`) through the `{% icon "name" %}` tag. Allauth screens (reset, email, two-factor) are restyled by overriding its element templates in `templates/allauth/elements/`.
+
+**No inline code.** Pages contain no inline `<script>`, `<style>`, `style=""` or `on…=` handlers, so the CSP set by Caddy is unchanged. Progress widths use `data-v`, which `ccfr-shell.js` copies into a CSS custom property. A test scans the rendered pages for this.
+
+**Language wiring.** `POST /i18n/setlang/` is `apps.core.views.set_language`: Django's `set_language` (a cookie for guests) plus `Profile.preferred_language` for signed-in users. `ProfileLanguageMiddleware` applies a signed-in learner's saved language on a device that has no cookie yet. The real translations arrive in Stage 8; until then the language only changes `<html lang>` and the fonts. **Django ships no Gujarati catalogue, and without one `LocaleMiddleware` ignores `gu`.** The project therefore keeps its own `locale/gu` (header only for now) and sets `LOCALE_PATHS`; a test checks that all four languages can be activated.
+
+**Review fixes applied.** The question map shows "marked for review" as a dashed border with a corner flag, and "answered" as a tinted square, so they differ in shape as well as colour. "Answer every question" is a block of running text, never a flex row. Small contrast fixes (the divider text, row-header links, the module-card kicker, the map heading) came from the axe check.
+
+**Sign in** keeps allauth's real login view, form, error messages, CSRF protection and redirects. The prototype's demo "Preview as" box and simulated sign-in were not carried over. "Remember me" stays unchecked by default (a shared phone in a community centre should not stay signed in); the prototype ticked it.
+
+**Checks.** `tools/screenshots.mjs` takes 390px and 1366px screenshots, tests for sideways scroll at 360px and 1366px, and runs `@axe-core/playwright` on the same pages (`cd tools && npm install`, then see the header of the script). It uses Microsoft Edge when installed, so no browser download is needed on Windows.

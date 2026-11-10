@@ -1,0 +1,3 @@
+{% load ccfr %}
+{% if attrs.form.non_field_errors %}{% include "components/form_errors.html" with form=attrs.form %}{% endif %}
+{% for field in attrs.form %}{% if field.is_hidden %}{{ field }}{% else %}{% include "components/field.html" with field=field %}{% endif %}{% endfor %}

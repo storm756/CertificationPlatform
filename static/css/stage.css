@@ -1,0 +1,64 @@
+/* Learn -> Practise -> Assess -> Certify stage strip (from the prototype landing page).
+   Sits on a navy band: wrap it in .on-dark. */
+.stage-explorer { min-width: 0; }
+.stage-explorer__label { margin-bottom: 1rem; color: #a9bfe3; font-size: .95rem; }
+.stage-track { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+.stage-link { display: none; }
+.stage {
+  --stroke: rgba(47, 220, 245, .6); --fill: rgba(11, 40, 88, .88);
+  position: relative; isolation: isolate; min-width: 0; min-height: 8.5rem; padding: 1rem 1.25rem;
+  display: grid; justify-items: center; align-content: center; gap: .2rem;
+  border: 0; background: none; color: var(--white); cursor: pointer;
+  transition: transform var(--med) var(--ease);
+}
+.stage__shape { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; overflow: visible; }
+.stage__shape polygon {
+  fill: var(--fill); stroke: var(--stroke); stroke-width: 2; vector-effect: non-scaling-stroke;
+  transition: fill var(--med) var(--ease), stroke var(--med) var(--ease);
+}
+.stage__icon { width: 2.1rem; height: 2.1rem; margin-bottom: .3rem; stroke-width: 1.75; color: var(--cyan); transition: color var(--med), transform var(--med) var(--ease); }
+.stage__num { font-size: .72rem; font-weight: 700; letter-spacing: .16em; color: #8fb0dd; }
+.stage strong { font-family: var(--font-display); font-weight: 700; font-size: 1.35rem; line-height: 1.1; }
+.stage[aria-selected="true"], .stage[aria-current="step"] { --stroke: var(--teal-bright); --fill: #07535c; }
+.stage[aria-selected="true"] .stage__shape, .stage[aria-current="step"] .stage__shape { filter: drop-shadow(0 0 14px rgba(25, 225, 210, .45)); }
+.stage[aria-selected="true"] .stage__icon, .stage[aria-current="step"] .stage__icon { color: var(--white); }
+.stage[aria-selected="true"] .stage__num, .stage[aria-current="step"] .stage__num { color: var(--teal-bright); }
+.stage.is-done { --stroke: rgba(25, 225, 210, .75); }
+.stage.is-done .stage__icon { color: var(--teal-bright); }
+.stage:focus-visible { outline: none; }
+.stage:focus-visible .stage__shape polygon { stroke: var(--mustard); stroke-width: 3; }
+@media (hover: hover) {
+.stage:hover { transform: translateY(-4px); }
+.stage:hover { --stroke: var(--cyan); }
+.stage:hover .stage__icon { transform: scale(1.06); }
+}
+.stage-panel {
+  position: relative; margin-top: 1.25rem; padding: 1.25rem 1.4rem 1.35rem 1.6rem;
+  background: linear-gradient(180deg, rgba(18, 54, 111, .75), rgba(11, 40, 88, .75));
+  border: 1px solid rgba(47, 220, 245, .25); border-radius: var(--r-md);
+}
+.stage-panel::before { content: ""; position: absolute; left: 0; top: 1rem; bottom: 1rem; width: 4px; border-radius: 0 4px 4px 0; background: var(--teal-bright); }
+.stage-panel__kicker { color: var(--teal-bright); font-size: .8rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.stage-panel__title { margin: .25rem 0 .6rem; font-size: 1.4rem; }
+.stage-panel__list { display: grid; gap: .4rem; color: #d3e1f7; }
+.stage-panel__list li { position: relative; padding-left: 1.5rem; }
+.stage-panel__list li::before {
+  content: ""; position: absolute; left: .15rem; top: .55em; width: .55rem; height: .55rem;
+  border: 2px solid var(--teal-bright); transform: rotate(45deg); border-radius: 2px;
+}
+.stage-panel.is-swapping > * { animation: swap var(--med) var(--ease); }
+@keyframes swap { from { opacity: 0; transform: translateY(6px); } }
+@media (min-width: 48rem) {
+.stage { min-height: 10rem; }
+}
+@media (min-width: 64rem) {
+.stage-track { display: flex; align-items: center; gap: 0; }
+.stage { flex: 1 1 0; min-height: 11rem; padding-inline: 1.6rem; }
+.stage-link { display: block; flex: 0 0 1.25rem; height: 2px; margin-inline: -.6rem; background: rgba(47, 220, 245, .6); position: relative; z-index: 1; }
+.stage-link i { position: absolute; top: 50%; left: 50%; width: .65rem; height: .65rem; border-radius: 50%; transform: translate(-50%, -50%); background: var(--navy); border: 2px solid var(--cyan); }
+.stage-link.is-lit { background: var(--teal-bright); }
+.stage-link.is-lit i { background: var(--teal-bright); border-color: var(--teal-bright); }
+}
+@media (min-width: 80rem) {
+.stage strong { font-size: 1.55rem; }
+}

@@ -1,5 +1,10 @@
 {% extends "base.html" %}
+{% load i18n ccfr %}
+{% block head_title %}{% translate "This link is not valid" %}{% endblock %}
 {% block content %}
-  <h1>This link is not valid</h1>
-  <p>It may have expired (links last 1 hour) or already been used. Ask your mentor for a new one.</p>
+  <div class="state-panel accent--terracotta">
+    <span class="big-icon">{% icon "alert" %}</span>
+    <h1>{% translate "This link is not valid" %}</h1>
+    <p>{% translate "It may have expired (links last 1 hour) or already been used. Ask your mentor for a new one." %}</p>
+  </div>
 {% endblock %}

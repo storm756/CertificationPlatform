@@ -1,0 +1,11 @@
+{% comment %}Errors that belong to the whole form (not one field). Usage: {% include "components/form_errors.html" with form=form %}{% endcomment %}
+{% load i18n ccfr %}
+{% if form.non_field_errors %}
+  <div class="notice notice--danger" role="alert">
+    {% icon "alert" %}
+    <div>
+      <h2 class="notice__title">{% translate "Please check the highlighted fields" %}</h2>
+      <ul>{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    </div>
+  </div>
+{% endif %}

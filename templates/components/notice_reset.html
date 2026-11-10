@@ -1,0 +1,10 @@
+{% load i18n ccfr %}
+<div class="notice notice--mustard" role="status">
+  {% icon "info" %}
+  <div>
+    <p>{% translate "Your password was reset by your mentor. If you did not expect this, tell your trainer." %}</p>
+    <form method="post" action="{% url 'dismiss_reset_notice' %}">{% csrf_token %}
+      <button class="btn btn-outline btn-sm" type="submit">{% translate "OK, got it" %}</button>
+    </form>
+  </div>
+</div>

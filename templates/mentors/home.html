@@ -1,17 +1,28 @@
 {% extends "base.html" %}
-{% block head_title %}My batches{% endblock %}
+{% load i18n ccfr %}
+{% block head_title %}{% translate "My batches" %}{% endblock %}
+{% block page_class %} page--wide{% endblock %}
 {% block content %}
-  <h1>My batches</h1>
-  <p><a class="btn" href="{% url 'mentor_batch_new' %}">Create a batch</a></p>
-  {% for row in rows %}
-    <div class="card">
-      <h2><a href="{% url 'mentor_batch' row.batch.pk %}">{{ row.batch.code }} · {{ row.batch.name }}</a></h2>
-      <p>
-        {% if row.open %}<span class="tag">Registration open</span>{% else %}<span class="tag tag-warn">Registration closed</span>{% endif %}
-        {{ row.seats }} / {{ row.batch.seat_limit }} seats used
-      </p>
+  <div class="section-title">
+    <div>
+      <p class="eyebrow">{% translate "Mentor" %}</p>
+      <h1>{% translate "My batches" %}</h1>
     </div>
-  {% empty %}
-    <p>You do not have any batches yet.</p>
-  {% endfor %}
+    <a class="btn btn-primary" href="{% url 'mentor_batch_new' %}">{% icon "plus" %}{% translate "Create a batch" %}</a>
+  </div>
+  <div class="grid-2">
+    {% for row in rows %}
+      <article class="card card--edge {% if row.open %}accent--teal{% else %}accent--terracotta{% endif %} stack">
+        <h2><a class="link" href="{% url 'mentor_batch' row.batch.pk %}">{{ row.batch.code }} · {{ row.batch.name }}</a></h2>
+        <p>
+          {% if row.open %}{% include "components/badge.html" with text=_("Registration open") colour="teal" icon="unlock" %}{% else %}{% include "components/badge.html" with text=_("Registration closed") colour="terracotta" icon="lock" %}{% endif %}
+          {{ row.seats }} / {{ row.batch.seat_limit }} seats used
+        </p>
+        {% widthratio row.seats row.batch.seat_limit 100 as used_pct %}
+        {% include "components/progress_bar.html" with value=used_pct label=row.batch.name %}
+      </article>
+    {% empty %}
+      {% include "components/empty_state.html" with icon="users" title=_("You do not have any batches yet.") %}
+    {% endfor %}
+  </div>
 {% endblock %}

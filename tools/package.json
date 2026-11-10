@@ -1,0 +1,13 @@
+{
+  "name": "ccfr-check-tools",
+  "private": true,
+  "type": "module",
+  "description": "Screenshots and accessibility checks for pages (Stage 1.5). Dev tools only, not part of the site.",
+  "scripts": {
+    "screenshots": "node screenshots.mjs"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.0",
+    "playwright-core": "^1.49.0"
+  }
+}

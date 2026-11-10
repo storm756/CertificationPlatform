@@ -45,7 +45,7 @@ def send_request(consent: GuardianConsent, raw_token: str) -> bool:
         {"consent": consent, "url": consent_url(raw_token), "learner": consent.user.profile},
     )
     send_mail(
-        "Please confirm consent for your child to join Cyber First Response",
+        f"Please confirm consent for your child to join {settings.PROGRAMME_NAME}",
         body,
         settings.DEFAULT_FROM_EMAIL,
         [consent.guardian_email],

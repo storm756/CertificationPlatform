@@ -1,0 +1,7 @@
+{% comment %}Saved / Saving / Offline pill. state: saved | saving | offline.{% endcomment %}
+{% load i18n ccfr %}
+<span class="save-pill" data-state="{{ state|default:'saved' }}" role="status">
+  {% if state == "saving" %}{% icon "save" "sm" %}<span>{% translate "Saving…" %}</span>
+  {% elif state == "offline" %}{% icon "wifi-off" "sm" %}<span>{% translate "Offline" %}</span>
+  {% else %}{% icon "check" "sm" %}<span>{% translate "Saved" %}</span>{% endif %}
+</span>

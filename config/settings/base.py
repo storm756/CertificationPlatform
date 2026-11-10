@@ -49,6 +49,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -56,6 +57,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
+    "apps.accounts.middleware.ProfileLanguageMiddleware",
     "apps.accounts.middleware.StaffMFARequiredMiddleware",
     "apps.accounts.middleware.LearnerGateMiddleware",
 ]
@@ -73,6 +75,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.core.context.programme",
             ],
         },
     },
@@ -96,7 +99,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"
 SITE_ID = 1
 SITE_DOMAIN = env("SITE_DOMAIN", "localhost:8000")
-SITE_NAME = env("SITE_NAME", "Cyber First Response")
+# The programme name is read from here everywhere, never hard-coded (D23, D30).
+PROGRAMME_NAME = "Community Cyber First Responder"
+PROGRAMME_SHORT = "CCFR"
+SITE_NAME = env("SITE_NAME", PROGRAMME_NAME)
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
@@ -128,7 +134,7 @@ LOGIN_URL = "account_login"
 ACCOUNT_LOGOUT_REDIRECT_URL = "/"
 
 MFA_SUPPORTED_TYPES = ["totp", "recovery_codes"]
-MFA_TOTP_ISSUER = "Cyber First Response"
+MFA_TOTP_ISSUER = PROGRAMME_NAME
 
 # Sessions (architecture 7.4): 14 days; staff are cut to 12 hours by the MFA middleware.
 SESSION_COOKIE_AGE = 14 * 24 * 3600
@@ -142,14 +148,14 @@ EMAIL_PORT = int(env("EMAIL_PORT", "1025"))
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", False)
-DEFAULT_FROM_EMAIL = env(
-    "DEFAULT_FROM_EMAIL", "Cyber First Response <noreply@cyberfirstresponse.io>"
-)
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", f"{PROGRAMME_NAME} <noreply@cyberfirstresponse.io>")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 # --- i18n ---
 LANGUAGE_CODE = "en"
 LANGUAGES = [("en", "English"), ("hi", "हिन्दी"), ("mr", "मराठी"), ("gu", "ગુજરાતી")]
+# Our own catalogues. Django ships none for Gujarati, and without one it ignores "gu" entirely.
+LOCALE_PATHS = [BASE_DIR / "locale"]
 
 # Django lacks language info for Gujarati; without it the admin templates raise KeyError.
 import django.conf.locale  # noqa: E402
@@ -170,8 +176,8 @@ MEDIA_ROOT = Path(env("MEDIA_ROOT", str(BASE_DIR / "media")))
 
 # --- Unfold admin ---
 UNFOLD = {
-    "SITE_TITLE": "CSFR Admin",
-    "SITE_HEADER": "Cyber First Response",
+    "SITE_TITLE": f"{PROGRAMME_SHORT} Admin",
+    "SITE_HEADER": PROGRAMME_NAME,
     "DASHBOARD_CALLBACK": "apps.core.dashboard.dashboard_callback",
 }
 

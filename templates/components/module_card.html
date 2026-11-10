@@ -1,0 +1,10 @@
+{% comment %}Module card (Stage 4 fills it with real data). colour: teal | mustard | terracotta | blue | plum.
+  Usage: {% include "components/module_card.html" with number=1 title="Cyber hygiene" blurb="..." topics=6 hours="3" progress=40 colour="teal" href="#" %}{% endcomment %}
+{% load i18n ccfr %}
+<a class="mod-card card-link mod-card--{{ colour|default:'teal' }}" href="{{ href|default:'#' }}">
+  <span class="mod-card__top"><span class="mod-card__kicker">{% translate "Module" %}</span><span class="mod-card__num">{{ number }}</span></span>
+  <span class="mod-card__body"><h3>{{ title }}</h3>{% if blurb %}<p>{{ blurb }}</p>{% endif %}
+    <span class="mod-card__meta">{% if topics %}<span>{% icon "book" "sm" %}{{ topics }} {% translate "topics" %}</span>{% endif %}{% if hours %}<span>{% icon "clock" "sm" %}≈ {{ hours }} h</span>{% endif %}</span></span>
+  <span class="mod-card__foot"><span class="row"><span>{% translate "Progress" %}</span><span>{{ progress|pct }}%</span></span>
+    {% include "components/progress_bar.html" with value=progress label=title %}</span>
+</a>

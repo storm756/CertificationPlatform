@@ -1,0 +1,4 @@
+{% comment %}Chip / status badge. colour: teal | mustard | terracotta | blue | plum | muted | danger.
+  Usage: {% include "components/badge.html" with text="Registration open" colour="teal" icon="unlock" %}{% endcomment %}
+{% load ccfr %}
+<span class="badge badge--{{ colour|default:'muted' }}">{% if icon %}{% icon icon "sm" %}{% endif %}{{ text }}</span>

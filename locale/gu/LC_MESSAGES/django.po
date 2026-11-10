@@ -1,0 +1,12 @@
+# Gujarati catalogue for the UI. Django ships none, and without a catalogue it refuses to
+# activate "gu". The real strings arrive in Stage 8 (gettext + Rosetta, reviewed by the team).
+msgid ""
+msgstr ""
+"Project-Id-Version: ccfr
+"
+"Content-Type: text/plain; charset=UTF-8
+"
+"Language: gu
+"
+"Plural-Forms: nplurals=2; plural=(n != 1);
+"
