@@ -173,5 +173,8 @@ def test_purge_sends_no_email_and_audits_only_counts(make_user, mailoutbox):
 def test_the_periodic_job_registry_runs_the_purge(make_user):
     stale = make_user(verified=False)
     age(stale, 9)
-    assert periodic.run_due(at(10, 3, 30)) == {"purge_unverified": "ok"}
+    assert periodic.run_due(at(10, 3, 30)) == {
+        "purge_unverified": "ok",
+        "auto_submit_stale_attempts": "ok",
+    }
     assert not User.objects.filter(pk=stale.pk).exists()

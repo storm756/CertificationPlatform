@@ -1,13 +1,20 @@
 {% comment %}Question map. `items` is a list of dicts: {number, answered, flagged, current}.
   Answered = tinted square, marked for review = dashed border plus a corner flag, so shape and
-  colour both differ. Usage: {% include "components/question_palette.html" with items=items %}{% endcomment %}
+  colour both differ. Usage: {% include "components/question_palette.html" with items=items %}
+  Add palette_url="/attempt/1/q/" to make each number a link (htmx loads the question into #question-panel).{% endcomment %}
 {% load i18n %}
 <aside class="palette" aria-label="{% translate 'Question map' %}">
   <h2>{% translate "Question map" %}</h2>
   <div class="palette__grid">
     {% for q in items %}
-      <button type="button" class="{% if q.answered %}is-answered {% endif %}{% if q.flagged %}is-flagged{% endif %}"{% if q.current %} aria-current="true"{% endif %}
-        aria-label="{% blocktranslate with n=q.number %}Question {{ n }}{% endblocktranslate %}{% if q.answered %}, {% translate 'answered' %}{% endif %}{% if q.flagged %}, {% translate 'marked for review' %}{% endif %}">{{ q.number }}</button>
+      {% if palette_url %}
+        <a href="{{ palette_url }}{{ q.number }}/" hx-get="{{ palette_url }}{{ q.number }}/" hx-target="#question-panel"
+          class="{% if q.answered %}is-answered {% endif %}{% if q.flagged %}is-flagged{% endif %}"{% if q.current %} aria-current="true"{% endif %}
+          aria-label="{% blocktranslate with n=q.number %}Question {{ n }}{% endblocktranslate %}{% if q.answered %}, {% translate 'answered' %}{% endif %}{% if q.flagged %}, {% translate 'marked for review' %}{% endif %}">{{ q.number }}</a>
+      {% else %}
+        <button type="button" class="{% if q.answered %}is-answered {% endif %}{% if q.flagged %}is-flagged{% endif %}"{% if q.current %} aria-current="true"{% endif %}
+          aria-label="{% blocktranslate with n=q.number %}Question {{ n }}{% endblocktranslate %}{% if q.answered %}, {% translate 'answered' %}{% endif %}{% if q.flagged %}, {% translate 'marked for review' %}{% endif %}">{{ q.number }}</button>
+      {% endif %}
     {% endfor %}
   </div>
   <div class="palette__legend">

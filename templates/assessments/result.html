@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load i18n ccfr %}
+{% block head_title %}{% translate "Your result" %}{% endblock %}
+{% block page_class %} page--wide{% endblock %}
+{% block content %}
+  <div class="row">
+    {% include "components/progress_ring.html" with value=attempt.score caption=_("score") %}
+    <div class="stack">
+      <p class="eyebrow">{{ part.name }} · {% blocktranslate with n=attempt.number %}Attempt {{ n }}{% endblocktranslate %}</p>
+      <h1>
+        {% if attempt.gate_breached %}{% translate "This attempt doesn't count" %}
+        {% elif passed %}{% translate "Passed. Well done!" %}
+        {% else %}{% translate "Not yet. Review the hints and try again." %}{% endif %}
+      </h1>
+      <p>
+        {% include "components/badge.html" with text=score_text colour="blue" %}
+        {% if attempt.counted %}{% include "components/badge.html" with text=_("counts") colour="teal" icon="check-circle" %}{% endif %}
+        {% if not attempt.all_answered %}{% include "components/badge.html" with text=_("some questions blank") colour="mustard" icon="alert-triangle" %}{% endif %}
+        {% if auto %}{% include "components/badge.html" with text=_("auto-submitted") colour="muted" icon="clock" %}{% endif %}
+      </p>
+    </div>
+  </div>
+
+  {% if attempt.gate_breached %}
+    {% include "components/alert.html" with tone="danger" icon="shield-alert" title=_("Safety gate") text=_("This attempt doesn't count: one of your choices would have put a citizen at risk. Read the hint and retake.") %}
+  {% elif not passed %}
+    {% include "components/alert.html" with icon="info" text=_("You need 50% to pass. Attempts are unlimited and only your best counts, so this won't hold you back.") %}
+  {% endif %}
+  {% if not attempt.all_answered %}
+    {% include "components/alert.html" with tone="mustard" icon="alert-triangle" text=_("This attempt left some questions blank, so it does not count towards unlocking the final.") %}
+  {% endif %}
+
+  <section class="stack" aria-labelledby="qbq">
+    <h2 id="qbq">{% translate "Question by question" %}</h2>
+    <ul class="result-list">
+      {% for r in rows %}
+        <li class="result-item result-item--block">
+          <div class="row">
+            <span class="status status--{% if r.right %}done{% else %}todo{% endif %}">{% if r.right %}{% icon "check-circle" %}{% else %}{% icon "x" %}{% endif %}</span>
+            <strong>{{ r.position }}. {{ r.stem }}</strong>
+          </div>
+          <p class="muted">
+            {% if r.right %}<span class="sr-only">{% translate "Right." %}</span>{% translate "Right" %}{% else %}<span class="sr-only">{% translate "Wrong." %}</span>{% translate "Not quite" %}{% endif %}
+            {% if r.your_answer %} · {% translate "Your answer" %}: {{ r.your_answer }}{% else %} · {% translate "Not answered" %}{% endif %}
+          </p>
+          {% if r.hint %}<p class="callout callout--ask"><span class="callout__label">{% translate "Hint" %}</span> {{ r.hint }}</p>{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <div class="row">
+    <a class="btn btn-outline" href="{% url 'assess_intro' part.pk %}">{% translate "Back to the assessment" %}</a>
+    <form method="post" action="{% url 'assess_start' part.pk %}">{% csrf_token %}
+      <button class="btn btn-primary" type="submit">{% icon "retry" %}{% translate "Try again" %}</button>
+    </form>
+  </div>
+{% endblock %}

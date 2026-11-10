@@ -1,0 +1,33 @@
+{% comment %}One question. `q` comes from client_projection(): the stem and the options as random
+  one-off tokens. Nothing else about the question reaches this template.{% endcomment %}
+{% load i18n ccfr %}
+<form id="answer-form" class="qcard" method="post" action="{% url 'attempt_answer' attempt.pk %}"
+  hx-post="{% url 'attempt_answer' attempt.pk %}" hx-trigger="change" hx-target="#save-status" hx-swap="outerHTML" data-answer-form>
+  {% csrf_token %}
+  <input type="hidden" name="position" value="{{ position }}">
+  <input type="hidden" name="flag_present" value="1">
+  <div class="qcard__meta">
+    <span class="qcard__format">{% icon "square-check" %}{% translate "Multiple choice" %}</span>
+    <span class="muted">{{ position }} / {{ total }}</span>
+  </div>
+  <h2 id="q-title" tabindex="-1">{{ q.stem }}</h2>
+  <p class="qcard__ask">{% translate "Choose one answer." %}</p>
+  <div class="opts" role="radiogroup" aria-labelledby="q-title">
+    {% for o in q.options %}
+      <label class="opt">
+        <input type="radio" name="choice" value="{{ o.token }}"{% if o.token == chosen %} checked{% endif %}>
+        <span class="opt__key" aria-hidden="true">{{ forloop.counter0|letter }}</span>
+        <span class="opt__mark" aria-hidden="true">{% icon "check" %}</span>
+        <span>{{ o.text }}</span>
+      </label>
+    {% endfor %}
+  </div>
+  <label class="check"><input type="checkbox" name="flag"{% if flagged %} checked{% endif %}><span>{% translate "Mark for review" %}</span></label>
+  <noscript><button class="btn btn-primary" type="submit">{% translate "Save answer" %}</button></noscript>
+</form>
+<div class="qnav">
+  {% if prev_pos %}<a class="btn btn-outline" href="{% url 'attempt_question' attempt.pk prev_pos %}" hx-get="{% url 'attempt_question' attempt.pk prev_pos %}" hx-target="#question-panel">{% icon "arrow-left" %}{% translate "Previous" %}</a>{% else %}<span></span>{% endif %}
+  {% if next_pos %}<a class="btn btn-primary" href="{% url 'attempt_question' attempt.pk next_pos %}" hx-get="{% url 'attempt_question' attempt.pk next_pos %}" hx-target="#question-panel">{% translate "Next" %}{% icon "arrow" %}</a>
+  {% else %}<a class="btn btn-primary" href="{% url 'attempt_review' attempt.pk %}">{% translate "Review and submit" %}{% icon "arrow" %}</a>{% endif %}
+</div>
+{% if oob %}{% include "assessments/_palette.html" with oob=True %}{% endif %}

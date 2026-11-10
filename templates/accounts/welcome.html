@@ -11,4 +11,14 @@
     <h2>{% translate "Next: the short pre-test" %}</h2>
     <p>{% translate "The pre-test will appear here soon. It shows what you already know before you start." %}</p>
   </section>
+  {% if parts %}
+    <section class="stack">
+      <h2>{% translate "Assessments" %}</h2>
+      <ul class="result-list">
+        {% for part in parts %}
+          <li class="result-item"><span>{{ part }}</span><a class="btn btn-sm btn-primary" href="{% url 'assess_intro' part.pk %}">{% translate "Open" %}</a></li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
 {% endblock %}
