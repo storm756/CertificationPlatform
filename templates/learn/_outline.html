@@ -1,0 +1,9 @@
+{% load i18n ccfr %}
+<nav class="outline is-open" aria-label="{% translate 'Module outline' %}" data-outline>
+  <div class="outline__body">
+    <div class="outline__head"><div><p class="muted eyebrow">{% translate "Module" %} {{ module.number }}</p><h2><a href="{% url 'learn_module' module.number %}">{{ module.display_title }}</a></h2></div></div>
+    {% for g in groups %}<div class="outline__group"><p>{{ g.title }}</p><ul>
+      {% for r in g.rows %}<li><a href="{% url 'learn_unit' module.number r.unit.slug %}" class="{% if r.done %}is-done{% endif %}"{% if current and r.unit.pk == current.pk %} aria-current="page"{% endif %}>{% if r.done %}{% icon "check-circle" %}{% else %}{% icon r.icon %}{% endif %}<span>{{ r.version.title }}<small>{% if r.done %}{% translate "Completed" %}{% else %}{{ r.unit.nominal_minutes }} {% translate "min" %}{% endif %}</small></span></a></li>{% endfor %}
+    </ul></div>{% endfor %}
+  </div>
+</nav>

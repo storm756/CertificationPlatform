@@ -1,0 +1,31 @@
+/* Lesson pages (Stage 4): inline interactions, film and transcript. Tokens come from tokens.css. */
+.sentinel { height: 1px; }
+.reveal, .myth[data-check] { display: grid; gap: .75rem; padding: 1.25rem; border: 2px solid var(--line); border-radius: var(--r-md); background: var(--surface); margin-block: 1.25rem; }
+.reveal__prompt { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; }
+.reveal__text { padding: .9rem 1rem; border-radius: var(--r-md); background: var(--teal-tint); color: var(--teal-ink); }
+.flips { display: grid; gap: .75rem; margin-block: 1rem; }
+@media (min-width: 40rem) { .flips { grid-template-columns: repeat(2, 1fr); } }
+.flip__btn { display: grid; gap: .4rem; width: 100%; min-height: 48px; padding: 1rem 1.1rem; text-align: left; border: 2px solid var(--line); border-radius: var(--r-md); background: var(--surface); font: inherit; cursor: pointer; }
+.flip__btn[aria-expanded="true"] { background: var(--mustard-tint); border-color: var(--mustard-deep); }
+.flip__front { font-weight: 700; }
+.flip__hint { font-size: .85rem; color: var(--ink-muted); }
+.myth__verdict--right { color: var(--teal-ink); }
+.myth__verdict--wrong { color: var(--terracotta-ink); }
+.urgency--red { background: var(--danger-tint); color: var(--danger); }
+.urgency--amber { background: var(--terracotta-tint); color: var(--terracotta-ink); }
+.urgency--yellow { background: var(--mustard-tint); color: var(--mustard-ink); }
+.urgency--green { background: var(--teal-tint); color: var(--teal-ink); }
+.film__stage { position: relative; aspect-ratio: 16 / 9; width: 100%; border-radius: var(--r-md); overflow: hidden; background: var(--navy); }
+.film__stage img, .film__frame { width: 100%; height: 100%; border: 0; object-fit: cover; }
+.transcript { display: grid; gap: .5rem; }
+.transcript__line { display: grid; gap: .15rem; margin: 0; }
+.transcript__hi { color: var(--ink-muted); }
+.transcript time { color: var(--ink-muted); font-size: .85rem; }
+.grid-cards { display: grid; gap: 1.25rem; }
+@media (min-width: 40rem) { .grid-cards { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 64rem) { .grid-cards { grid-template-columns: repeat(3, 1fr); } }
+.outline__group > p, .outline small { color: var(--ink-muted); }
+.crumbs, .crumbs a, .crumbs span { color: var(--ink); }
+.crumbs span[aria-current] { color: var(--ink-muted); }
+.course > * { min-width: 0; }
+.ssr .s3 { --c: var(--teal-ink); }

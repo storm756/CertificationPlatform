@@ -8,6 +8,10 @@ select = ["E", "F", "W", "I", "B", "UP", "DJ", "S", "SIM"]
 ignore = ["S101"]
 
 [tool.ruff.lint.per-file-ignores]
+"apps/content/legacy.py" = ["E501"]  # long literal rows from the legacy data
+"apps/content/docx.py" = ["E501"]
+"apps/content/blocks.py" = ["E501"]
+"apps/content/views.py" = ["E501"]
 "tests/**" = ["S105", "S106", "E501"]  # long lines in test data and docstrings are fine
 
 [tool.pytest.ini_options]

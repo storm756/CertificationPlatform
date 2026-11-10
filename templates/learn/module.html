@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load static i18n ccfr %}
+{% block head_title %}{{ module.display_title }} · {% translate "Module" %} {{ module.number }}{% endblock %}
+{% block page_class %} page--wide{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/learn.css' %}">{% endblock %}
+{% block content %}
+  <nav class="crumbs" aria-label="{% translate 'Breadcrumb' %}"><a href="{% url 'learn_catalogue' %}">{% translate "Modules" %}</a>{% icon "chevron-right" %}<span aria-current="page">{% translate "Module" %} {{ module.number }}</span></nav>
+  <section class="band band--mod"><div class="stack">
+    <p class="eyebrow eyebrow--cyan">{% translate "Module" %} {{ module.number }} {% translate "of 9" %}</p>
+    <h1>{{ module.display_title }}</h1><p class="lede">{{ module.tagline }}</p>
+    <div class="band-meta"><span>{% icon "clock" %}≈ {{ module.hours }} h</span><span>{% icon "book" %}{{ topics|length }} {% translate "topics" %}</span><span>{% icon "video" %}{% translate "1 film" %}</span><span>{% icon "check-circle" %}{{ done }}/{{ total }} {% translate "units" %} · {{ pct }}%</span></div>
+    {% if next %}<p><a class="btn btn-accent btn-lg" href="{% url 'learn_unit' module.number next.unit.slug %}">{% if done %}{% translate "Continue" %}{% else %}{% translate "Start" %}{% endif %} {% icon "arrow" %}</a></p>{% endif %}
+  </div></section>
+  <div class="course">
+    {% include "learn/_outline.html" %}
+    <div class="stack-lg">
+      <section class="prose"><h2>{% translate "What is it?" %}</h2><p>{{ overview.what }}</p></section>
+      {% if overview.outcomes %}<section class="card"><h3>{% translate "What you will be able to do" %}</h3><ul class="outcomes">{% for o in overview.outcomes %}<li>{% icon "check-circle" %}<span>{{ o }}</span></li>{% endfor %}</ul></section>{% endif %}
+      {% if overview.callout %}<aside class="callout callout--key">{% icon "shield-alert" %}<span class="callout__label">{% translate "Key rule" %}</span><p>{{ overview.callout }}</p></aside>{% endif %}
+      <section><h3>{% translate "Topics in this module" %}</h3><ol class="unit-list">{% for r in topics %}<li><a class="unit-row" href="{% url 'learn_unit' module.number r.unit.slug %}"><span class="unit-row__icon"><strong>{{ forloop.counter }}</strong></span><span><h4>{{ r.version.title }}</h4><small>{{ r.unit.nominal_minutes }} {% translate "min" %}</small></span><span class="status status--{% if r.done %}done{% else %}todo{% endif %}">{% if r.done %}{% icon "check-circle" %}{% else %}{% icon "circle" %}{% endif %}</span></a></li>{% endfor %}</ol></section>
+      {% for g in groups %}{% if g.key != "read" %}<section><h3>{{ g.title }}</h3><div class="unit-list">{% for r in g.rows %}<a class="unit-row" href="{% url 'learn_unit' module.number r.unit.slug %}"><span class="unit-row__icon">{% icon r.icon %}</span><span><h4>{{ r.version.title }}</h4><small>{{ r.unit.nominal_minutes }} {% translate "min" %}</small></span><span class="status status--{% if r.done %}done{% else %}todo{% endif %}">{% if r.done %}{% icon "check-circle" %}{% else %}{% icon "circle" %}{% endif %}</span></a>{% endfor %}</div></section>{% endif %}{% endfor %}
+      {% if overview.stop or overview.save or overview.report %}<section><h3>{% translate "Stop · Save · Report" %}</h3><div class="ssr"><div class="s1"><h4>{% icon "stop" %}{% translate "Stop" %}</h4><ul>{% for i in overview.stop %}<li>{{ i }}</li>{% endfor %}</ul></div><div class="s2"><h4>{% icon "save" %}{% translate "Save" %}</h4><ul>{% for i in overview.save %}<li>{{ i }}</li>{% endfor %}</ul></div><div class="s3"><h4>{% icon "megaphone" %}{% translate "Report" %}</h4><ul>{% for i in overview.report %}<li>{{ i }}</li>{% endfor %}</ul></div></div></section>{% endif %}
+      {% for p in assessments %}<section class="part-card"><h3>{{ p.name }}</h3><p><a class="btn btn-primary" href="{% url 'assess_intro' p.pk %}">{% translate "Go to the assessment" %}</a></p></section>{% endfor %}
+      <nav class="unit-nav" aria-label="{% translate 'Other modules' %}">{% if prev_module %}<a class="btn btn-ghost" href="{% url 'learn_module' prev_module.number %}">{% icon "arrow-left" %}{% translate "Module" %} {{ prev_module.number }}</a>{% else %}<span></span>{% endif %}{% if next_module %}<a class="btn btn-outline" href="{% url 'learn_module' next_module.number %}">{% translate "Module" %} {{ next_module.number }} {% icon "arrow" %}</a>{% endif %}</nav>
+    </div>
+  </div>
+{% endblock %}

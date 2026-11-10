@@ -19,6 +19,8 @@
       <ul class="nav-links">
         {% url 'home' as home_url %}
         <li><a href="{{ home_url }}"{% if request.path == home_url %} aria-current="page"{% endif %}>{% icon "home" %}{% translate "Home" %}</a></li>
+        {% url 'learn_catalogue' as learn_url %}
+        <li><a href="{{ learn_url }}"{% if learn_url in request.path %} aria-current="page"{% endif %}>{% icon "book" %}{% translate "Modules" %}</a></li>
         {% if user.role == 'mentor' or user.role == 'admin' %}
           {% url 'mentor_home' as mentor_url %}
           <li><a href="{{ mentor_url }}"{% if mentor_url in request.path %} aria-current="page"{% endif %}>{% icon "users" %}{% translate "My batches" %}</a></li>
