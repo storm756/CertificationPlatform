@@ -72,14 +72,17 @@ def send_request(consent: GuardianConsent, raw_token: str, *, new_hash: str | No
 def resend(user) -> bool:
     """Email the guardian a fresh link. The old link keeps working until the new one is sent,
     so a full budget or a mail failure never leaves the learner without a working link."""
-    consent = user.guardian_consent
-    if consent.confirmed_at:
-        return False
     raw, hashed = new_token()
     try:
-        return send_request(consent, raw, new_hash=hashed)
+        with transaction.atomic():
+            # One resend at a time per learner: the row stays locked from the email to the save,
+            # so the link in the newest email is always the one stored.
+            consent = GuardianConsent.objects.select_for_update().get(user=user)
+            if consent.confirmed_at:
+                return False
+            return send_request(consent, raw, new_hash=hashed)
     except Exception:
-        logger.exception("guardian resend failed for consent %s", consent.pk)
+        logger.exception("guardian resend failed for user %s", user.pk)
         return False
 
 
@@ -100,9 +103,13 @@ def find_by_token(raw_token: str, now=None) -> GuardianConsent | None:
 
 
 @transaction.atomic
-def confirm(consent: GuardianConsent, typed_name: str, request=None) -> None:
-    now = timezone.now()
-    consent.confirmed_at = now
+def confirm(consent: GuardianConsent, typed_name: str, request=None) -> bool:
+    """Record the guardian's confirmation once. Returns False if it was already confirmed (two
+    overlapping requests, or a double tap): the first one stands and nothing is repeated."""
+    consent = GuardianConsent.objects.select_for_update().select_related("user").get(pk=consent.pk)
+    if consent.confirmed_at:
+        return False
+    consent.confirmed_at = timezone.now()
     consent.confirmed_name = typed_name
     consent.declaration_text_version = DECLARATION_VERSION
     consent.save()
@@ -110,3 +117,4 @@ def confirm(consent: GuardianConsent, typed_name: str, request=None) -> None:
         status=UserStatus.ACTIVE
     )
     audit("guardian.confirmed", target=consent.user, request=request)
+    return True

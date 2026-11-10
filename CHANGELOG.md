@@ -67,3 +67,7 @@
 ## 2026-11-10: Guardian send result and auto-submit count
 - `guardian.send_request()` treats `send_mail()` returning 0 as a failed send: the old link keeps working (and keeps its original expiry), nothing is recorded against the email budget. Why: D16.
 - `submit()` marks the attempt it returns with `just_closed`, decided under the attempt lock. `auto_submit_stale()` counts and audits only the attempts this call really closed, so a manual submit that won the race, or another worker's auto-submit, is not counted. Why: §9.3, audit accuracy.
+
+## 2026-11-10: Guardian confirmation and resend overlap
+- `guardian.confirm()` locks the consent row and rechecks it, so two overlapping confirmations (or a double tap) record and audit once; the first name stands. Why: audit accuracy, D16.
+- `guardian.resend()` holds the consent row from the email to the save, so overlapping resends can no longer leave the newest email with a dead link. Why: D16.

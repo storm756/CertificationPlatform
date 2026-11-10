@@ -317,3 +317,58 @@ def test_submit_reports_whether_this_call_closed_the_attempt(make_part, learner)
     assert first.just_closed is True and again.just_closed is False
     assert again.status == AttemptStatus.SUBMITTED and again.score == first.score
     assert events("attempt.submitted").count() == 1
+
+
+# --- guardian confirmation and resends that overlap ---------------------------------------------
+
+
+def test_a_double_confirmation_is_recorded_and_audited_once(make_user):
+    user, raw = pending_minor(make_user, link_sent_days_ago=1)
+    first_view = guardian.find_by_token(raw)  # two requests both found the link valid...
+    second_view = guardian.find_by_token(raw)
+    guardian.confirm(first_view, "Ravi Desai")
+    guardian.confirm(second_view, "Someone Else")  # ...and both then confirm
+    consent = GuardianConsent.objects.get(user=user)
+    assert consent.confirmed_name == "Ravi Desai"  # the first confirmation stands
+    assert events("guardian.confirmed").count() == 1
+    user.refresh_from_db()
+    assert user.status == UserStatus.ACTIVE
+
+
+@pytest.mark.django_db(transaction=True)
+def test_overlapping_resends_leave_the_last_emailed_link_working(
+    make_user, mailoutbox, monkeypatch
+):
+    import re
+    import threading
+
+    from django.db import close_old_connections, connection
+
+    user, _old = pending_minor(make_user, link_sent_days_ago=1)
+    real_save = GuardianConsent.save
+    state = {"second": None, "first_save_seen": False}
+
+    def second_request():
+        close_old_connections()
+        try:
+            guardian.resend(User.objects.get(pk=user.pk))
+        finally:
+            connection.close()  # this thread's own connection, or the test database cannot drop
+
+    def save_after_a_second_resend_arrives(self, *args, **kwargs):
+        # The first resend has emailed its link and is about to store it. A second resend arrives
+        # right now. If the first holds no lock, the second finishes first and then the first's
+        # (older) link overwrites the second's, leaving the newest email with a dead link.
+        if not state["first_save_seen"]:
+            state["first_save_seen"] = True
+            state["second"] = threading.Thread(target=second_request)
+            state["second"].start()
+            state["second"].join(timeout=1.5)
+        return real_save(self, *args, **kwargs)
+
+    monkeypatch.setattr(GuardianConsent, "save", save_after_a_second_resend_arrives)
+    assert guardian.resend(user) is True
+    state["second"].join(timeout=10)
+    links = [re.search(r"/guardian/([^/\s]+)/", m.body).group(1) for m in mailoutbox]
+    assert len(links) == 2
+    assert guardian.find_by_token(links[-1]) is not None  # the newest email's link works
