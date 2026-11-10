@@ -80,3 +80,9 @@
 
 ## 2026-11-10: Guardian confirmation rechecks the link under the lock
 - `guardian.confirm()` locks the consent row and checks that the link the page was opened with is still the stored one and still live. A link replaced by a resend (or expired, or already used) can no longer approve consent; the consent page then shows the invalid-link page. Why: D16.
+
+## 2026-11-10: Stay on the quiz when an answer was refused; guardian record removed mid-confirm
+- Review and submit (or any plain link on the attempt page) no longer leaves the quiz when an answer was refused, whether the learner clicks after the "Not saved" message or while that save is still in progress. Focus moves to the pill and, if the refused answer belongs to another question, that question is shown. Why: the learner would otherwise submit without knowing an answer was not saved.
+- Closing or reloading the tab while an answer is still waiting to be saved now makes the browser ask first (the outbox lives in the page). Why: no silent loss of answers.
+- `guardian.confirm()` returns False when the consent record was removed between the link lookup and the confirmation (account cleanup), so the consent page shows the existing invalid-link page instead of a server error. It now locks only the consent row. Why: D16, robustness.
+- Tests: browser scenarios in `tools/e2e_save_retry.mjs`; Python regression tests in `tests/test_review_fixes.py`.

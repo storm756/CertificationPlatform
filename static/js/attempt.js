@@ -125,8 +125,16 @@
   }, true);
   /* Leaving the question (Next, Previous, the map): send what is waiting now. */
   document.body.addEventListener("htmx:beforeRequest", flushAll);
-  /* Leaving the page: the request is kept alive by the browser. */
+  /* Leaving the page: the request is kept alive by the browser. If an answer is still waiting
+     (offline, or a save not yet accepted), the browser first asks the learner to stay, because
+     the outbox lives in this page and a reload or a closed tab would lose it. */
   window.addEventListener("pagehide", flushAll);
+  window.addEventListener("beforeunload", function (evt) {
+    if (!pending()) { return; }
+    flushAll();
+    evt.preventDefault();
+    evt.returnValue = "";
+  });
   window.addEventListener("online", function () {
     Object.keys(outbox).forEach(function (key) { outbox[key].delay = FIRST_RETRY; });
     flushAll();
@@ -135,16 +143,33 @@
   window.addEventListener("offline", function () { if (pending()) { refreshPill(); } });
   /* A normal link (such as Review and submit) waits until every answer is saved, so the next
      page shows them. If a save cannot go through, the learner stays here and sees why. */
+  var hasRefused = function () { return Object.keys(refused).length > 0; };
+  var holdHere = function () { // stay on the quiz and point the learner at the "Not saved" pill
+    refreshPill();
+    var el = pill();
+    if (el) { el.setAttribute("tabindex", "-1"); el.focus(); }
+    // If the answer that was not saved belongs to another question, show that question.
+    var waiting = Object.keys(outbox).concat(Object.keys(refused));
+    var current = String(currentPosition());
+    var f = document.querySelector("[data-answer-form]");
+    if (!f || !waiting.length || waiting.indexOf(current) >= 0 || !window.htmx) { return; }
+    var url = f.getAttribute("action").replace(/answer\/$/, "q/" + encodeURIComponent(waiting[0]) + "/");
+    window.htmx.ajax("GET", url, { target: "#question-panel" });
+  };
   root.addEventListener("click", function (evt) {
     var link = evt.target.closest ? evt.target.closest("a[href]") : null;
-    if (!link || link.hasAttribute("hx-get") || evt.defaultPrevented || !pending()) { return; }
+    if (!link || link.hasAttribute("hx-get") || evt.defaultPrevented) { return; }
+    if (!pending() && !hasRefused()) { return; }
     evt.preventDefault();
+    if (!pending()) { holdHere(); return; } // a refused answer: leaving now would hide it
     flushAll();
     var waited = 0;
     var timer = window.setInterval(function () {
       waited += 100;
-      if (!pending()) { window.clearInterval(timer); window.location.assign(link.href); }
-      else if (waited >= 8000) { window.clearInterval(timer); refreshPill(); }
+      if (pending() && waited < 8000) { return; }
+      window.clearInterval(timer);
+      if (pending() || hasRefused()) { holdHere(); return; } // still failing, or refused meanwhile
+      window.location.assign(link.href);
     }, 100);
   });
 

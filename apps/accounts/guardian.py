@@ -111,11 +111,18 @@ def confirm(consent: GuardianConsent, typed_name: str, request=None) -> bool:
     """Record the guardian's confirmation once, for the link `consent` was found with.
 
     The row is locked and the link is checked again: a resend that replaced the link since it was
-    found, a link that has expired, or an earlier confirmation (two overlapping requests, a double
-    tap) all give False and change nothing. The first confirmation stands.
+    found, a record removed since (account cleanup), a link that has expired, or an earlier
+    confirmation (two overlapping requests, a double tap) all give False and change nothing.
     """
     seen_hash = consent.token_hash
-    consent = GuardianConsent.objects.select_for_update().select_related("user").get(pk=consent.pk)
+    consent = (
+        GuardianConsent.objects.select_for_update(of=("self",))
+        .select_related("user")
+        .filter(pk=consent.pk)
+        .first()
+    )
+    if consent is None:  # removed meanwhile: the link is no longer valid
+        return False
     if consent.token_hash != seen_hash or not _is_live(consent, timezone.now()):
         return False
     consent.confirmed_at = timezone.now()
