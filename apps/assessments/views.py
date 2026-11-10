@@ -251,22 +251,14 @@ def submit(request, pk):
 
 @learner_required
 def result(request, pk):
-    """Score, ✓/✗ and the hint for each question. The correct option is never shown (D13)."""
+    """Score, right/wrong and the hint for each question. Neither the correct option nor the
+    learner's own pick is repeated: a right pick would be the correct option's text (D13)."""
     attempt = _own_attempt(request, pk)
     if attempt.status == AttemptStatus.IN_PROGRESS:
         return redirect("attempt_page", pk=attempt.pk)
     rows = []
     for item in _items(attempt):
         body = item.question_version.body
-        your_answer = None
-        if item.format in ("mcq", "mc"):  # the learner's own pick, never the key
-            token = (item.response or {}).get("choice")
-            if item.format == "mcq":
-                key = item.option_map["tokens"].get(token)
-                your_answer = next((o["text"] for o in body["options"] if o["id"] == key), None)
-            else:
-                index = formats.ref_index(item.option_map, token, "options")
-                your_answer = body["options"][index]["text"] if index is not None else None
         score = item.score if item.score is not None else 0
         rows.append(
             {
@@ -275,7 +267,6 @@ def result(request, pk):
                 "right": score == 1,
                 "partial": 0 < score < 1,
                 "answered": item.answered,
-                "your_answer": your_answer,
                 "hint": body.get("hint", ""),
                 "gated": item.gate_flag,
             }

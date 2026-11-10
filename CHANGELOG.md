@@ -50,3 +50,9 @@
 - `import_legacy_interactive` (create-only, drafts, counts only). The 104 legacy challenges validate but are **not loaded**: they have no hints. The 405 Stage 2 MCQs were also only dry-run checked and stay in the source file. Why: §13.2.
 - TypeScript renderer (`engine/`, esbuild bundle `static/js/engine.js`, `static/css/engine.css`) with colour triage as four labelled buttons; saves through the Stage 2 htmx form; chat fetches its next step after the save. Checked in a real browser at 390px and 1366px under the production CSP, axe clean. Why: D20, Stage 3.
 - New dependency: Pillow. Dev dependencies in `tools/`: esbuild, typescript, jsdom.
+
+## 2026-11-10: Stage 3 review fixes
+- Untouched questions now earn zero in manual and automatic submissions. Before, a blank free "tick the right ones" question earned 1/2 and a blank settings question 1/3 (the legacy engine's credit for leaving things alone), which inflated blank and auto-submitted attempts. Real answers, including a deliberate "finished, nothing picked", keep their partial credit. Why: scoring must follow what the learner did.
+- The result page no longer prints "Your answer: ..." (for a right answer that was the correct option's text). It shows right / partly right / not quite and the hint. Why: D13, never repeat the correct option.
+- Regression tests for both.
+

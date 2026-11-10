@@ -41,7 +41,7 @@
           </div>
           <p class="muted">
             {% if r.right %}<span class="sr-only">{% translate "Right." %}</span>{% translate "Right" %}{% elif r.partial %}<span class="sr-only">{% translate "Partly right." %}</span>{% translate "Partly right" %}{% else %}<span class="sr-only">{% translate "Wrong." %}</span>{% translate "Not quite" %}{% endif %}
-            {% if r.your_answer %} · {% translate "Your answer" %}: {{ r.your_answer }}{% elif not r.answered %} · {% translate "Not answered" %}{% endif %}
+            {% if not r.answered %} · {% translate "Not answered" %}{% endif %}
           </p>
           {% if r.hint %}<p class="callout callout--ask"><span class="callout__label">{% translate "Hint" %}</span> {{ r.hint }}</p>{% endif %}
         </li>

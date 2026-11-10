@@ -760,3 +760,141 @@ def test_the_colour_triage_buttons_carry_a_name_and_a_shape_not_just_a_colour():
 
 def test_stage2_services_still_expose_their_names():
     assert services.make_option_map and services.save_answer and schemas.SCHEMAS["mcq"]
+
+
+# --- review fixes: untouched questions earn nothing; results do not repeat the right option ------------------------
+
+BLANK_SCORING_CASES = ["inv-pick-free", "inv-settings", "inv-cards", "inv-mc", "inv-sort"]
+
+
+def stale(attempt, days=8):
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    Attempt.objects.filter(pk=attempt.pk).update(
+        last_saved_at=timezone.now() - timedelta(days=days)
+    )
+
+
+def test_untouched_means_no_response_or_only_the_review_flag_or_empty_values():
+    from apps.assessments.scoring import untouched
+
+    assert untouched(None) and untouched({}) and untouched({"flag": True})
+    assert untouched({"picked": [], "done": False, "flag": True})
+    assert untouched({"values": {}, "done": False}) and untouched("not a dict")
+    assert not untouched({"picked": [], "done": True})  # a deliberate "none of these"
+    assert not untouched({"values": {"tok": 0}})  # a dial left at zero is still a value
+    assert not untouched({"choice": "tok"})
+
+
+def test_the_legacy_credit_for_leaving_things_alone_is_kept_in_the_format_scorers_only():
+    """Untouched free pick scores 1/2 and untouched settings 1/3 in the legacy engine (parity); the
+    attempt scorer must still give a blank item zero."""
+    from apps.assessments.scoring import score_item
+    from apps.questions import formats
+
+    for case_id, legacy in (("inv-pick-free", Decimal(1) / 2), ("inv-settings", Decimal(1) / 3)):
+        fmt, body = invented_body(case_id)
+        m = formats.make_map(fmt, body)
+        assert formats.score(fmt, body, m, None)[0] == legacy
+        assert score_item(fmt, body, m, None) == (Decimal(0), False)
+        assert score_item(fmt, body, m, {"flag": True}) == (Decimal(0), False)
+        assert score_item(fmt, body, m, {}) == (Decimal(0), False)
+
+
+def blank_part(interactive_part):
+    return interactive_part(BLANK_SCORING_CASES)
+
+
+def test_a_manual_submit_of_an_untouched_attempt_scores_zero(learner_client, interactive_part):
+    attempt = start(learner_client, blank_part(interactive_part))
+    learner_client.post(reverse("attempt_submit", args=[attempt.pk]))
+    attempt.refresh_from_db()
+    assert attempt.score == 0 and not attempt.all_answered and not attempt.gate_breached
+    assert {i.score for i in attempt.items.all()} == {0}
+    assert not any(i.gate_flag for i in attempt.items.all())
+    html = learner_client.get(reverse("attempt_result", args=[attempt.pk])).content.decode()
+    assert html.count("Not answered") == len(BLANK_SCORING_CASES)
+    assert "Partly right" not in html
+
+
+def test_an_auto_submit_of_an_untouched_attempt_scores_zero(
+    learner_client, interactive_part, learner
+):
+    attempt = start(learner_client, blank_part(interactive_part))
+    stale(attempt)
+    assert services.auto_submit_stale() == 1
+    attempt.refresh_from_db()
+    assert attempt.status == "auto_submitted"
+    assert attempt.score == 0 and not attempt.gate_breached
+    assert {i.score for i in attempt.items.all()} == {0}
+
+
+def test_flagging_a_question_for_review_alone_does_not_earn_credit(
+    learner_client, interactive_part
+):
+    attempt = start(learner_client, blank_part(interactive_part))
+    for item in attempt.items.all():
+        post_response(learner_client, attempt, item.position, {}, flag=True)
+    stale(attempt)
+    services.auto_submit_stale()
+    attempt.refresh_from_db()
+    assert attempt.score == 0
+    assert {i.score for i in attempt.items.all()} == {0}
+
+
+@pytest.mark.parametrize("auto", [False, True])
+def test_actual_answers_keep_their_credit_while_blank_ones_earn_none(
+    learner_client, interactive_part, auto
+):
+    from apps.questions import formats
+
+    attempt = start(learner_client, blank_part(interactive_part))
+    by_case = {case_of(i): i for i in attempt.items.select_related("question_version")}
+    # right: full marks; a partial card answer: some right, some wrong; a finished free pick with
+    # nothing ticked is a deliberate answer and keeps the legacy half credit
+    post_response(
+        learner_client, attempt, by_case["inv-mc"].position,
+        logical(by_case["inv-mc"], spec_for("inv-mc", by_case["inv-mc"])),
+    )  # fmt: skip
+    cards = by_case["inv-cards"]
+    partial = {0: 0, 3: 0}  # two of four cards answered, both right, no gate card touched
+    post_response(learner_client, attempt, cards.position, logical(cards, {"answers": partial}))
+    free = by_case["inv-pick-free"]
+    post_response(learner_client, attempt, free.position, logical(free, {"picked": []}))
+    if auto:
+        stale(attempt)
+        services.auto_submit_stale()
+    else:
+        learner_client.post(reverse("attempt_submit", args=[attempt.pk]))
+    attempt.refresh_from_db()
+    scores = {case_of(i): i.score for i in attempt.items.select_related("question_version")}
+    assert scores["inv-mc"] == 1
+    assert 0 < scores["inv-cards"] < 1  # partial credit for what was actually answered
+    fmt, body = free.format, free.question_version.body
+    stored = Attempt.objects.get(pk=attempt.pk).items.get(pk=free.pk)
+    assert (
+        scores["inv-pick-free"] == formats.score(fmt, body, stored.option_map, stored.response)[0]
+    )
+    assert scores["inv-pick-free"] > 0
+    assert scores["inv-settings"] == 0 and scores["inv-sort"] == 0  # never touched
+    assert attempt.score > 0
+
+
+def test_the_result_page_gives_status_and_hints_without_the_correct_option_text(
+    learner_client, interactive_part
+):
+    part = interactive_part(["inv-mc", "inv-order"])
+    attempt = start(learner_client, part)
+    mc = next(i for i in attempt.items.all() if case_of(i) == "inv-mc")
+    right_text = _INVENTED["inv-mc"]["opts"][_INVENTED["inv-mc"]["a"]]
+    post_response(learner_client, attempt, mc.position, logical(mc, spec_for("inv-mc", mc)))
+    learner_client.post(reverse("attempt_submit", args=[attempt.pk]))
+    html = unescape(
+        learner_client.get(reverse("attempt_result", args=[attempt.pk])).content.decode()
+    )
+    assert "Right." in html and "Wrong." in html  # the status of each question
+    assert "Invented hint for inv-mc." in html and "Invented hint for inv-order." in html
+    assert right_text not in html  # not even for the question the learner got right
+    assert "Your answer" not in html
