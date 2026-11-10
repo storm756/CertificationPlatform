@@ -656,3 +656,50 @@ def test_pretest_feedback_is_the_overall_score_only_even_when_a_gate_was_trigger
     assert compute_results([learner.pk])[
         learner.pk
     ].pretest_done  # a gated pre-test still counts as done
+
+
+# --- review fix: every counted module needs exactly 100 published counted marks ---------------------------
+
+
+def test_full_marks_on_the_only_50_mark_part_cannot_unlock_the_final(learner):
+    parts = make_parts([1])
+    AssessmentPart.objects.filter(pk=parts[1][1].pk).delete()  # only the 50-mark Part A is left
+    attempt(learner, part=parts[1][0], score="100")
+    attempt(learner, kind=ProgrammeAssessmentKind.PRETEST)
+    attempt(learner, kind=ProgrammeAssessmentKind.FINAL, score="100")
+    r = compute_results([learner.pk])[learner.pk]
+    assert r.parts_all_answered and r.pretest_done  # everything the learner can do is done...
+    assert not r.final_unlocked and not r.eligible  # ...but the course is not fully set up
+    message = "Module 1 has 50 published marks configured; it needs exactly 100."
+    assert any(message in b and "Course setup is incomplete" in b for b in r.blockers)
+    reasons = programme.final_locked_reasons(learner)
+    assert len(reasons) == 1 and message in reasons[0]
+    with pytest.raises(programme.Locked, match="50 published marks"):
+        programme.start_programme(learner, "final")
+
+
+def test_marks_over_100_are_also_a_setup_problem_and_exactly_100_is_fine(learner):
+    parts = make_parts([1])
+    AssessmentPart.objects.filter(pk=parts[1][0].pk).update(marks=60)
+    assert any(
+        "110 published marks" in g for g in compute_results([learner.pk])[learner.pk].setup_gaps
+    )
+    AssessmentPart.objects.filter(pk=parts[1][0].pk).update(marks=50)
+    assert compute_results([learner.pk])[learner.pk].setup_gaps == []
+
+
+def test_an_unpublished_counted_part_and_a_marks_gap_are_both_reported(learner):
+    parts = make_parts([1])
+    AssessmentPart.objects.filter(pk=parts[1][1].pk).update(is_published=False)
+    gaps = compute_results([learner.pk])[learner.pk].setup_gaps
+    assert any("Part B is not published yet" in g for g in gaps)
+    assert any("50 published marks configured" in g for g in gaps)
+
+
+def test_the_dashboard_shows_which_module_has_how_many_marks(learner_client, learner):
+    parts = make_parts([1])
+    AssessmentPart.objects.filter(pk=parts[1][1].pk).delete()
+    learner.profile.pretest_prompted_at = timezone.now()
+    learner.profile.save()
+    html = learner_client.get(reverse("start")).content.decode()
+    assert "Module 1 has 50 published marks configured" in html

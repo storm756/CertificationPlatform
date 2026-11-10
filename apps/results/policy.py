@@ -170,7 +170,8 @@ def _counted_parts():
 
 def setup_gaps(modules, published_parts) -> list[str]:
     """Course set-up problems that keep the final locked: a counted module with no published
-    counted assessment, or a counted assessment that is not published yet. Learners cannot fix
+    counted assessment, a counted assessment that is not published yet, or published counted
+    marks that do not total exactly 100 (D11). Learners cannot fix
     these, and the missing marks must not be silently treated as zero or as "nothing required"."""
     from apps.assessments.models import AssessmentPart
 
@@ -181,10 +182,18 @@ def setup_gaps(modules, published_parts) -> list[str]:
     for module in modules:
         if not published_parts[module.pk]:
             gaps.append(f"Module {module.number} has no published assessment yet.")
-        elif unpublished[module.pk]:
-            gaps.append(
-                f"Module {module.number}: {', '.join(unpublished[module.pk])} is not published yet."
-            )
+        else:
+            if unpublished[module.pk]:
+                gaps.append(
+                    f"Module {module.number}: {', '.join(unpublished[module.pk])} "
+                    "is not published yet."
+                )
+            marks = sum(part.marks for part in published_parts[module.pk])
+            if marks != 100:
+                gaps.append(
+                    f"Module {module.number} has {marks} published marks configured; "
+                    "it needs exactly 100."
+                )
     return gaps
 
 
