@@ -198,15 +198,20 @@ def save_answer(
 
 
 @transaction.atomic
-def submit(attempt_id, user_id, *, auto=False, now=None) -> Attempt:
+def submit(attempt_id, user_id, *, auto=False, now=None, stale_before=None) -> Attempt:
     """Score an attempt with its frozen question versions. Safe to call twice (§9.4).
 
     Locks the user, then the attempt. A second call finds a closed attempt and returns it
     unchanged, so a double tap on Submit gives one result.
+
+    `stale_before` is for the automatic job: once the attempt is locked, the last save is checked
+    again, and an attempt saved since the job looked is left open for the learner.
     """
     User.objects.select_for_update().get(pk=user_id)
     attempt = Attempt.objects.select_for_update().get(pk=attempt_id, user_id=user_id)
     if not attempt.is_open:
+        return attempt
+    if stale_before is not None and attempt.last_saved_at >= stale_before:
         return attempt
 
     items = list(attempt.items.select_related("question_version"))
@@ -256,8 +261,8 @@ def auto_submit_stale(now=None) -> int:
     done = 0
     for attempt_id, user_id in stale:
         try:
-            submit(attempt_id, user_id, auto=True, now=now)
-            done += 1
+            submitted = submit(attempt_id, user_id, auto=True, now=now, stale_before=cutoff)
+            done += 0 if submitted.is_open else 1
         except Exception:
             logger.exception("auto-submit of attempt %s failed", attempt_id)
     if done:

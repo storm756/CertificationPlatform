@@ -1,6 +1,7 @@
 """Guardian consent for 16-17-year-olds (D16). The consent *method* is pending CyberPeace
 legal, so everything that could change lives in this module and the GuardianConsent model."""
 
+import logging
 from datetime import timedelta
 
 from django.conf import settings
@@ -15,6 +16,8 @@ from apps.audit.services import audit
 from . import email_budget
 from .models import GuardianConsent, User, UserStatus
 from .tokens import hash_token, new_token
+
+logger = logging.getLogger(__name__)
 
 DECLARATION_VERSION = "1"
 
@@ -36,8 +39,12 @@ def consent_url(raw_token: str) -> str:
     return f"{scheme}://{settings.SITE_DOMAIN}{reverse('guardian_consent', args=[raw_token])}"
 
 
-def send_request(consent: GuardianConsent, raw_token: str) -> bool:
-    """Email the guardian. Returns False if the daily budget is used up."""
+def send_request(consent: GuardianConsent, raw_token: str, *, new_hash: str | None = None) -> bool:
+    """Email the guardian. Returns False if the daily budget is used up.
+
+    With `new_hash` (a resend) the new link replaces the old one only once the email has really
+    gone out, so a failed send leaves the guardian's earlier link working.
+    """
     if not email_budget.can_send(email_budget.GUARDIAN, consent.guardian_email):
         return False
     body = render_to_string(
@@ -50,21 +57,28 @@ def send_request(consent: GuardianConsent, raw_token: str) -> bool:
         settings.DEFAULT_FROM_EMAIL,
         [consent.guardian_email],
     )
-    email_budget.record(email_budget.GUARDIAN, consent.guardian_email)
+    fields = ["sent_at", "updated_at"]
     consent.sent_at = timezone.now()
-    consent.save(update_fields=["sent_at", "updated_at"])
+    if new_hash:
+        consent.token_hash = new_hash
+        fields.append("token_hash")
+    consent.save(update_fields=fields)
+    email_budget.record(email_budget.GUARDIAN, consent.guardian_email)
     return True
 
 
 def resend(user) -> bool:
-    """Issue a fresh link (the old one stops working) and email it."""
+    """Email the guardian a fresh link. The old link keeps working until the new one is sent,
+    so a full budget or a mail failure never leaves the learner without a working link."""
     consent = user.guardian_consent
     if consent.confirmed_at:
         return False
     raw, hashed = new_token()
-    consent.token_hash = hashed
-    consent.save(update_fields=["token_hash", "updated_at"])
-    return send_request(consent, raw)
+    try:
+        return send_request(consent, raw, new_hash=hashed)
+    except Exception:
+        logger.exception("guardian resend failed for consent %s", consent.pk)
+        return False
 
 
 def find_by_token(raw_token: str, now=None) -> GuardianConsent | None:

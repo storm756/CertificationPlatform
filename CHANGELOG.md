@@ -56,3 +56,10 @@
 - The result page no longer prints "Your answer: ..." (for a right answer that was the correct option's text). It shows right / partly right / not quite and the hint. Why: D13, never repeat the correct option.
 - Regression tests for both.
 
+
+## 2026-11-10: Review fixes (accounts, language, auto-submit)
+- The purge job now locks the email-verification and guardian-consent rows of its candidates and asks the rule again before deleting, so a learner who verifies (or whose guardian confirms) while it runs is kept. Why: DPDP minimisation must not delete someone who just finished signing up.
+- A guardian resend keeps the old link working until the new email has really gone out. A full budget or a mail failure used to replace the link without sending it. Failures are logged and the waiting page says the email could not be sent. Why: D16.
+- A signed-in learner's saved language now wins over a stale language cookie, and choosing a language no longer has its cookie reset to the old saved one on a new device. Why: D7.
+- `submit()` takes `stale_before`: the auto-submit job rechecks the last save under the attempt lock, so a quiz saved after the job looked is left open. Why: §9.3.
+- A regression test for each (`tests/test_review_fixes.py`).

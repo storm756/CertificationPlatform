@@ -44,13 +44,36 @@ def guardian_expired_stale(now):
     )
 
 
+def _lock_verification_rows(user_ids):
+    """Lock the rows that verifying an email or confirming guardian consent writes to.
+
+    A verification that is mid-flight holds its row, so this waits for it; one that starts later
+    waits for us and then finds the account gone. Either way nobody is deleted on a stale read.
+    """
+    list(EmailAddress.objects.select_for_update().filter(user_id__in=user_ids))
+    list(GuardianConsent.objects.select_for_update().filter(user_id__in=user_ids))
+
+
+def _stale_ids(find, now) -> list:
+    """Accounts `find(now)` matches, decided *after* locking their verification rows.
+
+    A first look picks the candidates, the locks are taken, then the rule is asked again: a learner
+    who verified (or whose guardian confirmed) in between no longer matches and is kept.
+    """
+    candidates = list(find(now).values_list("pk", flat=True))
+    if not candidates:
+        return []
+    _lock_verification_rows(candidates)
+    return list(find(now).filter(pk__in=candidates).values_list("pk", flat=True))
+
+
 def purge_stale_accounts(now=None) -> dict:
     """Delete both groups. Returns the counts; the audit event holds counts only."""
     now = now or timezone.now()
     with transaction.atomic():
-        unverified_ids = list(unverified_stale(now).values_list("pk", flat=True))
+        unverified_ids = _stale_ids(unverified_stale, now)
         User.objects.filter(pk__in=unverified_ids).delete()
-        guardian_ids = list(guardian_expired_stale(now).values_list("pk", flat=True))
+        guardian_ids = _stale_ids(guardian_expired_stale, now)
         User.objects.filter(pk__in=guardian_ids).delete()
         counts = {"unverified": len(unverified_ids), "guardian_expired": len(guardian_ids)}
         counts["count"] = counts["unverified"] + counts["guardian_expired"]
