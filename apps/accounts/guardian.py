@@ -86,6 +86,13 @@ def resend(user) -> bool:
         return False
 
 
+def _is_live(consent: GuardianConsent, now) -> bool:
+    base = consent.sent_at or consent.created_at
+    return consent.confirmed_at is None and now <= base + timedelta(
+        days=settings.GUARDIAN_LINK_DAYS
+    )
+
+
 def find_by_token(raw_token: str, now=None) -> GuardianConsent | None:
     """The pending, unexpired consent for this link, or None."""
     now = now or timezone.now()
@@ -94,20 +101,22 @@ def find_by_token(raw_token: str, now=None) -> GuardianConsent | None:
         .filter(token_hash=hash_token(raw_token), confirmed_at__isnull=True)
         .first()
     )
-    if consent is None:
-        return None
-    base = consent.sent_at or consent.created_at
-    if now > base + timedelta(days=settings.GUARDIAN_LINK_DAYS):
+    if consent is None or not _is_live(consent, now):
         return None
     return consent
 
 
 @transaction.atomic
 def confirm(consent: GuardianConsent, typed_name: str, request=None) -> bool:
-    """Record the guardian's confirmation once. Returns False if it was already confirmed (two
-    overlapping requests, or a double tap): the first one stands and nothing is repeated."""
+    """Record the guardian's confirmation once, for the link `consent` was found with.
+
+    The row is locked and the link is checked again: a resend that replaced the link since it was
+    found, a link that has expired, or an earlier confirmation (two overlapping requests, a double
+    tap) all give False and change nothing. The first confirmation stands.
+    """
+    seen_hash = consent.token_hash
     consent = GuardianConsent.objects.select_for_update().select_related("user").get(pk=consent.pk)
-    if consent.confirmed_at:
+    if consent.token_hash != seen_hash or not _is_live(consent, timezone.now()):
         return False
     consent.confirmed_at = timezone.now()
     consent.confirmed_name = typed_name
