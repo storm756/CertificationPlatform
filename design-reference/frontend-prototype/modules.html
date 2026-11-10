@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071a3d">
+  <title>Modules · Community Cyber First Responder</title>
+  <script src="js/theme-init.js"></script>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/app.css">
+  <script src="js/i18n.js" defer></script>
+  <script src="js/core.js" defer></script>
+  <script src="js/course.js" defer></script>
+  <script src="js/pages/catalog.js" defer></script>
+</head>
+<body data-page="catalog" data-nav="modules.html">
+  <div data-shell="header"></div>
+  <main id="main">
+    <section class="band">
+      <div class="shell">
+        <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html" data-i18n="nav.home">Home</a><svg class="icon" aria-hidden="true"><use href="#i-chevron-right"/></svg><span aria-current="page" data-i18n="nav.modules">Modules</span></nav>
+        <p class="eyebrow eyebrow--cyan">Course catalogue</p>
+        <h1>Nine modules. One clear route.</h1>
+        <p class="lede">Each module has a short film, six or seven readings, a handout and practice checks. It ends in a two-part assessment worth 100 marks. Nothing is locked, so start anywhere and come back any time.</p>
+        <div class="band-meta" data-cat-meta></div>
+      </div>
+    </section>
+
+    <section class="shell section">
+      <ol class="journey-map" aria-label="Programme structure" style="margin-bottom:2.5rem">
+        <li class="journey-step"><svg class="icon" aria-hidden="true"><use href="#i-target"/></svg><strong>Pre-test</strong><small>One short attempt, so we can measure what you learn</small></li>
+        <li class="journey-step"><svg class="icon" aria-hidden="true"><use href="#i-layers"/></svg><strong>Modules 1–9</strong><small>Learn, practise, then pass each part with 50%</small></li>
+        <li class="journey-step"><svg class="icon" aria-hidden="true"><use href="#i-flag"/></svg><strong>Capstone</strong><small>Bring it all together (not graded)</small></li>
+        <li class="journey-step"><svg class="icon" aria-hidden="true"><use href="#i-retry"/></svg><strong>Practice mock</strong><small>18 mixed challenges before the final</small></li>
+        <li class="journey-step"><svg class="icon" aria-hidden="true"><use href="#i-award"/></svg><strong>Final + certificate</strong><small>About 60 min. Result = 50% modules + 50% final</small></li>
+      </ol>
+
+      <div class="catalog-tools">
+        <div class="search">
+          <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+          <label class="sr-only" for="cat-search">Search modules and topics</label>
+          <input class="input" id="cat-search" type="search" placeholder="Search modules and topics, e.g. UPI, deepfake, router" autocomplete="off">
+        </div>
+        <div class="seg" role="group" aria-label="Filter modules">
+          <button type="button" aria-pressed="true" data-filter="all">All</button>
+          <button type="button" aria-pressed="false" data-filter="progress" data-i18n="c.inProgress">In progress</button>
+          <button type="button" aria-pressed="false" data-filter="todo" data-i18n="c.notStarted">Not started</button>
+          <button type="button" aria-pressed="false" data-filter="done" data-i18n="c.completed">Completed</button>
+        </div>
+      </div>
+      <p class="sr-only" aria-live="polite" data-cat-count></p>
+      <div class="mod-grid" data-cat-grid></div>
+      <div class="notice" data-cat-empty hidden style="margin-top:1rem"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg><p>No modules match. Try another word, or clear the filter.</p></div>
+
+      <article class="card card--edge" style="--m:var(--plum);margin-top:2.5rem" data-reveal>
+        <div class="row" style="justify-content:space-between">
+          <div style="max-width:44rem">
+            <p class="eyebrow">Before the final</p>
+            <h2 style="font-size:1.7rem">Practice mock: mixed challenges</h2>
+            <p class="muted">Eighteen rounds, two from each module, each one playing differently: fix settings, spot scams, sort evidence, match, order, dial and more. It is practice only, so try it as often as you like.</p>
+          </div>
+          <a class="btn btn-accent" href="assessment.html?part=mock">Try the practice mock <svg class="icon icon-arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        </div>
+      </article>
+    </section>
+  </main>
+  <div data-shell="footer"></div>
+</body>
+</html>

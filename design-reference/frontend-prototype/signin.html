@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071a3d">
+  <title>Sign in · Community Cyber First Responder</title>
+  <script src="js/theme-init.js"></script>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/app.css">
+  <script src="js/i18n.js" defer></script>
+  <script src="js/core.js" defer></script>
+  <script src="js/pages/auth.js" defer></script>
+</head>
+<body data-page="signin" data-nav="signin.html">
+  <div data-shell="header"></div>
+  <main id="main" class="auth">
+    <aside class="auth__aside">
+      <div class="accent-bars" aria-hidden="true"><i></i><i></i><i></i></div>
+      <h2>Pick up right <span>where you left off.</span></h2>
+      <p>Your answers are saved to your account as you go, so you can continue on any device.</p>
+      <ul class="ticks">
+        <li><svg class="icon" aria-hidden="true"><use href="#i-unlock"/></svg> Every module stays open. Revisit any topic, any time.</li>
+        <li><svg class="icon" aria-hidden="true"><use href="#i-retry"/></svg> Unlimited attempts. Your best attempt counts.</li>
+        <li><svg class="icon" aria-hidden="true"><use href="#i-globe"/></svg> English, हिन्दी, मराठी, ગુજરાતી</li>
+      </ul>
+    </aside>
+
+    <div class="auth__main">
+      <!-- Sign in -->
+      <section class="auth-card" data-view="signin" aria-labelledby="signin-title">
+        <div>
+          <p class="eyebrow">Learner &amp; mentor sign-in</p>
+          <h1 id="signin-title" data-i18n="auth.signinTitle">Welcome back</h1>
+          <p class="muted" data-i18n="auth.signinLede">Sign in to continue your certification.</p>
+        </div>
+        <div class="notice notice--danger" role="alert" data-error-summary hidden tabindex="-1">
+          <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>
+          <div><h2 style="font-size:1.05rem">Please check the highlighted fields</h2><ul data-error-list></ul></div>
+        </div>
+        <form novalidate data-signin-form>
+          <div class="field">
+            <label for="email" data-i18n="auth.email">Email address</label>
+            <input class="input" id="email" name="email" type="email" autocomplete="email" inputmode="email" required aria-describedby="email-err">
+            <p class="field-error" id="email-err" hidden></p>
+          </div>
+          <div class="field">
+            <div class="row" style="justify-content:space-between"><label for="password" data-i18n="auth.password">Password</label><a class="link" href="#reset" data-go="reset" data-i18n="auth.forgot">Forgot your password?</a></div>
+            <div class="password-wrap">
+              <input class="input" id="password" name="password" type="password" autocomplete="current-password" required aria-describedby="password-err">
+              <button type="button" data-reveal-pw aria-controls="password" aria-pressed="false" data-i18n="auth.show">Show</button>
+            </div>
+            <p class="field-error" id="password-err" hidden></p>
+          </div>
+          <label class="check"><input type="checkbox" name="remember" checked> <span data-i18n="auth.remember">Keep me signed in for 14 days</span></label>
+          <fieldset class="form-section" style="padding:.9rem 1rem">
+            <legend style="font-size:1rem">Preview as <span class="badge badge--muted">Frontend preview</span></legend>
+            <div class="seg" role="group" aria-label="Preview role">
+              <button type="button" aria-pressed="true" data-role="learner">Learner</button>
+              <button type="button" aria-pressed="false" data-role="mentor">Mentor</button>
+            </div>
+            <p class="muted" style="font-size:.9rem">Any email and password work here. Nothing is sent and passwords are never stored.</p>
+          </fieldset>
+          <button class="btn btn-primary btn-lg btn-block" type="submit"><span data-i18n="nav.signin">Sign in</span> <svg class="icon icon-arrow" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+        </form>
+        <div class="divider"><span data-i18n="auth.noAccount">New here?</span></div>
+        <a class="btn btn-outline btn-block" href="register.html" data-i18n="auth.createAccount">Create your account</a>
+      </section>
+
+      <!-- Reset request -->
+      <section class="auth-card" data-view="reset" hidden aria-labelledby="reset-title">
+        <a class="link" href="#signin" data-go="signin"><svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg> Back to sign in</a>
+        <div>
+          <h1 id="reset-title">Reset your password</h1>
+          <p class="muted">Enter the email you registered with. We’ll send a link that works for one hour.</p>
+        </div>
+        <form novalidate data-reset-form>
+          <div class="field">
+            <label for="reset-email" data-i18n="auth.email">Email address</label>
+            <input class="input" id="reset-email" type="email" autocomplete="email" required aria-describedby="reset-email-err">
+            <p class="field-error" id="reset-email-err" hidden></p>
+          </div>
+          <button class="btn btn-primary btn-lg btn-block" type="submit">Send reset link</button>
+        </form>
+        <div class="notice"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg><p>Can’t reach your email? Your mentor can give you a one-time reset link in person.</p></div>
+      </section>
+
+      <!-- Reset sent: same text whether or not the account exists -->
+      <section class="auth-card" data-view="sent" hidden aria-labelledby="sent-title">
+        <div class="state-panel" style="--c:var(--teal)">
+          <span class="big-icon"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg></span>
+          <h1 id="sent-title" style="font-size:2rem" data-i18n="auth.checkInbox">Check your inbox</h1>
+          <p class="muted">If an account uses that address, a reset link is on its way. It works for one hour. Check your spam folder too.</p>
+          <a class="btn btn-outline" href="#signin" data-go="signin">Back to sign in</a>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

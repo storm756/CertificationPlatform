@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071a3d">
+  <title>Enrol · Community Cyber First Responder</title>
+  <script src="js/theme-init.js"></script>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/app.css">
+  <script src="js/i18n.js" defer></script>
+  <script src="js/core.js" defer></script>
+  <script src="js/pages/auth.js" defer></script>
+</head>
+<body data-page="register" data-nav="register.html">
+  <div data-shell="header"></div>
+  <main id="main" class="auth">
+    <aside class="auth__aside">
+      <div class="accent-bars" aria-hidden="true"><i></i><i></i><i></i></div>
+      <h2>Become a Community Cyber <span>First Responder.</span></h2>
+      <p>Nine modules and a capstone, with practical challenges along the way and a certificate anyone can verify.</p>
+      <ul class="ticks">
+        <li><svg class="icon" aria-hidden="true"><use href="#i-award"/></svg> Pass every module and the final with 50% or more.</li>
+        <li><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg> All marking happens on the server, so it is fair for everyone.</li>
+        <li><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg> Your certificate is downloaded from the site, never emailed.</li>
+      </ul>
+    </aside>
+
+    <div class="auth__main">
+      <div class="auth-card" style="width:min(100%,38rem)">
+        <div class="scenario" aria-label="Preview states">
+          <span class="badge badge--muted">Frontend preview</span>
+          <span>Show:</span>
+          <div class="seg" role="group" aria-label="Registration state">
+            <button type="button" aria-pressed="true" data-reg-state="open">Open batch</button>
+            <button type="button" aria-pressed="false" data-reg-state="closed">Registrations closed</button>
+            <button type="button" aria-pressed="false" data-reg-state="race">Batch fills on submit</button>
+          </div>
+        </div>
+
+        <!-- Closed: no form (architecture §7.2) -->
+        <section data-view="closed" hidden class="state-panel" style="--c:var(--mustard-deep)">
+          <span class="big-icon"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg></span>
+          <h1 style="font-size:2rem">Registrations are closed right now</h1>
+          <p class="muted">Ask your trainer to open registration. Batches open when a mentor or the programme team opens them, sometimes for a set window.</p>
+          <div class="row"><a class="btn btn-primary" href="modules.html">Look around the modules</a><a class="btn btn-outline" href="help.html">Read the FAQ</a></div>
+        </section>
+
+        <!-- Under 16 -->
+        <section data-view="young" hidden class="state-panel" style="--c:var(--plum)">
+          <span class="big-icon"><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg></span>
+          <h1 style="font-size:2rem">You must be 16 or older to join.</h1>
+          <p class="muted">Thank you for your interest in staying safe online. You’re welcome to come back and register once you turn 16. Until then, talk to a trusted adult or teacher about anything that worries you online.</p>
+          <a class="btn btn-outline" href="index.html">Back to home</a>
+        </section>
+
+        <!-- Check inbox: same text even if the email exists (no account fishing) -->
+        <section data-view="inbox" hidden class="state-panel" style="--c:var(--teal)">
+          <span class="big-icon"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg></span>
+          <h1 style="font-size:2rem" data-i18n="auth.checkInbox">Check your inbox</h1>
+          <p class="muted">We’ve sent a verification link to <strong data-inbox-email></strong>. Open it on this device to activate your account. Unverified accounts are removed after 7 days.</p>
+          <div class="notice notice--plum" data-inbox-guardian hidden><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg><p>Because you’re under 18, we’ve also emailed your parent or guardian. Your learning starts once they confirm.</p></div>
+          <div class="row"><button class="btn btn-primary" type="button" data-demo-verify>Preview: open the verification link</button></div>
+        </section>
+
+        <!-- Form -->
+        <section data-view="form" aria-labelledby="reg-title" class="stack">
+          <div>
+            <p class="eyebrow">Free to join</p>
+            <h1 id="reg-title" data-i18n="auth.registerTitle">Enrol in the programme</h1>
+            <p class="muted">Already have an account? <a class="link" href="signin.html" data-i18n="nav.signin">Sign in</a></p>
+          </div>
+          <div class="notice notice--danger" role="alert" data-error-summary hidden tabindex="-1">
+            <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>
+            <div><h2 style="font-size:1.05rem" data-error-title>Please fix these before continuing</h2><ul data-error-list style="list-style:disc;padding-left:1.2rem"></ul></div>
+          </div>
+          <form novalidate data-register-form class="stack">
+            <fieldset class="form-section">
+              <legend>1 · Your certificate name</legend>
+              <div class="field">
+                <label for="cert-name" data-i18n="auth.certName">Full name for your certificate</label>
+                <p class="hint" id="cert-name-hint" data-i18n="auth.certNameHint">This exact name will be printed on your certificate. Check the spelling now.</p>
+                <input class="input" id="cert-name" name="certName" autocomplete="name" maxlength="80" required aria-describedby="cert-name-hint cert-name-err">
+                <p class="field-error" id="cert-name-err" hidden></p>
+              </div>
+              <div class="cert-preview" aria-live="polite"><span class="muted" data-i18n="auth.certPreview">Your certificate will read:</span> <strong data-cert-preview>—</strong></div>
+              <p class="muted" style="font-size:.92rem"><svg class="icon icon--sm" aria-hidden="true"><use href="#i-lock"/></svg> After you register, only your mentor or an admin can change this name.</p>
+            </fieldset>
+
+            <fieldset class="form-section">
+              <legend>2 · Your account</legend>
+              <div class="field">
+                <label for="r-email" data-i18n="auth.email">Email address</label>
+                <p class="hint" id="r-email-hint">Use your own email. It is where we send your verification link.</p>
+                <input class="input" id="r-email" name="email" type="email" autocomplete="email" inputmode="email" required aria-describedby="r-email-hint r-email-err">
+                <p class="field-error" id="r-email-err" hidden></p>
+              </div>
+              <div class="field">
+                <label for="r-password" data-i18n="auth.password">Password</label>
+                <p class="hint" id="r-pw-hint">At least 8 characters. Not only numbers, and not a common password. A short sentence works well.</p>
+                <div class="password-wrap">
+                  <input class="input" id="r-password" name="password" type="password" autocomplete="new-password" required aria-describedby="r-pw-hint r-pw-strength r-password-err">
+                  <button type="button" data-reveal-pw aria-controls="r-password" aria-pressed="false" data-i18n="auth.show">Show</button>
+                </div>
+                <div class="pw-meter" data-pw-meter data-score="0" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+                <p class="hint" id="r-pw-strength" aria-live="polite" data-pw-text></p>
+                <p class="field-error" id="r-password-err" hidden></p>
+              </div>
+              <div class="grid-2">
+                <div class="field">
+                  <label for="r-dob" data-i18n="auth.dob">Date of birth</label>
+                  <input class="input" id="r-dob" name="dob" type="date" required aria-describedby="r-dob-err">
+                  <p class="field-error" id="r-dob-err" hidden></p>
+                </div>
+                <div class="field">
+                  <label for="r-lang" data-i18n="auth.prefLang">Preferred language</label>
+                  <select class="select" id="r-lang" name="lang">
+                    <option value="en">English</option><option value="hi" lang="hi">हिन्दी</option><option value="mr" lang="mr">मराठी</option><option value="gu" lang="gu">ગુજરાતી</option>
+                  </select>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset class="form-section" data-guardian hidden>
+              <legend>Parent or guardian</legend>
+              <p class="muted">Because you are 16 or 17, a parent or guardian needs to confirm by email before your account starts. We don’t track time-on-task for learners under 18.</p>
+              <div class="field">
+                <label for="g-name">Guardian’s full name</label>
+                <input class="input" id="g-name" name="guardianName" autocomplete="off" aria-describedby="g-name-err">
+                <p class="field-error" id="g-name-err" hidden></p>
+              </div>
+              <div class="field">
+                <label for="g-email">Guardian’s email address</label>
+                <input class="input" id="g-email" name="guardianEmail" type="email" inputmode="email" autocomplete="off" aria-describedby="g-email-err">
+                <p class="field-error" id="g-email-err" hidden></p>
+              </div>
+            </fieldset>
+
+            <fieldset class="form-section">
+              <legend>3 · Your batch</legend>
+              <div class="field">
+                <label for="r-batch" data-i18n="auth.batch">Batch</label>
+                <p class="hint" id="r-batch-hint">Only batches accepting registrations are listed.</p>
+                <select class="select" id="r-batch" name="batch" required aria-describedby="r-batch-hint r-batch-err">
+                  <option value="">Choose your batch</option>
+                  <option value="sakec-3">SAKEC Mumbai · Community batch (sample)</option>
+                  <option value="ngo-1">Partner NGO · Weekend batch (sample)</option>
+                </select>
+                <p class="field-error" id="r-batch-err" hidden></p>
+              </div>
+              <p class="muted" style="font-size:.92rem" data-seats><svg class="icon icon--sm" aria-hidden="true"><use href="#i-users"/></svg> Seats and dates come from the batch your mentor opened.</p>
+            </fieldset>
+
+            <fieldset class="form-section">
+              <legend>4 · Consent</legend>
+              <label class="check"><input type="checkbox" name="privacy" required aria-describedby="r-privacy-err"> <span>I have read the <a class="link" href="privacy.html" target="_blank">privacy notice</a> and agree to how my data is used.</span></label>
+              <p class="field-error" id="r-privacy-err" hidden></p>
+              <label class="check"><input type="checkbox" name="terms" required aria-describedby="r-terms-err"> <span>I agree to the <a class="link" href="terms.html" target="_blank">terms of use</a>.</span></label>
+              <p class="field-error" id="r-terms-err" hidden></p>
+            </fieldset>
+
+            <button class="btn btn-accent btn-lg btn-block" type="submit" data-submit>Create my account <svg class="icon icon-arrow" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+          </form>
+        </section>
+      </div>
+    </div>
+  </main>
+  <div data-shell="footer"></div>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071a3d">
+  <title>Guardian consent · Community Cyber First Responder</title>
+  <script src="js/theme-init.js"></script>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/app.css">
+  <script src="js/i18n.js" defer></script>
+  <script src="js/core.js" defer></script>
+  <script src="js/pages/auth.js" defer></script>
+</head>
+<body data-page="guardian">
+  <div data-shell="header"></div>
+  <main id="main">
+    <section class="band">
+      <div class="shell">
+        <div class="scenario" style="background:transparent;border-color:rgba(255,255,255,.3);color:#e4effd;margin-bottom:1.25rem">
+          <span class="badge badge--muted">Frontend preview</span>
+          <div class="seg" role="group" aria-label="Page">
+            <button type="button" aria-pressed="true" data-gview="consent">Guardian’s consent page</button>
+            <button type="button" aria-pressed="false" data-gview="waiting">Learner’s waiting page</button>
+          </div>
+        </div>
+        <h1 data-g-title>Confirm consent for your child</h1>
+        <p class="lede" data-g-lede>A learner aged 16 or 17 named you as their parent or guardian for the Community Cyber First Responder programme.</p>
+      </div>
+    </section>
+
+    <div class="shell section" style="max-width:52rem">
+      <!-- Guardian consent -->
+      <section data-view="consent" class="stack-lg">
+        <div class="card stack">
+          <h2 style="font-size:1.5rem">What the programme is</h2>
+          <p class="muted">A free online course on staying safe online and helping others after a cyber incident, run by CyberPeace Foundation and SAKEC. Learners study nine modules, take assessments, and can earn a certificate.</p>
+        </div>
+        <div class="card stack">
+          <h2 style="font-size:1.5rem">What we collect, and why</h2>
+          <div class="table-wrap" tabindex="0" role="region" aria-label="Data collected">
+            <table class="table">
+              <thead><tr><th scope="col">Information</th><th scope="col">Why we need it</th></tr></thead>
+              <tbody>
+                <tr><td>Name for the certificate, email, date of birth</td><td>To create the account, confirm age and print the certificate</td></tr>
+                <tr><td>Preferred language and batch</td><td>To show the course in their language and link them to their mentor</td></tr>
+                <tr><td>Units completed, answers and scores</td><td>To track progress, mark assessments and decide certificate eligibility</td></tr>
+                <tr><td>Your name and email</td><td>To record your consent</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="notice notice--teal"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg><p><strong>No behavioural tracking for under-18s.</strong> We don’t measure time spent on pages. Study hours are counted only from the units they complete.</p></div>
+          <p class="slot">Content slot: the approved privacy notice for guardians (from CyberPeace legal) goes here.</p>
+        </div>
+
+        <form class="card stack" novalidate data-consent-form>
+          <h2 style="font-size:1.5rem">Your declaration</h2>
+          <div class="field">
+            <label for="cg-name">Your full name</label>
+            <input class="input" id="cg-name" required autocomplete="name" aria-describedby="cg-name-err">
+            <p class="field-error" id="cg-name-err" hidden></p>
+          </div>
+          <label class="check"><input type="checkbox" required data-declare aria-describedby="cg-decl-err"> <span>I am the parent or legal guardian of <strong data-learner-name>this learner</strong>, and I consent to them joining the programme.</span></label>
+          <p class="field-error" id="cg-decl-err" hidden></p>
+          <div class="row">
+            <button class="btn btn-primary btn-lg" type="submit">I give consent</button>
+            <button class="btn btn-ghost" type="button" data-decline>I do not consent</button>
+          </div>
+        </form>
+        <div class="state-panel" data-consent-done hidden style="--c:var(--teal)" role="status">
+          <span class="big-icon"><svg class="icon" aria-hidden="true"><use href="#i-check-circle"/></svg></span>
+          <h2 style="font-size:1.6rem">Thank you. Consent recorded.</h2>
+          <p class="muted">The learner can now start the programme. You can close this page.</p>
+        </div>
+        <div class="state-panel" data-consent-declined hidden style="--c:var(--plum)" role="status">
+          <span class="big-icon"><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg></span>
+          <h2 style="font-size:1.6rem">Understood. No consent given.</h2>
+          <p class="muted">The account will not be activated. You can close this page.</p>
+        </div>
+      </section>
+
+      <!-- Learner waiting -->
+      <section data-view="waiting" hidden class="stack-lg">
+        <div class="state-panel" style="--c:var(--plum)">
+          <span class="big-icon"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg></span>
+          <h2 style="font-size:1.8rem">Waiting for your guardian</h2>
+          <p class="muted">We’ve emailed the parent or guardian you named. Once they open the link and confirm, you’ll be able to start learning. Nothing else is needed from you.</p>
+          <ul class="ticks">
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Your account is created and your certificate name is saved.</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg> Ask them to check their inbox and spam folder.</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg> Stuck? Your mentor can help.</li>
+          </ul>
+          <div class="row">
+            <button class="btn btn-outline" type="button" data-resend>Resend the email</button>
+            <button class="btn btn-primary" type="button" data-demo-approve>Preview: guardian approved</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <div data-shell="footer"></div>
+</body>
+</html>
