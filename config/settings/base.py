@@ -40,7 +40,10 @@ INSTALLED_APPS = [
     "allauth.mfa",
     "simple_history",
     "apps.core",
+    "apps.audit",
     "apps.accounts",
+    "apps.batches",
+    "apps.mentors",
 ]
 
 MIDDLEWARE = [
@@ -54,6 +57,7 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
     "apps.accounts.middleware.StaffMFARequiredMiddleware",
+    "apps.accounts.middleware.LearnerGateMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -117,7 +121,9 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_LOGOUT_ON_GET = False
-LOGIN_REDIRECT_URL = "/"
+ACCOUNT_ADAPTER = "apps.accounts.adapter.BudgetedAccountAdapter"
+ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
+LOGIN_REDIRECT_URL = "start"
 LOGIN_URL = "account_login"
 ACCOUNT_LOGOUT_REDIRECT_URL = "/"
 
@@ -166,6 +172,7 @@ MEDIA_ROOT = Path(env("MEDIA_ROOT", str(BASE_DIR / "media")))
 UNFOLD = {
     "SITE_TITLE": "CSFR Admin",
     "SITE_HEADER": "Cyber First Response",
+    "DASHBOARD_CALLBACK": "apps.core.dashboard.dashboard_callback",
 }
 
 LOGGING = {
@@ -174,3 +181,18 @@ LOGGING = {
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "root": {"handlers": ["console"], "level": env("LOG_LEVEL", "INFO")},
 }
+
+# --- Registration and email budgets (architecture 7.2, 7.3) ---
+# Fold Gmail dots / +tags so one person can't register twice. On in prod, off on staging.
+EMAIL_NORMALISE_ALIASES = env_bool("EMAIL_NORMALISE_ALIASES", False)
+PRIVACY_NOTICE_VERSION = "1"
+REGISTER_RATE = "30/10m"  # per batch, not per IP
+GUARDIAN_LINK_DAYS = 14
+EMAIL_DAILY_BUDGET = {"registration": 150, "reset_guardian": 100, "reserve": 50}
+EMAIL_ALERT_AT = 150
+UNVERIFIED_ACCOUNT_DAYS = 7
+
+# Daily jobs run by `manage.py run_periodic` (D27) at this Asia/Kolkata time (after the backup).
+from datetime import time as _time  # noqa: E402
+
+PERIODIC_RUN_AT = _time(3, 0)

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block head_title %}{{ batch.code }}{% endblock %}
+{% block content %}
+  <p><a href="{% url 'mentor_home' %}">&larr; My batches</a></p>
+  <h1>{{ batch.code }} · {{ batch.name }}</h1>
+  <p>
+    {% if accepting_now %}<span class="tag">Registration open</span>{% else %}<span class="tag tag-warn">Registration closed</span>{% endif %}
+    {{ seats }} / {{ batch.seat_limit }} seats used
+  </p>
+
+  <div class="card">
+    <h2>Registration</h2>
+    <form method="post" action="{% url 'mentor_batch_settings' batch.pk %}" novalidate>{% csrf_token %}
+      {{ form.non_field_errors }}
+      <label class="checkbox-label">{{ form.accepting }} <span>{{ form.accepting.label }}</span></label>
+      <label for="{{ form.opens_at.id_for_label }}">Opens at (optional)</label>
+      {{ form.opens_at }}{{ form.opens_at.errors }}
+      <label for="{{ form.closes_at.id_for_label }}">Closes at (optional)</label>
+      {{ form.closes_at }}{{ form.closes_at.errors }}
+      <label for="{{ form.seat_limit.id_for_label }}">Seats</label>
+      {{ form.seat_limit }}{{ form.seat_limit.errors }}
+      <p class="help">Learners can register only while this is on, inside the window, and while seats are left.</p>
+      <p><button type="submit">Save</button></p>
+    </form>
+  </div>
+
+  <h2>New sign-ups (last 7 days)</h2>
+  {% if new_signups %}
+    <ul>
+      {% for e in new_signups %}
+        <li><a href="{% url 'mentor_learner' e.user_id %}">{{ e.user.profile.certificate_name }}</a>
+          · {{ e.joined_at|date:"d M, H:i" }}
+          {% if not e.email_verified %}<span class="tag tag-warn">email not verified</span>{% endif %}
+          {% if e.user.status == 'pending_guardian' %}<span class="tag tag-warn">waiting for guardian</span>{% endif %}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No new sign-ups.</p>
+  {% endif %}
+
+  <h2>Roster ({{ roster|length }})</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Name</th><th>Email</th><th>Joined</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for e in roster %}
+          <tr>
+            <td><a href="{% url 'mentor_learner' e.user_id %}">{{ e.user.profile.certificate_name }}</a></td>
+            <td>{{ e.user.email }}</td>
+            <td>{{ e.joined_at|date:"d M Y" }}</td>
+            <td>{% if not e.email_verified %}unverified{% elif e.user.status == 'pending_guardian' %}waiting for guardian{% else %}{{ e.user.status }}{% endif %}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

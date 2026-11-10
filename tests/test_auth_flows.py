@@ -22,13 +22,22 @@ def test_healthz_checks_database(client):
     assert response.content == b"ok"
 
 
-def test_signup_verify_login_logout(client):
-    # signup
+def test_signup_verify_login_logout(client, make_batch):
+    # registration (public allauth signup is closed; /register is the only way in)
+    batch = make_batch()
     response = client.post(
-        reverse("account_signup"),
-        {"email": "learner@example.com", "password1": PASSWORD, "password2": PASSWORD},
+        reverse("register"),
+        {
+            "certificate_name": "Lee Learner",
+            "email": "learner@example.com",
+            "password": PASSWORD,
+            "preferred_language": "en",
+            "date_of_birth": "2000-01-01",
+            "batch": batch.pk,
+            "accept_privacy": "on",
+        },
     )
-    assert response.status_code == 302
+    assert response.status_code == 200
     assert len(mail.outbox) == 1
 
     # cannot log in before verifying

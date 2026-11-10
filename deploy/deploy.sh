@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Deploy one stack on the VPS.   Usage: deploy/deploy.sh <staging|prod> [git-ref]
-#   pull -> build -> (prod: DB dump first) -> migrate as csfr_owner -> collectstatic -> restart
+#   pull -> build -> (prod: DB dump first) -> migrate as csfr_owner -> collectstatic -> restart web + tasks
 # Run as the `deploy` user on the server. See docs/server-setup.md for the directory layout:
 #   /srv/csfr/<env>/src       git checkout (cloned by this script on first run)
 #   /srv/csfr/<env>/app.env   web + cron secrets          (never in git)
@@ -71,6 +71,8 @@ echo "==> restarting"
 "${COMPOSE[@]}" up -d --remove-orphans
 docker compose -f compose.edge.yml up -d
 "${COMPOSE[@]}" up -d --wait web
+# tasks runs the same image as web; `up -d` recreates it with the new image, so it never runs old code.
+"${COMPOSE[@]}" up -d tasks
 
 echo "==> done: $ENV_NAME is running $(git -C "$SRC" rev-parse --short HEAD)"
 docker image prune -f >/dev/null

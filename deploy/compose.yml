@@ -1,4 +1,4 @@
-# One application stack (web + db + cron). Staging and prod are two separate instances of this
+# One application stack (web + tasks + db + cron). Staging and prod are two separate instances of this
 # file, each with its own project name, .env file, database, volumes and secrets.
 # deploy/deploy.sh sets CSFR_ENV (staging|prod) and CSFR_ENV_FILE. Do not run by hand.
 #
@@ -43,6 +43,24 @@ services:
       timeout: 6s
       retries: 5
       start_period: 20s
+
+  tasks:
+    # Daily jobs (D27): the same image as web, running `manage.py run_periodic`. Not a job queue.
+    # Connects as the same limited csfr_app role as web (DB_USER in the env file), never csfr_owner.
+    build:
+      context: ..
+    image: csfr-web:${CSFR_ENV}
+    command: ["python", "manage.py", "run_periodic"]
+    user: "10001:10001" # non-root: the image's `app` user
+    env_file: ${CSFR_ENV_FILE:?set by deploy.sh}
+    restart: unless-stopped
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    depends_on:
+      db:
+        condition: service_healthy
 
   db:
     image: postgres:17

@@ -56,3 +56,29 @@ def test_staff_session_is_limited_to_12_hours(client, settings):
     _login(client, staff)
     client.get(reverse("mfa_activate_totp"))
     assert client.session.get_expiry_age() <= settings.STAFF_SESSION_AGE
+
+
+@pytest.mark.parametrize("role", ["mentor", "admin"])
+def test_mentor_or_admin_without_totp_is_redirected_to_set_it_up(client, role):
+    # Mentors use the mentor pages, not Django admin, so is_staff is False for them.
+    user = User.objects.create_user("m@example.com", "a-long-password-1", role=role)
+    assert not user.is_staff
+    _login(client, user)
+    for path in ("/mentor/", "/start/", "/"):
+        response = client.get(path)
+        assert response.status_code == 302, path
+        assert response["Location"] == reverse("mfa_activate_totp"), path
+
+
+def test_mentor_with_totp_reaches_the_mentor_pages(client):
+    mentor = User.objects.create_user("m@example.com", "a-long-password-1", role="mentor")
+    _login(client, mentor)
+    Authenticator.objects.create(user=mentor, type=Authenticator.Type.TOTP, data={"secret": "x"})
+    assert client.get("/mentor/").status_code == 200
+
+
+def test_mentor_session_is_limited_to_12_hours(client, settings):
+    mentor = User.objects.create_user("m@example.com", "a-long-password-1", role="mentor")
+    _login(client, mentor)
+    client.get(reverse("mfa_activate_totp"))
+    assert client.session.get_expiry_age() <= settings.STAFF_SESSION_AGE

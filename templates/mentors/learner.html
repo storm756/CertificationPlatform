@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block head_title %}{{ learner.profile.certificate_name }}{% endblock %}
+{% block content %}
+  <p><a href="{% url 'mentor_batch' enrolment.batch_id %}">&larr; {{ enrolment.batch.code }}</a></p>
+  <h1>{{ learner.profile.certificate_name }}</h1>
+  <p>{{ learner.email }} · batch {{ enrolment.batch.code }}</p>
+
+  <div class="card">
+    <h2>Certificate name</h2>
+    <p class="help">The change is logged.</p>
+    <form method="post" action="{% url 'mentor_learner_name' learner.pk %}" novalidate>{% csrf_token %}
+      {{ name_form.non_field_errors }}
+      {{ name_form.certificate_name }}{{ name_form.certificate_name.errors }}
+      <p><button type="submit">Change name</button></p>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Move to another batch</h2>
+    {% if move_form.fields.batch.queryset %}
+      <form method="post" action="{% url 'mentor_learner_move' learner.pk %}">{% csrf_token %}
+        {{ move_form.batch.errors }}{{ move_form.batch }}
+        <p><button type="submit">Move</button></p>
+      </form>
+    {% else %}
+      <p>You have no other batch to move this learner to.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>One-time password reset link</h2>
+    <p class="help">Valid for 1 hour. Using it signs the learner out everywhere and blocks an email change for 7 days.</p>
+    <form method="post" action="{% url 'mentor_learner_reset_link' learner.pk %}">{% csrf_token %}
+      <button class="btn-danger" type="submit">Create link</button>
+    </form>
+  </div>
+{% endblock %}

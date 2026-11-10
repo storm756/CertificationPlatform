@@ -28,13 +28,36 @@ services:
       db:
         condition: service_healthy
 
+  tasks:
+    # Daily jobs (D27): same image and code as web, running the periodic loop.
+    build:
+      context: ..
+      args:
+        REQUIREMENTS: requirements-dev.txt
+    command: python manage.py run_periodic
+    # Connects as csfr_app (the limited runtime role), like production. The role is created by
+    # the db service's init scripts, so an existing dev database needs `down -v` once.
+    environment:
+      <<: *web-env
+      DB_USER: csfr_app
+      DB_PASSWORD: dev
+    volumes:
+      - ..:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
   db:
     image: postgres:17
     environment:
       POSTGRES_PASSWORD: dev
       POSTGRES_DB: csfr
+      DB_OWNER_PASSWORD: dev # used by init-roles.sh, same script as production
+      DB_APP_PASSWORD: dev
     volumes:
       - dev-db:/var/lib/postgresql/data
+      - ./db/init-roles.sh:/docker-entrypoint-initdb.d/10-init-roles.sh:ro
+      - ./db/dev-grants.sh:/docker-entrypoint-initdb.d/20-dev-grants.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d csfr"]
       interval: 3s

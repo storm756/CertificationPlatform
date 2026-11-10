@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block head_title %}Registration closed{% endblock %}
+{% block content %}
+  <h1>Registrations are closed right now</h1>
+  <p>Ask your trainer to open registration.</p>
+  <p><a href="{% url 'account_login' %}">Already registered? Sign in</a></p>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block head_title %}My batches{% endblock %}
+{% block content %}
+  <h1>My batches</h1>
+  <p><a class="btn" href="{% url 'mentor_batch_new' %}">Create a batch</a></p>
+  {% for row in rows %}
+    <div class="card">
+      <h2><a href="{% url 'mentor_batch' row.batch.pk %}">{{ row.batch.code }} · {{ row.batch.name }}</a></h2>
+      <p>
+        {% if row.open %}<span class="tag">Registration open</span>{% else %}<span class="tag tag-warn">Registration closed</span>{% endif %}
+        {{ row.seats }} / {{ row.batch.seat_limit }} seats used
+      </p>
+    </div>
+  {% empty %}
+    <p>You do not have any batches yet.</p>
+  {% endfor %}
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block head_title %}Guardian consent{% endblock %}
+{% block content %}
+  <h1>Guardian consent</h1>
+  <p><strong>{{ learner.certificate_name }}</strong> has asked to join the Community Cyber First Responder programme by CyberPeace Foundation and SAKEC. They are under 18, so we need your consent.</p>
+  <div class="card">
+    <h2>What we collect, and why</h2>
+    <ul>
+      <li>Name, email, date of birth and preferred language: to run the course and print the certificate.</li>
+      <li>Quiz and exam answers and scores: to grade the learner and decide the certificate.</li>
+      <li>We do <strong>not</strong> track time spent or behaviour for under-18s.</li>
+    </ul>
+    <p class="help">Full privacy notice: <a href="{% url 'privacy' %}">read it here</a>. Data is kept for 3 years after the programme ends.</p>
+  </div>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <label for="{{ form.guardian_name.id_for_label }}">{{ form.guardian_name.label }}</label>
+    {{ form.guardian_name }}{{ form.guardian_name.errors }}
+    <label class="checkbox-label">{{ form.declaration }} <span>{{ form.declaration.label }}</span></label>
+    {{ form.declaration.errors }}
+    <p><button type="submit">I consent</button></p>
+  </form>
+{% endblock %}

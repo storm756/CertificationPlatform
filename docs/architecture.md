@@ -41,6 +41,7 @@
 │   │                                                                                   │
 │ PostgreSQL 17 (private network only; two roles: csfr_owner for migrations,            │
 │                csfr_app for runtime)                                                  │
+│ tasks container ── same image as web; `run_periodic` daily jobs (D27), as csfr_app     │
 │ cron container ── hourly encrypted DB dump + nightly media → off-site (write-only)     │
 │ (staging = same images, own DB + own secrets + mail sink)                             │
 └───────────────────────────────────────────────────────────────────────────────────────┘
@@ -73,7 +74,7 @@ an answer key.**
 | Video | **YouTube** unlisted, privacy-enhanced embed, IFrame Player API | D18, §8.2 |
 | Ops | Docker Compose, **Caddy**, sentry-sdk, an external uptime pinger | |
 
-**Not used:** Redis, Celery, a background worker, Wagtail, a React SPA, JWT. Each was considered and rejected; the review history has the reasons.
+**Not used:** Redis, Celery, a job queue, Wagtail, a React SPA, JWT. Each was considered and rejected; the review history has the reasons. The one background process is the `tasks` loop (D27): the web image running `manage.py run_periodic`, which only runs a few daily jobs. It is not a queue.
 
 ---
 
@@ -614,3 +615,24 @@ Rules that follow:
 ## 20. Build order
 
 See `docs/build-stages.md` (stages 0–10).
+
+---
+
+## 21. Stage 1 implementation notes (accounts, batches, registration)
+
+Where the build made a choice the design left open. Each is a one-line change if the team decides otherwise.
+
+* **Public allauth sign-up is closed** (`BudgetedAccountAdapter.is_open_for_signup`), and `/accounts/signup/` redirects to `/register`. This is what makes D9 true for every entry point.
+* `is_accepting` also requires `status == active` (an archived batch never accepts, even if left switched on).
+* **2FA keys on role, not `is_staff`:** `accounts.rules.requires_mfa` is true for staff, mentors and admins. Mentors never need `is_staff`. The 12-hour session applies to them too.
+* **Email budget:** pools are registration 150 (verification + the "you already have an account" note), reset + guardian 100, reserve 50 (admin alerts). The admin alert fires once a day when the **total sent** reaches 150 (`EMAIL_ALERT_AT`). Every allauth email passes the same gate via the account adapter, so the per-address limit also covers password reset. If the registration pool is empty, `/register` refuses before creating anything.
+* **Guardian link** is valid for 14 days (`GUARDIAN_LINK_DAYS`); the learner's waiting page can send a fresh link (5 per hour), which kills the old one. Only a hash of the token is stored.
+* **Mentor reset link**: hash only stored, 1 hour, single use. Using it sets `Profile.mentor_reset_at`, ends all the learner's sessions, shows a dismissible banner, and blocks `POST /accounts/email/` for 7 days.
+* **Seats** count verified enrolments plus unverified ones younger than 48 h; moves by a mentor do not check the target's seat limit.
+* **Batch codes** are generated as `B02`, `B03`, ... (the next free number). The catch-all pool is created by migration with code `OPEN`, closed.
+* **Daily jobs (D27):** the `tasks` service (web image, non-root, connects as `csfr_app`, never `csfr_owner`) runs `manage.py run_periodic`. It wakes every 10 minutes and runs each job in `apps/core/periodic.py::JOBS` that is due. A job is due once today's scheduled time (`PERIODIC_RUN_AT`, 03:00 Asia/Kolkata, after the 02:00 backup) has passed and its last success (`core.PeriodicRun`) was before that time. A run missed during a restart happens once on the next wake-up, with no pile-up. A failing job is logged and retried at the next wake-up, and never stops the other jobs or the loop. `deploy.sh` restarts `tasks` together with `web`. In dev, `compose.dev.yml` creates the real `csfr_app` role (same `init-roles.sh`, plus `dev-grants.sh`) so `tasks` runs as it there too; an existing dev database needs `down -v` once.
+* **`purge_unverified`** (daily job, also a management command; logic in `apps/accounts/purge.py`) deletes learner accounts (1) whose email is still unverified 7 days after sign-up, and (2) that are still `pending_guardian` 7 days after their guardian link expired (14 + 7 = 21 days after it was sent). It sends no email. It records one `AuditEvent` `system.purge_unverified` with counts only, and logs one stdout line per run. Seats are already freed after 48 hours by `is_accepting`; this clears the personal data (DPDP data minimisation).
+* **Move learner** (`mentors.views.learner_move`): no batch chosen returns 400 with the form and the translatable "Pick a batch."; any other value that is not one of the mentor's own active batches (unknown, someone else's, or not a number) returns the same 403 and an `access.denied` audit event, so the response never reveals which.
+* **Audit**: `apps.audit.AuditEvent` + `audit()`; the migration revokes UPDATE/DELETE/TRUNCATE from `csfr_app` (skipped where that role doesn't exist, e.g. dev and CI).
+* `accounts.rules.may_track_time(user, today)` is the single question the Stage 4 heartbeat must ask (false under 18).
+* After sign-in everyone goes through `/start/`: pending learners to the waiting page, mentors to their batches, learners to a welcome page whose pre-test prompt is a placeholder until Stage 5.

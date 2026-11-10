@@ -11,20 +11,32 @@
     <a class="brand" href="/">Cyber First Response</a>
     <nav>
       {% if user.is_authenticated %}
+        {% if user.role == 'mentor' or user.role == 'admin' %}
+          <a class="btn btn-ghost" href="{% url 'mentor_home' %}">My batches</a>
+        {% endif %}
         <form method="post" action="{% url 'account_logout' %}">{% csrf_token %}
           <button class="btn btn-ghost" type="submit">Sign out</button>
         </form>
       {% else %}
         <a class="btn btn-ghost" href="{% url 'account_login' %}">Sign in</a>
-        <a class="btn" href="{% url 'account_signup' %}">Sign up</a>
+        <a class="btn" href="{% url 'register' %}">Register</a>
       {% endif %}
     </nav>
   </header>
   <main class="wrap">
+    {% if user.is_authenticated and user.profile.mentor_reset_notice %}
+      <div class="notice">
+        <p>Your password was reset by your mentor. If you did not expect this, tell your trainer.</p>
+        <form method="post" action="{% url 'dismiss_reset_notice' %}">{% csrf_token %}
+          <button type="submit">OK, got it</button>
+        </form>
+      </div>
+    {% endif %}
     {% if messages %}
       <ul class="messages">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
     {% endif %}
     {% block content %}{% endblock %}
   </main>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

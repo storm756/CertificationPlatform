@@ -20,7 +20,7 @@ If two of these still disagree, or something is missing, **stop and ask in chat*
 | Stage | State | Notes |
 | --- | --- | --- |
 | 0. Foundation and server | ✅ **Done, merged (PR #1)** | Django 5.2 + Postgres 17 + Caddy on the VPS. `staging.cyberfirstresponse.io` serves HTTPS. Key-only SSH. Encrypted off-site backups. Staff 2FA. The CSP is set by Caddy. |
-| 1. Accounts, batches, registration | 🟡 **Built, PR #2 open** | Two code items for Claude, then a person reviews, merges and deploys (below). |
+| 1. Accounts, batches, registration | 🟡 **Finish items done and checked** (`stage-1-finish`, c646170, with `origin/main` merged in) | Items 1 and 2 are built and tested (results below). A person reviews and merges the PR and deploys staging. |
 | 1.5. UI shell and components | ⬜ **Next** | Port the approved frontend prototype into Django templates. |
 | 2 to 10 | ⬜ | In order. One stage = one branch = one PR. |
 
@@ -65,6 +65,21 @@ The Stage 1 review passed. These design calls are approved (they are also in arc
 | A valid own batch | Move, audit, then redirect (as now) |
 
 Tests for all three rows.
+
+**Stage 1 finish: check results (11 Nov 2026, `stage-1-finish`, after merging `origin/main` at f34cbe3).** Run in the dev stack against a throwaway test database.
+
+| Check | Result |
+| --- | --- |
+| Item 1: `tasks` service in `compose.yml` and `compose.dev.yml` (web image, non-root, `csfr_app` role, `run_periodic`) | ✅ present; `deploy.sh` brings up `tasks` after the new image is built |
+| Item 1: `run_periodic` and the purge job (due, not due, missed-run catch-up, one failing job, both purge rules, count-only audit) | ✅ `tests/test_periodic.py` passes |
+| Item 2: mentor Move learner (no batch → 400 "Pick a batch."; unknown or foreign batch → 403 + `access.denied`; own batch → move) | ✅ `tests/test_mentor_pages.py` passes |
+| Full test suite (PostgreSQL) | ✅ 88 passed |
+| `ruff check` and `ruff format --check` | ✅ clean |
+| `makemigrations --check` | ✅ no changes |
+| `check --deploy` with prod settings | ✅ no issues |
+| `docker compose -f deploy/compose.dev.yml config` | ✅ valid |
+
+Not run here: the GitHub Actions workflow itself (it runs when the branch is pushed), the production `compose.yml` render (needs the server's env files) and shellcheck. **Ready to push**, then watch CI on the PR.
 
 **3. Person only, not Claude:** a person reviews and merges PR #2 (the review checklist is in the handoff README). Then a person deploys staging on the server. After that, `/register` must load on staging, and Teammate B starts testing there.
 
