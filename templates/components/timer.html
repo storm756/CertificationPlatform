@@ -1,0 +1,3 @@
+{% comment %}Count-up timer (a guide, never enforced: D3). `time` is the starting text, e.g. "00:00".{% endcomment %}
+{% load i18n ccfr %}
+<span class="timer" role="timer" aria-label="{% translate 'Time spent' %}">{% icon "clock" "sm" %}<span data-timer>{{ time|default:"00:00" }}</span></span>

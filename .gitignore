@@ -33,3 +33,7 @@ Thumbs.db
 # Prototype question data and real people's photos stay out of git (D22)
 design-reference/**/data/
 design-reference/**/assets/people/
+
+# Check tools (Stage 1.5)
+tools/node_modules/
+screenshots/

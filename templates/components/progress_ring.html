@@ -1,0 +1,4 @@
+{% comment %}Progress ring. value is 0-100; caption is the small text under the number.
+  Usage: {% include "components/progress_ring.html" with value=62 caption="overall" %}{% endcomment %}
+{% load ccfr %}
+<div class="ring" role="img" aria-label="{{ value|pct }}% {{ caption }}" data-v="{{ value|pct }}"><div><strong>{{ value|pct }}%</strong><small>{{ caption }}</small></div></div>

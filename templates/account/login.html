@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load i18n ccfr %}
+{% block head_title %}{% translate "Sign in" %}{% endblock %}
+{% block body_attrs %} data-page="signin"{% endblock %}
+{% block footer %}{% endblock %}
+{% block body %}
+<main id="main" class="auth" tabindex="-1">
+  <aside class="auth__aside">
+    <div class="accent-bars" aria-hidden="true"><i></i><i></i><i></i></div>
+    <h2>{% translate "Pick up right" %} <span>{% translate "where you left off." %}</span></h2>
+    <p>{% translate "Your answers are saved to your account as you go, so you can continue on any device." %}</p>
+    <ul class="ticks">
+      <li>{% icon "unlock" %} {% translate "Every module stays open. Revisit any topic, any time." %}</li>
+      <li>{% icon "retry" %} {% translate "Unlimited attempts. Your best attempt counts." %}</li>
+      <li>{% icon "globe" %} English, हिन्दी, मराठी, ગુજરાતી</li>
+    </ul>
+  </aside>
+
+  <div class="auth__main">
+    <section class="auth-card" aria-labelledby="signin-title">
+      <div>
+        <p class="eyebrow">{% translate "Learner & mentor sign-in" %}</p>
+        <h1 id="signin-title">{% translate "Welcome back" %}</h1>
+        <p class="muted">{% translate "Sign in to continue your certification." %}</p>
+      </div>
+      {% include "components/form_errors.html" with form=form %}
+      <form method="post" action="{% url 'account_login' %}" novalidate>
+        {% csrf_token %}
+        {% include "components/field.html" with field=form.login label_text=_("Email address") %}
+        {% url 'account_reset_password' as reset_url %}
+        {% include "components/field.html" with field=form.password label_link_url=reset_url label_link_text=_("Forgot your password?") hide_hint=True %}
+        {% if form.remember %}{% include "components/field.html" with field=form.remember label_text=_("Keep me signed in for 14 days") %}{% endif %}
+        {{ redirect_field }}
+        <button class="btn btn-primary btn-lg btn-block" type="submit">{% translate "Sign in" %} {% icon "arrow" %}</button>
+      </form>
+      <div class="divider"><span>{% translate "New here?" %}</span></div>
+      <a class="btn btn-outline btn-block" href="{% url 'register' %}">{% translate "Create your account" %}</a>
+    </section>
+  </div>
+</main>
+{% endblock %}

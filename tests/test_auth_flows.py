@@ -13,7 +13,7 @@ PASSWORD = "correct-horse-battery-9"
 def test_home_page_loads(client):
     response = client.get("/")
     assert response.status_code == 200
-    assert b"Cyber First Response" in response.content
+    assert b"Community Cyber First Responder" in response.content
 
 
 def test_healthz_checks_database(client):

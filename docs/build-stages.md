@@ -14,7 +14,7 @@ Each stage builds on the previous one, so don't skip ahead. Use Opus for stages 
 | --- | --- |
 | 0 | ✅ Done, merged |
 | 1 | 🟡 Built, PR #2 open; 3 finish items in `docs/STATUS.md` |
-| 1.5 | ⬜ **Next** (new stage: UI shell from the approved prototype) |
+| 1.5 | 🟡 Built locally on `stage-1-5-ui` (UI shell from the approved prototype); see `docs/STATUS.md` |
 | 2 to 10 | ⬜ |
 
 **Every page from Stage 1.5 onwards** takes its layout from `design-reference/frontend-prototype/`. The table below says which prototype file to copy for each stage.

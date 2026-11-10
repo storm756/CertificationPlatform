@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% load i18n ccfr static %}
+{% block head_title %}Styleguide{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/stage.css' %}">{% endblock %}
+{% block page_class %} page--wide styleguide{% endblock %}
+{% block content %}
+  <div>
+    <p class="eyebrow">Staff only</p>
+    <h1>Styleguide</h1>
+    <p class="muted">Every shared component in every state. The Hindi, Marathi and Gujarati sample text below is written into this template on purpose, to check fonts and wrapping. It is not a translation of the site.</p>
+  </div>
+
+  <section aria-labelledby="sg-colour">
+    <h2 id="sg-colour">Colour tokens</h2>
+    <div class="row">
+      {% for c in colours %}<div class="swatch"><i class="sw-{{ c }}"></i><code>--{{ c }}</code></div>{% endfor %}
+    </div>
+  </section>
+
+  <section aria-labelledby="sg-type">
+    <h2 id="sg-type">Type in four languages</h2>
+    <div class="grid-2">
+      <article class="card" lang="en"><p class="eyebrow">English · Baloo 2 + Hind</p><h3>Report it before you share it</h3><p>Stop, save the evidence and tell someone you trust before you forward a suspicious message.</p></article>
+      <article class="card" lang="hi"><p class="eyebrow">हिन्दी · Baloo 2 + Hind</p><h3>साझा करने से पहले रिपोर्ट करें</h3><p>किसी संदिग्ध संदेश को आगे भेजने से पहले रुकें, सबूत सहेजें और किसी भरोसेमंद व्यक्ति को बताएँ।</p></article>
+      <article class="card" lang="mr"><p class="eyebrow">मराठी · Baloo 2 + Hind</p><h3>शेअर करण्यापूर्वी तक्रार करा</h3><p>संशयास्पद संदेश पुढे पाठवण्यापूर्वी थांबा, पुरावा जतन करा आणि विश्वासू व्यक्तीला सांगा.</p></article>
+      <article class="card" lang="gu"><p class="eyebrow">ગુજરાતી · Baloo Bhai 2 + Hind Vadodara</p><h3>શેર કરતાં પહેલાં ફરિયાદ કરો</h3><p>શંકાસ્પદ સંદેશ આગળ મોકલતાં પહેલાં અટકો, પુરાવો સાચવો અને ભરોસાપાત્ર વ્યક્તિને જણાવો.</p></article>
+    </div>
+    <div class="grid-2">
+      <article class="card" lang="hi"><p>लंबा शब्द परीक्षण: सुरक्षित-ऑनलाइन-व्यवहार-प्रमाणीकरण-प्रक्रिया-संबंधी-जानकारी</p></article>
+      <article class="card" lang="gu"><p>લાંબો શબ્દ કસોટી: સુરક્ષિત-ઓનલાઇન-વ્યવહાર-પ્રમાણીકરણ-પ્રક્રિયા-સંબંધિત-માહિતી</p></article>
+    </div>
+  </section>
+
+  <section aria-labelledby="sg-buttons">
+    <h2 id="sg-buttons">Buttons</h2>
+    <div class="row">
+      {% include "components/button.html" with label="Primary" variant="primary" type="button" %}
+      {% include "components/button.html" with label="Secondary" variant="outline" type="button" %}
+      {% include "components/button.html" with label="Quiet" variant="ghost" type="button" %}
+      {% include "components/button.html" with label="Danger" variant="danger" type="button" %}
+      {% include "components/button.html" with label="Link button" variant="primary" href="#" icon="arrow" %}
+    </div>
+    <div class="row">
+      {% include "components/button.html" with label="Small" variant="primary" size="sm" type="button" %}
+      {% include "components/button.html" with label="Large" variant="primary" size="lg" type="button" %}
+      <button class="btn btn-primary" type="button" disabled>Disabled</button>
+      {% include "components/button.html" with label="हिन्दी बटन" variant="primary" type="button" %}
+      {% include "components/button.html" with label="ગુજરાતી બટન" variant="outline" type="button" %}
+    </div>
+  </section>
+
+  <section aria-labelledby="sg-badges">
+    <h2 id="sg-badges">Chips and status badges</h2>
+    <div class="row">
+      {% include "components/badge.html" with text="Teal" colour="teal" icon="check-circle" %}
+      {% include "components/badge.html" with text="Mustard" colour="mustard" icon="clock" %}
+      {% include "components/badge.html" with text="Terracotta" colour="terracotta" icon="lock" %}
+      {% include "components/badge.html" with text="Blue" colour="blue" %}
+      {% include "components/badge.html" with text="Plum" colour="plum" %}
+      {% include "components/badge.html" with text="Muted" colour="muted" %}
+      {% include "components/badge.html" with text="Danger" colour="danger" icon="alert" %}
+    </div>
+  </section>
+
+  <section aria-labelledby="sg-cards">
+    <h2 id="sg-cards">Cards, progress and module cards</h2>
+    <div class="grid-3">
+      <article class="card stack"><h3>Plain card</h3><p>Text inside a card.</p></article>
+      <article class="card card--edge accent--teal stack"><h3>Edge card</h3><p>With an offset teal edge.</p></article>
+      <article class="card card--edge accent--mustard stack"><h3>Mustard edge</h3><p>Accent colours come from classes.</p></article>
+    </div>
+    <div class="row">
+      {% include "components/progress_ring.html" with value=62 caption="overall" %}
+      {% include "components/progress_ring.html" with value=0 caption="not started" %}
+      {% include "components/progress_ring.html" with value=100 caption="complete" %}
+    </div>
+    <div class="stack">
+      {% include "components/progress_bar.html" with value=0 label="0 percent" %}
+      {% include "components/progress_bar.html" with value=45 label="45 percent" %}
+      {% include "components/progress_bar.html" with value=100 label="100 percent" %}
+    </div>
+    <div class="grid-3">
+      {% include "components/module_card.html" with number=1 title="Cyber hygiene and digital safety" blurb="Passwords, updates and safe settings." topics=6 hours="3" progress=40 colour="teal" %}
+      {% include "components/module_card.html" with number=2 title="Online fraud and scams" blurb="Spot the pattern behind a scam." topics=6 hours="3" progress=0 colour="mustard" %}
+      {% include "components/module_card.html" with number=3 title="डीपफ़ेक और गलत सूचना" blurb="देखा हुआ हमेशा सच नहीं होता।" topics=6 hours="3" progress=100 colour="terracotta" %}
+    </div>
+  </section>
+
+  <section aria-labelledby="sg-stage">
+    <h2 id="sg-stage">Stage strip: Learn → Practise → Assess → Certify</h2>
+    <div class="band on-dark"><div class="shell">
+      {% include "components/stage_strip.html" with current=1 %}
+    </div></div>
+  </section>
+
+  <section aria-labelledby="sg-forms">
+    <h2 id="sg-forms">Form fields</h2>
+    <div class="grid-2">
+      <form class="form-stack" novalidate>
+        <h3>Normal</h3>
+        {% for field in form %}{% include "components/field.html" with field=field %}{% endfor %}
+      </form>
+      <form class="form-stack" novalidate>
+        <h3>With errors</h3>
+        {% include "components/form_errors.html" with form=broken %}
+        {% for field in broken %}{% include "components/field.html" with field=field %}{% endfor %}
+      </form>
+    </div>
+  </section>
+
+  <section aria-labelledby="sg-alerts">
+    <h2 id="sg-alerts">Alerts, empty state and messages</h2>
+    {% include "components/alert.html" with icon="info" title="Information" text="A plain notice." %}
+    {% include "components/alert.html" with tone="teal" icon="check-circle" title="Success" text="Your changes were saved." %}
+    {% include "components/alert.html" with tone="mustard" icon="clock" title="Heads up" text="Registration closes tomorrow." %}
+    {% include "components/alert.html" with tone="danger" icon="alert" title="Problem" text="Please check the highlighted fields." %}
+    {% include "components/alert.html" with tone="plum" icon="shield" title="Safety" text="Never share an OTP." %}
+    {% include "components/empty_state.html" with icon="users" title="No batches yet" text="Create a batch to get started." %}
+    <div class="row">
+      <button class="btn btn-outline" type="button" data-confirm="Delete this?" data-confirm-body="This is only a demo of the confirm dialog." data-confirm-yes="Yes, continue">Open confirm dialog</button>
+    </div>
+  </section>
+
+  <section aria-labelledby="sg-assess">
+    <h2 id="sg-assess">Assessment parts</h2>
+    <div class="row">
+      {% include "components/save_pill.html" with state="saved" %}
+      {% include "components/save_pill.html" with state="saving" %}
+      {% include "components/save_pill.html" with state="offline" %}
+      {% include "components/timer.html" with time="12:34" %}
+    </div>
+    <div class="grid-2">
+      {% include "components/question_palette.html" with items=items %}
+      <div class="card stack">
+        <h3>Answer every question</h3>
+        <p class="rule-line">{% icon "check-circle" %}<strong>Answer every question.</strong> A submission only counts towards unlocking the final when nothing is left blank.</p>
+        <p class="rule-line" lang="hi">{% icon "check-circle" %}<strong>हर प्रश्न का उत्तर दें।</strong> कुछ भी खाली न होने पर ही जमा किया गया प्रयास गिना जाता है।</p>
+      </div>
+    </div>
+  </section>
+{% endblock %}

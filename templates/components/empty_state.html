@@ -1,0 +1,7 @@
+{% comment %}Empty state. Usage: {% include "components/empty_state.html" with icon="users" title="No batches yet" text="..." %}{% endcomment %}
+{% load ccfr %}
+<div class="state-panel">
+  <span class="big-icon">{% icon icon|default:"info" "lg" %}</span>
+  <h2>{{ title }}</h2>
+  {% if text %}<p class="muted">{{ text }}</p>{% endif %}
+</div>

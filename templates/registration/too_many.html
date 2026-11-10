@@ -1,5 +1,10 @@
 {% extends "base.html" %}
+{% load i18n ccfr %}
+{% block head_title %}{% translate "Too many attempts" %}{% endblock %}
 {% block content %}
-  <h1>Too many attempts</h1>
-  <p>Many people are registering for this batch right now. Please wait a few minutes and try again.</p>
+  <div class="state-panel accent--mustard">
+    <span class="big-icon">{% icon "clock" %}</span>
+    <h1>{% translate "Too many attempts" %}</h1>
+    <p>{% translate "Many people are registering for this batch right now. Please wait a few minutes and try again." %}</p>
+  </div>
 {% endblock %}

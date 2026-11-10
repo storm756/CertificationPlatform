@@ -1,12 +1,12 @@
 {% extends "base.html" %}
+{% load i18n %}
+{% block head_title %}{% translate "Choose a new password" %}{% endblock %}
 {% block content %}
-  <h1>Choose a new password</h1>
-  <form method="post">{% csrf_token %}
-    {{ form.non_field_errors }}
-    <label for="{{ form.new_password1.id_for_label }}">New password</label>
-    {{ form.new_password1 }}{{ form.new_password1.errors }}
-    <label for="{{ form.new_password2.id_for_label }}">Repeat the password</label>
-    {{ form.new_password2 }}{{ form.new_password2.errors }}
-    <p><button type="submit">Save password</button></p>
+  <h1>{% translate "Choose a new password" %}</h1>
+  <form class="form-stack" method="post" novalidate>{% csrf_token %}
+    {% include "components/form_errors.html" with form=form %}
+    {% include "components/field.html" with field=form.new_password1 %}
+    {% include "components/field.html" with field=form.new_password2 %}
+    <button class="btn btn-primary btn-lg btn-block" type="submit">{% translate "Save password" %}</button>
   </form>
 {% endblock %}

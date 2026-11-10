@@ -21,7 +21,7 @@ If two of these still disagree, or something is missing, **stop and ask in chat*
 | --- | --- | --- |
 | 0. Foundation and server | ✅ **Done, merged (PR #1)** | Django 5.2 + Postgres 17 + Caddy on the VPS. `staging.cyberfirstresponse.io` serves HTTPS. Key-only SSH. Encrypted off-site backups. Staff 2FA. The CSP is set by Caddy. |
 | 1. Accounts, batches, registration | 🟡 **Built, PR #2 open** | Two code items for Claude, then a person reviews, merges and deploys (below). |
-| 1.5. UI shell and components | ⬜ **Next** | Port the approved frontend prototype into Django templates. |
+| 1.5. UI shell and components | 🟡 **Built locally** (`stage-1-5-ui`, not pushed) | Design tokens, self-hosted fonts incl. Gujarati, shared base template and components, `/styleguide`, language wiring, `tools/screenshots.mjs`, every Stage 0–1 page restyled. Waits on the Stage 1 PR and the docs update being merged. |
 | 2 to 10 | ⬜ | In order. One stage = one branch = one PR. |
 
 **Live addresses:**
@@ -79,7 +79,7 @@ left out of the copy. The review fixes are listed in `build-stages.md` under Sta
 | Item | Owner | Until then |
 | --- | --- | --- |
 | ~~Programme name~~ **Decided: Community Cyber First Responder (CCFR)** (D23) | — | Use `settings.PROGRAMME_NAME` / `PROGRAMME_SHORT`. |
-| CCFR's own emblem (wanted) | Lead | An emblem slot that shows "CCFR" in text |
+| CCFR's own emblem (wanted) | Lead | The header's emblem slot (`.brand-emblem`) shows "CCFR" in text. Put the artwork in `templates/components/header.html` when it exists. |
 | Certificate qualification title, wording, signatories and certificate-number prefix (D28) | Lead + HOD (before Stage 7) | Stage 7 asks the lead before building the PDF template |
 | Consent from the three people whose photos are on the landing page | Lead (being arranged) | Their photos stay out of git, in `content-data/people/` only |
 | Privacy notice, terms, grievance officer, guardian-consent method (DPDP) | CyberPeace legal | Placeholder pages, marked "draft" |

@@ -1,0 +1,14 @@
+{% comment %}Learn -> Practise -> Assess -> Certify. Put it inside a navy band (class "on-dark").
+  `current` is 0-3. The landing page (Stage 9) adds the clickable tab version.{% endcomment %}
+{% load i18n ccfr %}
+<div class="stage-explorer">
+  <div class="stage-track" role="list" aria-label="{% translate 'Your route to certification' %}">
+    {% for key, label, ic in stages %}
+      {% if not forloop.first %}<span class="stage-link{% if forloop.counter0 <= current %} is-lit{% endif %}" aria-hidden="true"><i></i></span>{% endif %}
+      <div class="stage{% if forloop.counter0 < current %} is-done{% endif %}" role="listitem"{% if forloop.counter0 == current %} aria-current="step"{% endif %}>
+        <svg class="stage__shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polygon points="22,1 88,1 99,50 78,99 12,99 1,50"/></svg>
+        {% icon ic "" "stage__icon" %}<span class="stage__num">0{{ forloop.counter }}</span><strong>{{ label }}</strong>
+      </div>
+    {% endfor %}
+  </div>
+</div>

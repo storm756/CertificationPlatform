@@ -3,10 +3,12 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 
 from apps.accounts import views as account_views
-from apps.core.views import healthz, home
+from apps.core.views import healthz, home, set_language, styleguide
 
 urlpatterns = [
     path("healthz/", healthz, name="healthz"),
+    path("styleguide/", styleguide, name="styleguide"),
+    path("i18n/setlang/", set_language, name="set_language"),
     # Staff sign in through allauth so that TOTP is always applied.
     path("admin/login/", RedirectView.as_view(pattern_name="account_login", query_string=True)),
     path("admin/", admin.site.urls),

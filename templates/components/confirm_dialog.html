@@ -1,0 +1,12 @@
+{% comment %}One shared confirm dialog. Put data-confirm="Question?" on a form or submit button; ccfr-shell.js opens this first.{% endcomment %}
+{% load i18n %}
+<dialog class="modal" id="confirm-dialog" aria-labelledby="confirm-title">
+  <form method="dialog" class="modal__body">
+    <h2 id="confirm-title" data-confirm-title></h2>
+    <div class="muted" data-confirm-body></div>
+    <div class="modal__actions">
+      <button class="btn btn-ghost" value="no">{% translate "Cancel" %}</button>
+      <button class="btn btn-primary" value="yes" data-confirm-yes>{% translate "Continue" %}</button>
+    </div>
+  </form>
+</dialog>

@@ -1,8 +1,9 @@
 {% extends "base.html" %}
-{% block head_title %}Privacy notice{% endblock %}
+{% load i18n ccfr %}
+{% block head_title %}{% translate "Privacy notice" %}{% endblock %}
 {% block content %}
   <h1>Privacy notice (version {{ version }})</h1>
-  <p class="notice">Draft: the final text is being prepared with CyberPeace legal.</p>
+  <div class="notice notice--mustard">{% icon "info" %}<p>Draft: the final text is being prepared with CyberPeace legal.</p></div>
   <p>We collect the minimum needed to run the course: your name, email, date of birth, language, your answers and scores.
   Email is used only for verification, password reset and guardian consent. Under-18s are not tracked for time spent.</p>
   <p>Processors: our email provider, error monitoring, YouTube (embedded films) and the backup provider.</p>
