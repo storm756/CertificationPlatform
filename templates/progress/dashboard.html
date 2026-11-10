@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load static i18n ccfr %}
+{% block head_title %}{% translate "My progress" %}{% endblock %}
+{% block page_class %} page--wide{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/learn.css' %}">{% endblock %}
+{% block content %}
+  <section class="band band--mod"><div class="dash-hero">
+    <div class="stack">
+      <p class="eyebrow eyebrow--cyan">{{ PROGRAMME_SHORT }}</p>
+      <h1>{% blocktranslate with name=user.profile.certificate_name %}Hello, {{ name }}{% endblocktranslate %}</h1>
+      <p class="lede">{% if state == "eligible" %}{% translate "You have met every requirement. Your certificate is next." %}{% elif state == "new" %}{% translate "Welcome. Start with the pre-test, then work through the modules at your own pace." %}{% else %}{% translate "Here is where you are, and what is left before your final." %}{% endif %}</p>
+      {% if result.eligible %}<p>{% include "components/badge.html" with text=result.grade colour="mustard" icon="award" %}</p>{% endif %}
+    </div>
+    {% include "components/progress_ring.html" with value=result.overall_shown caption=_("overall") %}
+  </div></section>
+
+  <ol class="journey-map" aria-label="{% translate 'Your journey' %}">
+    {% for step in journey %}<li class="journey-step {% if step.state == 'done' %}is-done{% elif step.state == 'next' %}is-current{% else %}is-locked{% endif %}"{% if step.state == "next" %} aria-current="step"{% endif %}>{% if step.state == "done" %}{% icon "check-circle" %}{% else %}{% icon "circle" %}{% endif %}<strong>{{ step.label }}</strong><small>{% if step.state == "done" %}{% translate "Done" %}{% elif step.state == "next" %}{% translate "Next" %}{% elif step.state == "optional" %}{% translate "Optional practice" %}{% else %}{% translate "Later" %}{% endif %}</small></li>{% endfor %}
+  </ol>
+
+  {% if not result.pretest_done and pretest_available %}
+    <section class="card card--edge accent--teal stack" id="pretest">
+      <h2>{% translate "Next: the short pre-test" %}</h2>
+      <p>{% translate "It shows what you already know before you start. You do it once, and the final stays locked until it is done." %}</p>
+      <p><a class="btn btn-primary" href="{% url 'programme_intro' 'pretest' %}">{% translate "Take the pre-test" %}</a></p>
+    </section>
+  {% endif %}
+
+  <div class="dash-grid">
+    <div class="stack-lg">
+      <section class="stack" aria-labelledby="left">
+        <h2 id="left">{% translate "What's left before your final" %}</h2>
+        {% if left.todo %}
+          <ul class="result-list">{% for i in left.todo %}<li class="result-item"><span class="status status--todo">{% icon "circle" %}</span><span><strong>{{ i.text }}</strong>{% if i.detail %} <small class="muted">· {{ i.detail }}</small>{% endif %}</span><a class="btn btn-sm btn-outline" href="{{ i.href }}">{% translate "Open" %}</a></li>{% endfor %}</ul>
+        {% else %}<p class="muted">{% translate "Nothing left: the final is unlocked." %}</p>{% endif %}
+        {% if left.done %}<details class="finished"><summary>{% blocktranslate count n=left.done|length %}{{ n }} finished{% plural %}{{ n }} finished{% endblocktranslate %}</summary>
+          <ul class="result-list">{% for i in left.done %}<li class="result-item"><span class="status status--done">{% icon "check-circle" %}</span><span>{{ i.text }}{% if i.detail %} <small class="muted">· {{ i.detail }}</small>{% endif %}</span><a class="link" href="{{ i.href }}">{% translate "Open" %}</a></li>{% endfor %}</ul></details>{% endif %}
+      </section>
+
+      <section class="stack" aria-labelledby="mods">
+        <h2 id="mods">{% translate "Your modules" %}</h2>
+        <div class="grid-cards">
+          {% for row in modules %}{% with m=row.m %}
+            <article class="part-card">
+              <p class="eyebrow">{% translate "Module" %} {{ m.number }}</p>
+              <h3><a href="{{ row.href }}">{{ m.title }}</a></h3>
+              <p><strong>{{ m.shown }}%</strong> {% if m.parts %}{% if m.passed %}<span class="status status--done">{% icon "check-circle" %}{% translate "Pass" %}</span>{% else %}<span class="status status--todo">{% icon "x" %}{% translate "Not yet" %}</span>{% endif %}{% endif %}</p>
+              {% include "components/progress_bar.html" with value=m.shown label=m.title %}
+              <ul class="stack">{% for p in m.parts %}<li class="row"><span>{{ p.name }}: <strong>{% if p.attempts %}{{ p.best|floatformat:1 }}%{% else %}—{% endif %}</strong></span><a class="btn btn-sm btn-outline" href="{% url 'assess_intro' p.part_id %}">{% if p.attempts %}{% translate "Retake" %}{% else %}{% translate "Start" %}{% endif %}</a></li>{% empty %}<li class="muted">{% translate "Assessments are being prepared." %}</li>{% endfor %}</ul>
+            </article>
+          {% endwith %}{% endfor %}
+        </div>
+      </section>
+    </div>
+
+    <aside class="stack-lg">
+      <section class="card stack" aria-labelledby="final">
+        <h2 id="final">{% translate "Final exam" %}</h2>
+        {% if result.final_unlocked %}
+          <p>{% if result.final_attempts %}{% blocktranslate with best=result.final_shown pass=final_pass %}Your best: <strong>{{ best }}%</strong>. You need {{ pass }}%.{% endblocktranslate %}{% else %}{% translate "The final is unlocked." %}{% endif %}</p>
+          {% if final_bands %}<ul class="result-list">{% for b in final_bands %}<li class="result-item"><span>{% translate "Module" %} {{ b.module }}</span><span class="status">{% if b.band == "strong" %}{% translate "Strong" %}{% elif b.band == "ok" %}{% translate "OK" %}{% else %}{% translate "Needs work" %}{% endif %}</span></li>{% endfor %}</ul>{% endif %}
+          <a class="btn btn-primary" href="{% url 'programme_intro' 'final' %}">{% if result.final_attempts %}{% translate "Try the final again" %}{% else %}{% translate "Start the final" %}{% endif %}</a>
+        {% else %}
+          <p>{% icon "lock" %} {% translate "Locked." %}</p>
+          <ul class="ticks">{% for r in final_reasons %}<li>{{ r }}</li>{% endfor %}</ul>
+        {% endif %}
+      </section>
+
+      {% if result.blockers %}
+        <section class="card stack" aria-labelledby="blockers"><h2 id="blockers">{% translate "What is stopping your certificate" %}</h2>
+          <ul class="ticks">{% for b in result.blockers %}<li>{% icon "info" %} {{ b }}</li>{% endfor %}</ul></section>
+      {% endif %}
+
+      <section class="card stack" aria-labelledby="weak"><h2 id="weak">{% translate "Topics to revisit" %}</h2>
+        {% if weakest %}<ul class="result-list">{% for w in weakest %}<li class="result-item"><span>{{ w.pc }}</span><strong>{{ w.percent }}%</strong></li>{% endfor %}</ul>
+        {% else %}<p class="muted">{% translate "Complete a multiple-choice part to see your weakest topics." %}</p>{% endif %}</section>
+
+      <section class="card stack" aria-labelledby="hours"><h2 id="hours">{% translate "Hours" %}</h2>
+        <p><strong>{{ hours.minutes }}</strong> {% translate "minutes" %} {% if hours.kind == "engaged" %}<small class="muted">({% translate "engaged time, estimated" %})</small>{% else %}<small class="muted">({% translate "from the lessons you completed" %})</small>{% endif %}</p></section>
+
+      <section class="card stack" aria-labelledby="cert"><h2 id="cert">{% translate "Certificate" %}</h2>
+        {% if result.eligible %}<p>{% translate "You are eligible. Your certificate will appear here once it is issued." %}</p>
+        {% else %}<p class="muted">{% translate "Your certificate appears here when you have passed every module and the final." %}</p>{% endif %}</section>
+    </aside>
+  </div>
+{% endblock %}

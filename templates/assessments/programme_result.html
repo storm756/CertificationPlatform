@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load i18n ccfr %}
+{% block head_title %}{% translate "Your result" %}{% endblock %}
+{% block content %}
+  <div class="row">
+    {% include "components/progress_ring.html" with value=attempt.score caption=_("score") %}
+    <div class="stack">
+      <p class="eyebrow">{{ attempt.title }} · {% blocktranslate with n=attempt.number %}Attempt {{ n }}{% endblocktranslate %}</p>
+      <h1>
+        {% if kind == "pretest" %}{% translate "Pre-test done. Thank you." %}
+        {% elif attempt.gate_breached %}{% translate "This attempt doesn't count" %}
+        {% elif passed %}{% translate "Passed. Well done!" %}
+        {% else %}{% translate "Not yet. Revise the weaker modules and try again." %}{% endif %}
+      </h1>
+      <p>
+        {% include "components/badge.html" with text=score_text colour="blue" %}
+        {% if kind == "final" and attempt.counted %}{% include "components/badge.html" with text=_("counts") colour="teal" icon="check-circle" %}{% endif %}
+        {% if auto %}{% include "components/badge.html" with text=_("auto-submitted") colour="muted" icon="clock" %}{% endif %}
+      </p>
+    </div>
+  </div>
+
+  {% if attempt.gate_breached %}
+    {% include "components/alert.html" with tone="danger" icon="shield-alert" title=_("Safety gate") text=_("This attempt doesn't count: one of your choices would have put a citizen at risk. Revise the safety steps and retake.") %}
+  {% endif %}
+
+  {% if kind == "final" and bands %}
+    <section class="stack" aria-labelledby="bands">
+      <h2 id="bands">{% translate "How each module went" %}</h2>
+      <ul class="result-list">
+        {% for b in bands %}
+          <li class="result-item"><span><strong>{% translate "Module" %} {{ b.module }}</strong></span>
+            <span class="status status--{% if b.band == 'strong' %}done{% elif b.band == 'ok' %}progress{% else %}todo{% endif %}">{% if b.band == "strong" %}{% icon "check-circle" %}{% translate "Strong" %}{% elif b.band == "ok" %}{% icon "minus" %}{% translate "OK" %}{% else %}{% icon "x" %}{% translate "Needs work" %}{% endif %}</span></li>
+        {% endfor %}
+      </ul>
+      <p class="muted">{% translate "To keep the exam fair, we show how strong each module is, not which questions you got right." %}</p>
+    </section>
+  {% endif %}
+
+  <div class="row">
+    <a class="btn btn-outline" href="{% url 'start' %}">{% translate "Back to My progress" %}</a>
+    {% if kind == "final" %}<form method="post" action="{% url 'programme_start' 'final' %}">{% csrf_token %}<button class="btn btn-primary" type="submit">{% icon "retry" %}{% translate "Try again" %}</button></form>{% endif %}
+  </div>
+{% endblock %}

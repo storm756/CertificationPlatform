@@ -29,3 +29,10 @@
 .crumbs span[aria-current] { color: var(--ink-muted); }
 .course > * { min-width: 0; }
 .ssr .s3 { --c: var(--teal-ink); }
+.dash-grid { display: grid; gap: 2rem; margin-top: 1.5rem; }
+@media (min-width: 64rem) { .dash-grid { grid-template-columns: 1.6fr 1fr; align-items: start; } }
+.finished summary { cursor: pointer; min-height: 48px; display: flex; align-items: center; font-weight: 600; }
+.band--mod { padding: 1.5rem; border-radius: var(--r-lg); background: var(--navy); color: #fff; margin-bottom: 1.5rem; }
+.band--mod h1, .band--mod .lede, .band--mod .band-meta { color: #fff; }
+.dash-grid .grid-cards { grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); }
+.status--todo { color: var(--ink-muted); }

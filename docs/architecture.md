@@ -716,3 +716,11 @@ Where the build made a choice the design left open. Each is a one-line change if
 **Authoring.** `publish()` and `restore()` need an admin or the `content.publish_unit` permission; restore makes a new version with the old text and publishes it. `docx.py` reads a Word file (size, zip and entity checks, mammoth, nh3) into blocks for a draft; `media.py` stores PDFs (`%PDF-`), MP4s (`ftyp`, 150 MB) and images (Pillow re-encode, EXIF stripped, 5 MB, pixel cap). `/learn/media/<id>/` serves only assets used by a published unit, with `nosniff`.
 
 **Importer (`legacy.py`).** Create-only; refuses once any unit was edited. A small reader parses `modules.php`; booklet blocks map to the block types; tables that look jumbled are flagged.
+
+## 26. Stage 5 implementation notes (results, final exam, dashboard)
+
+**`results/policy.py`.** Constants, `round1`, `grade`, `band`, and `compute_results(user_ids)`, which returns a `Result` per user from their attempts (module % per counted part, best counted attempt, `answered` from any submitted attempt with every question answered, the final's best, the pre-test flag, verified email, status). `final_unlocked`, `eligible` and the plain-language `blockers` are derived from it, so the dashboard, mentor pages and the impact preview cannot disagree. `results/insights.py` has `final_bands`, `anchor_percent`, `knowledge_gain` (anchor score of the first final attempt minus the pre-test's) and `weakest_pcs`.
+
+**`assessments/programme.py`.** `start_programme(user, kind)` locks the learner, resumes an open attempt, and otherwise: the pre-test is the anchors, once; the final checks `final_locked_reasons` (pre-test done, every counted part answered) and the cooldown, then draws `per_module` questions from each module's final pool, always including the anchors, refusing if the pool is too small. Items freeze their version, points and option tokens exactly like Stage 2 attempts; `submit()`, autosave and auto-submit are shared.
+
+**Pages.** `/exam/<final|pretest>/` and `/exam/<kind>/start/`; the attempt pages work for programme attempts (`Attempt.title`). `/start/` is the learner's My progress dashboard (`results/views.py`, `templates/progress/dashboard.html`): journey strip, what's left (to do first, finished collapsed), module cards, final state with bands, blockers, weakest PCs, hours, certificate placeholder.

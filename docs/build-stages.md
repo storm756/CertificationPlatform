@@ -18,7 +18,8 @@ Each stage builds on the previous one, so don't skip ahead. Use Opus for stages 
 | 2 | 🟡 Built locally on `stage-2`; see `docs/STATUS.md` |
 | 3 | 🟡 Built locally on `stage-3`; see `docs/STATUS.md` |
 | 4 | 🟡 Built locally on `stage-4`; see `docs/STATUS.md` |
-| 5 to 10 | ⬜ |
+| 5 | 🟡 Built locally on `stage-5`; see `docs/STATUS.md` |
+| 6 to 10 | ⬜ |
 
 **Every page from Stage 1.5 onwards** takes its layout from `design-reference/frontend-prototype/`. The table below says which prototype file to copy for each stage.
 

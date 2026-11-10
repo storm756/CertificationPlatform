@@ -100,6 +100,8 @@ class Profile(models.Model):
     # Set when a mentor's one-time link was used; drives the banner and the email-change block.
     mentor_reset_at = models.DateTimeField(null=True, blank=True)
     mentor_reset_notice = models.BooleanField(default=False)
+    # Set when the pre-test prompt is first shown (shown once; the dashboard keeps a card).
+    pretest_prompted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

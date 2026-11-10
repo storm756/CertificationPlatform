@@ -32,6 +32,10 @@ class QuestionStatus(models.TextChoices):
     RETIRED = "retired", "Retired"
 
 
+class PoolLocked(Exception):
+    pass
+
+
 class Question(models.Model):
     stable_id = models.CharField(max_length=30, unique=True)  # e.g. M4-12
     module = models.ForeignKey("content.Module", on_delete=models.PROTECT, related_name="questions")
@@ -53,9 +57,29 @@ class Question(models.Model):
     def __str__(self):
         return self.stable_id
 
+    def save(self, *args, **kwargs):
+        if self.pk and self.pool == Pool.FINAL:
+            before = Question.objects.filter(pk=self.pk).values_list("pool", flat=True).first()
+            if before and before != Pool.FINAL and self.shown_in_non_final_attempt():
+                raise PoolLocked(
+                    f"{self.stable_id} has been shown in a non-final attempt, so it cannot move "
+                    "into the final pool. Write a new question for the final."
+                )
+        super().save(*args, **kwargs)
+
     @property
     def current_version(self):
         return self.versions.order_by("-version").first()
+
+    def shown_in_non_final_attempt(self) -> bool:
+        """True if any learner has already been shown this question outside the final exam."""
+        from apps.assessments.models import AttemptItem
+
+        return (
+            AttemptItem.objects.filter(question_version__question=self)
+            .exclude(attempt__programme_assessment__kind="final")
+            .exists()
+        )
 
 
 class QuestionVersion(models.Model):

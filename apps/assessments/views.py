@@ -19,9 +19,10 @@ from apps.accounts.models import Role
 from apps.questions import formats
 from apps.questions.models import QuestionImage
 from apps.questions.projections import client_projection
+from apps.results import insights
 from apps.results.policy import PASS_MARK
 
-from . import services
+from . import programme, services
 from .models import AssessmentPart, Attempt, AttemptStatus
 
 
@@ -39,7 +40,9 @@ def learner_required(view):
 
 def _own_attempt(request, pk) -> Attempt:
     return get_object_or_404(
-        Attempt.objects.select_related("part__module"), pk=pk, user=request.user, part__isnull=False
+        Attempt.objects.select_related("part__module", "programme_assessment"),
+        pk=pk,
+        user=request.user,
     )
 
 
@@ -256,6 +259,8 @@ def result(request, pk):
     attempt = _own_attempt(request, pk)
     if attempt.status == AttemptStatus.IN_PROGRESS:
         return redirect("attempt_page", pk=attempt.pk)
+    if attempt.programme_assessment_id:
+        return _programme_result(request, attempt)
     rows = []
     for item in _items(attempt):
         body = item.question_version.body
@@ -311,3 +316,64 @@ def image(request, pk, position):
     response = FileResponse(picture.file.open("rb"), content_type=f"image/{picture.format}")
     response["Cache-Control"] = "private, max-age=3600"
     return response
+
+
+# --- the final exam and the pre-test (architecture §11) ------------------------------------------
+
+
+def _programme_result(request, attempt):
+    """Final: overall % and per-module bands only. Pre-test: the score only. Never a hint, a
+    right/wrong mark or an answer, so a learner cannot learn individual answers (§9.5, §11)."""
+    kind = attempt.programme_assessment.kind
+    context = {
+        "attempt": attempt,
+        "kind": kind,
+        "score": attempt.score,
+        "score_text": f"{attempt.score}%",
+        "passed": attempt.counted and attempt.score is not None and attempt.score >= PASS_MARK,
+        "pass_mark": PASS_MARK,
+        "auto": attempt.status == AttemptStatus.AUTO_SUBMITTED,
+        "bands": insights.final_bands(attempt) if kind == "final" else [],
+    }
+    return render(request, "assessments/programme_result.html", context)
+
+
+@learner_required
+def programme_intro(request, kind):
+    if kind not in ("final", "pretest"):
+        raise Http404
+    assessment = programme.get_assessment(kind)
+    attempts = list(
+        Attempt.objects.filter(user=request.user, programme_assessment=assessment).order_by(
+            "-number"
+        )
+    )
+    reasons = programme.final_locked_reasons(request.user) if kind == "final" else []
+    done = kind == "pretest" and any(not a.is_open for a in attempts)
+    return render(
+        request,
+        "assessments/programme_intro.html",
+        {
+            "kind": kind, "assessment": assessment, "attempts": attempts, "reasons": reasons,
+            "open_attempt": next((a for a in attempts if a.is_open), None), "done": done,
+            "available": kind == "final" or programme.pretest_available(),
+            "pass_mark": PASS_MARK,
+        },
+    )  # fmt: skip
+
+
+@learner_required
+@require_POST
+def programme_start(request, kind):
+    if kind not in ("final", "pretest"):
+        raise Http404
+    try:
+        attempt, _ = programme.start_programme(request.user, kind)
+    except programme.Locked as exc:
+        for reason in exc.reasons:
+            messages.error(request, reason)
+        return redirect("programme_intro", kind=kind)
+    except services.PartNotAvailable as exc:
+        messages.error(request, str(exc))
+        return redirect("programme_intro", kind=kind)
+    return redirect("attempt_page", pk=attempt.pk)

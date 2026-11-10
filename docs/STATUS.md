@@ -25,7 +25,8 @@ If two of these still disagree, or something is missing, **stop and ask in chat*
 | 2. Questions and MCQ assessments | 🟡 **Built locally** (`stage-2`, not pushed) | `Question` and immutable `QuestionVersion`, MCQ schema, XLSX import with dry run, private legacy importer (drafts only), `AssessmentPart` + `validate_part()`, attempts with random option tokens, server-side scoring, the HTMX attempt page and result page, auto-submit job. **The 405 legacy MCQs are imported as drafts and none can go live: they have no hints.** See "Stage 2: what to know" below. |
 | 3. Interactive engine (13 formats) | 🟡 **Built locally** (`stage-3`, not pushed) | The 13 formats (mc, cards, spot, hotspot, sort, match, order, pick, build, settings, dial, chat, crossword) plus colour triage, with pydantic bodies, allow-list projections, random per-attempt tokens, Decimal scorers and safety gates ported from the legacy `engine.js` (parity proved on 128 frozen cases), a private legacy importer, safe hotspot images, and a TypeScript/esbuild renderer (`engine/`, bundle `static/js/engine.js`). Journeys 8 and 10 pass. **The 104 real legacy challenges validate but are not imported, and none can go live: they have no hints.** See "Stage 3: what to know" below. |
 | 4. Learning content | 🟡 **Built locally** (`stage-4`, from `stage-3` f375771, not pushed) | `/learn/` shows all 9 modules: overview, the 55 imported reading topics (each with an inline interaction), a film page per module (poster + English/Hindi transcript), a handout web page and a myth-or-fact check. Versioned blocks, publish/restore, DOCX and image upload, unit progress, `/learn/check` (practice only) and the adult-only time heartbeat. See "Stage 4: what to know". |
-| 5 to 10 | ⬜ | In order. One stage = one branch = one PR. |
+| 5. Results, final exam, pre-test, dashboard | 🟡 **Built locally** (`stage-5`, from `stage-4`, not pushed) | `compute_results` with Decimal rounding and the §10.3 worked example as a test, the pre-test (anchors, once, resumable) and the final (blueprint draw with anchors, unlock rules, cooldown setting), bands, knowledge gain, the pool rule, and the **My progress** dashboard. See "Stage 5: what to know". |
+| 6 to 10 | ⬜ | In order. One stage = one branch = one PR. |
 
 **Live addresses:**
 * Staging: `https://staging.cyberfirstresponse.io`. It runs Stage 0 code; Stage 1 isn't deployed yet, so `/register` returns 404.
@@ -159,3 +160,16 @@ left out of the copy. The review fixes are listed in `build-stages.md` under Sta
   * The Caddy CSP now allows `script-src https://www.youtube.com` (needed by the YouTube IFrame API that reports the 80% mark). A person must deploy that Caddyfile change.
   * Some legacy text was extracted from PDFs and contains fragments (for example a "Key term / Figure 1.3" paragraph in M1 topic 1). It is imported as written; the content team should review the topics in the editor.
   * Nothing creates a "Content publisher" permission holder yet: grant `content.publish_unit` to a mentor in the admin.
+
+## Stage 5: what to know (read before Stage 6)
+
+* **Nothing can run the real exams yet.** The pre-test and the final draw from the `final` pool, which the content team writes fresh (D19). Until anchors exist, the pre-test shows "not available yet" and the final stays locked with that reason. Tests and screenshots use invented questions only.
+* **Content decisions needed:** which questions are anchors (mark `is_anchor`; the blueprint may also list ids), and the blueprint counts (today 6/6/5/6/6/6/5/5/5 = 50 in `programme.DEFAULT_PER_MODULE`, editable on the `ProgrammeAssessment` row until Stage 6 adds an editor).
+* **Design calls made in Stage 5** (tell the lead if one is wrong):
+  * A module with no published counted part is not counted yet (it neither enters the mean nor blocks eligibility), following §10.4.
+  * Attempt scores are stored to one decimal, so the mean uses those stored values; the worked example is tested both with full-precision parts and through real attempts.
+  * The pre-test prompt is shown once, right after the first sign-in (`Profile.pretest_prompted_at`); "Later" goes to the dashboard, which keeps a pre-test card. A learner with no pre-test available is not prompted.
+  * The final result shows the overall % and per-module bands only; the pre-test result shows the score only. Neither shows questions, hints or right/wrong marks.
+  * A question that has been shown in any non-final attempt cannot be moved into the final pool (`Question.save` raises `PoolLocked`). Anchors are written directly in the final pool, so showing them in the pre-test is allowed.
+  * The practice mock has no page yet (a placeholder step on the journey strip).
+  * `eligible` does not yet check for an issued certificate (Stage 7 sets `already_issued`).

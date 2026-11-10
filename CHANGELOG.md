@@ -100,3 +100,10 @@
 ## 2026-11-10: Stage 4 review fixes
 - Completion and time-tracking requests for an unpublished (draft or retired) lesson are refused (404; the heartbeat counts nothing). A malformed module number in a posted check or heartbeat is a 404, not a server error. Why: no progress against lessons learners cannot see.
 - A signed-out visitor can answer a published practice check and gets the score and full answer; no `LearnCheck` or progress row is written for them (it used to fail). Quiz and final questions are still refused. Why: §8.4, awareness content is public.
+
+## 2026-11-10: Stage 5, results, final exam, pre-test and dashboard
+- `compute_results` (Decimal, `round1` only) with the §10.3 worked example and the boundary values as tests; grades and bands. Why: §10, D1, D2.
+- Pre-test (anchors only, once, resumable) and final exam (blueprint draw with anchors, cooldown setting, unlock rules, locked reasons). Final shows overall % and bands; the pre-test shows the score only. Why: §11, D14.
+- Knowledge gain (first final's anchor score minus the pre-test's), weakest PCs, hours. Why: §11, §15.
+- A question shown in a non-final attempt cannot move into the final pool. Why: §11.
+- The learner "My progress" dashboard replaces the placeholder welcome page; the pre-test is offered once after the first sign-in (`Profile.pretest_prompted_at`). Why: §15, Stage 5.
