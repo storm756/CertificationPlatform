@@ -61,7 +61,9 @@ def guardian_consent_view(request, token):
         return render(request, "registration/guardian_invalid.html", status=404)
     form = GuardianConfirmForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
-        guardian.confirm(consent, form.cleaned_data["guardian_name"], request)
+        if not guardian.confirm(consent, form.cleaned_data["guardian_name"], request):
+            # replaced by a resend, expired, or already confirmed since the page was checked
+            return render(request, "registration/guardian_invalid.html", status=404)
         return render(request, "registration/guardian_done.html")
     return render(
         request,

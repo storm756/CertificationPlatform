@@ -372,3 +372,56 @@ def test_overlapping_resends_leave_the_last_emailed_link_working(
     links = [re.search(r"/guardian/([^/\s]+)/", m.body).group(1) for m in mailoutbox]
     assert len(links) == 2
     assert guardian.find_by_token(links[-1]) is not None  # the newest email's link works
+
+
+# --- an old link replaced by a resend cannot approve consent -------------------------------------
+
+
+def test_an_old_link_replaced_by_a_resend_cannot_confirm(make_user, mailoutbox):
+    import re
+
+    user, old = pending_minor(make_user, link_sent_days_ago=1)
+    seen = guardian.find_by_token(old)  # the guardian's page was checked while the link was live
+    assert guardian.resend(user) is True  # ...then the learner asked for a fresh link
+    new = re.search(r"/guardian/([^/\s]+)/", mailoutbox[0].body).group(1)
+    assert guardian.confirm(seen, "Ravi Desai") is False  # the old link must not approve now
+    consent = GuardianConsent.objects.get(user=user)
+    assert consent.confirmed_at is None and consent.confirmed_name == ""
+    user.refresh_from_db()
+    assert user.status == UserStatus.PENDING_GUARDIAN
+    assert events("guardian.confirmed").count() == 0
+    assert guardian.find_by_token(new) is not None  # the new link still works
+    assert guardian.confirm(guardian.find_by_token(new), "Ravi Desai") is True
+
+
+def test_the_consent_page_refuses_an_old_link_replaced_between_check_and_confirm(
+    client, make_user, monkeypatch
+):
+    user, old = pending_minor(make_user, link_sent_days_ago=1)
+    real_find = guardian.find_by_token
+
+    def find_then_a_resend_replaces_the_link(raw_token, now=None):
+        consent = real_find(raw_token, now)
+        if consent is not None and not getattr(find_then_a_resend_replaces_the_link, "done", False):
+            find_then_a_resend_replaces_the_link.done = True
+            GuardianConsent.objects.filter(pk=consent.pk).update(token_hash="replaced-by-a-resend")
+        return consent
+
+    monkeypatch.setattr(guardian, "find_by_token", find_then_a_resend_replaces_the_link)
+    response = client.post(
+        reverse("guardian_consent", args=[old]),
+        {"guardian_name": "Ravi Desai", "declaration": "on"},
+    )
+    assert response.status_code == 404  # the invalid-link page, not "thank you"
+    assert GuardianConsent.objects.get(user=user).confirmed_at is None
+    assert events("guardian.confirmed").count() == 0
+
+
+def test_a_link_that_expires_before_confirm_cannot_approve(make_user):
+    user, raw = pending_minor(make_user, link_sent_days_ago=13)
+    seen = guardian.find_by_token(raw)
+    GuardianConsent.objects.filter(user=user).update(
+        sent_at=timezone.now() - timedelta(days=settings.GUARDIAN_LINK_DAYS + 1)
+    )
+    assert guardian.confirm(seen, "Ravi Desai") is False
+    assert GuardianConsent.objects.get(user=user).confirmed_at is None

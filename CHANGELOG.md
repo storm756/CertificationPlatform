@@ -81,3 +81,6 @@
 - The pill says "Saved" only when the server has accepted every answer. A refused answer (400, 403) shows a new "Not saved" state. Before, any 4xx showed "Saved".
 - The engine hands each change over at once instead of waiting 120 ms, so a quick Next can no longer drop an interactive answer. The question forms no longer use `hx-post`; without JavaScript they post as before.
 - `tools/e2e_save_retry.mjs` (with `tools/seed_e2e.py`, invented data) is the browser test: it fails question 1's save, moves to question 2, restores the connection and checks the server holds question 1's answer, for multiple choice and interactive questions, at 390px and 1366px, under the production CSP. It also covers a quick Next, a refused answer, Review and submit, and a chat reply.
+
+## 2026-11-10: Guardian confirmation rechecks the link under the lock
+- `guardian.confirm()` locks the consent row and checks that the link the page was opened with is still the stored one and still live. A link replaced by a resend (or expired, or already used) can no longer approve consent; the consent page then shows the invalid-link page. Why: D16.
