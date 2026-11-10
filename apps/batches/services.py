@@ -140,3 +140,15 @@ def issue_reset_link(actor, user: User, request=None) -> str:
     )
     audit("password.reset_link_issued", actor=actor, target=user, request=request)
     return raw
+
+
+@transaction.atomic
+def set_auto_issue(actor, batch: Batch, value: bool, request=None) -> Batch:
+    """The batch's certificate auto-issue switch (D10). Mentors set it for their own batches."""
+    if batch.is_open_pool and actor.role != Role.ADMIN:
+        raise PermissionDenied
+    was = batch.auto_issue
+    batch.auto_issue = bool(value)
+    batch.save(update_fields=["auto_issue", "updated_at"])
+    audit("batch.auto_issue_changed", actor=actor, target=batch, request=request, was=was, now=batch.auto_issue)  # fmt: skip
+    return batch

@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.batches",
     "apps.mentors",
+    "apps.staff",
     "apps.content",
     "apps.questions",
     "apps.assessments",

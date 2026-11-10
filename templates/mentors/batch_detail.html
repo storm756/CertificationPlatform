@@ -1,7 +1,8 @@
 {% extends "base.html" %}
-{% load i18n ccfr %}
+{% load static i18n ccfr %}
 {% block head_title %}{{ batch.code }}{% endblock %}
 {% block page_class %} page--wide{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/staff.css' %}">{% endblock %}
 {% block content %}
   <p><a class="link" href="{% url 'mentor_home' %}">{% icon "arrow-left" "sm" %} {% translate "My batches" %}</a></p>
   <div>
@@ -41,22 +42,42 @@
     {% endif %}
   </section>
 
+  <section class="card stack" aria-labelledby="cert-switch">
+    <h2 id="cert-switch">{% translate "Certificates" %}</h2>
+    <form class="row" method="post" action="{% url 'mentor_batch_auto_issue' batch.pk %}">{% csrf_token %}
+      <label class="check"><input type="checkbox" name="auto_issue"{% if batch.auto_issue %} checked{% endif %}><span>{% translate "Issue certificates automatically when a learner is eligible" %}</span></label>
+      <button class="btn btn-sm btn-outline" type="submit">{% translate "Save" %}</button>
+    </form>
+    <p class="muted">{% blocktranslate with n=overview.awaiting|length %}{{ n }} eligible and awaiting approval · 0 issued this week (certificates arrive in a later stage){% endblocktranslate %}</p>
+    {% if overview.awaiting %}<ul class="result-list">{% for r in overview.awaiting %}<li class="result-item"><a class="link" href="{% url 'mentor_learner' r.user.pk %}">{{ r.name }}</a><span>{{ r.overall }}%</span></li>{% endfor %}</ul>{% endif %}
+  </section>
+
+  {% if overview.stuck %}
+    <section class="stack" aria-labelledby="stuck">
+      <h2 id="stuck">{% translate "Learners who may be stuck" %}</h2>
+      <ul class="result-list">{% for r in overview.stuck %}<li class="result-item"><a class="link" href="{% url 'mentor_learner' r.user.pk %}">{{ r.name }}</a><span class="muted">{{ r.reasons|join:"; " }}</span></li>{% endfor %}</ul>
+    </section>
+  {% endif %}
+
   <section class="stack">
-    <h2>Roster ({{ roster|length }})</h2>
-    <div class="table-wrap">
-      <table class="table">
-        <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Joined</th><th scope="col">Status</th></tr></thead>
+    <div class="section-title"><h2>{% translate "Roster" %} ({{ roster|length }})</h2>
+      <form method="post" action="{% url 'mentor_batch_export' batch.pk %}">{% csrf_token %}<button class="btn btn-sm btn-outline" type="submit">{% icon "download" %}{% translate "Download CSV" %}</button></form></div>
+    <div class="table-wrap" tabindex="0" role="region" aria-label="{% translate 'Results by learner' %}">
+      <table class="table heatmap">
+        <thead><tr><th scope="col">{% translate "Learner" %}</th>{% for number, title in overview.modules %}<th scope="col"><abbr title="{{ title }}">M{{ number }}</abbr></th>{% endfor %}<th scope="col">{% translate "Final" %}</th><th scope="col">{% translate "Overall" %}</th><th scope="col">{% translate "Status" %}</th></tr></thead>
         <tbody>
-          {% for e in roster %}
+          {% for r in overview.rows %}
             <tr>
-              <th scope="row"><a class="link" href="{% url 'mentor_learner' e.user_id %}">{{ e.user.profile.certificate_name }}</a></th>
-              <td>{{ e.user.email }}</td>
-              <td>{{ e.joined_at|date:"d M Y" }}</td>
-              <td>{% if not e.email_verified %}unverified{% elif e.user.status == 'pending_guardian' %}waiting for guardian{% else %}{{ e.user.status }}{% endif %}</td>
+              <th scope="row"><a class="link" href="{% url 'mentor_learner' r.user.pk %}">{{ r.name }}</a><br><small class="muted">{{ r.user.email }}</small></th>
+              {% for c in r.cells %}<td class="heat{% if c.fail %} heat--fail{% endif %}">{% if c.parts %}{{ c.value }}{% if c.fail %} <span class="sr-only">{% translate "below 50" %}</span>{% endif %}{% else %}—{% endif %}</td>{% endfor %}
+              <td>{% if r.final is not None %}{{ r.final }}{% else %}—{% endif %}</td>
+              <td><strong>{{ r.overall }}</strong></td>
+              <td>{{ r.status }}</td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
+    <p class="muted">{% translate "Red cells are below 50%." %}</p>
   </section>
 {% endblock %}

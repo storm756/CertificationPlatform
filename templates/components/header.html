@@ -24,6 +24,9 @@
         {% if user.role == 'mentor' or user.role == 'admin' %}
           {% url 'mentor_home' as mentor_url %}
           <li><a href="{{ mentor_url }}"{% if mentor_url in request.path %} aria-current="page"{% endif %}>{% icon "users" %}{% translate "My batches" %}</a></li>
+          <li><a href="{% url 'staff_questions' %}"{% if '/staff/questions' in request.path %} aria-current="page"{% endif %}>{% icon "list" %}{% translate "Questions" %}</a></li>
+          {% if user.role == 'admin' %}<li><a href="{% url 'staff_marks' %}"{% if '/staff/marks' in request.path %} aria-current="page"{% endif %}>{% icon "sliders" %}{% translate "Marks" %}</a></li>
+          <li><a href="{% url 'staff_report' %}"{% if '/staff/report' in request.path %} aria-current="page"{% endif %}>{% icon "chart" %}{% translate "Report" %}</a></li>{% endif %}
         {% endif %}
         {% if user.is_authenticated and user.role == 'learner' %}
           {% url 'start' as start_url %}

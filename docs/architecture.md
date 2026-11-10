@@ -730,3 +730,15 @@ Where the build made a choice the design left open. Each is a one-line change if
 **Fixed papers.** `release` stores the approved `version`, `approved_points`, `approved_format` and `approved_module` on each `ExamSetItem` and freezes learners to those versions. Model guards (`ExamSetLocked`, `QuestionLocked`) and Postgres triggers (migration `0006_released_sets_fixed`) refuse changes to released membership, the released set, the marks / format / module / pool / status of its questions, and new versions of them; corrections are a new draft set. Import and release take the same `select_for_update` lock on the set row. `Question.reuse_reasons()` is the single reuse rule (module/practice attempts, lesson checks and lesson check blocks); `examsets.blueprint_problems()` and `release_errors()` back both Check sets and Release. Items freeze their version, points and option tokens exactly like Stage 2 attempts; `submit()`, autosave and auto-submit are shared.
 
 **Pages.** `/exam/<final|pretest>/` and `/exam/<kind>/start/`; the attempt pages work for programme attempts (`Attempt.title`). `/start/` is the learner's My progress dashboard (`results/views.py`, `templates/progress/dashboard.html`): journey strip, what's left (to do first, finished collapsed), module cards, final state with bands, blockers, weakest PCs, hours, certificate placeholder.
+
+## 27. Stage 6 implementation notes (staff tools)
+
+**Access.** `batches_for` still scopes every mentor query. `apps/staff` adds `staff_required` (mentor or admin; a learner gets 403 and an `access.denied` audit) and `admin_required`. `rules.can_access_final_pool` is the single check for the final pool: `visible_questions` excludes it for mentors, the question pages 403 and log, the Django-admin `QuestionAdmin.get_queryset` hides it, and the editor refuses `pool=final` from a mentor.
+
+**Dashboard (`mentors/dashboard.py`).** One `compute_results` call per batch feeds the roster, heatmap (red below 50, a dash where a module has no assessment), stuck learners and the eligible list. `batch_export` is a POST, scoped by `scoped_batch`, audited with counts only (`batch.exported`), and writes through `export.safe_cell`.
+
+**Mark split (`staff/views.py`, `results/impact.py`).** `compute_results(user_ids, overrides)` applies proposed marks, counted flags and a module's counted flag in memory (`_counted_parts`). `impact()` runs it twice for every learner and compares `meets_requirements`. A change is previewed, then confirmed in a second request that recomputes and applies it inside one transaction with a `marks.changed` audit event (counts and the part values, no names).
+
+**Report.** Per batch: registered, active, eligible, issued (0 until Stage 7), mean knowledge gain against the 25-point target; item statistics (% correct per question, per learner language); the email budget today.
+
+**History.** simple-history records `Batch`, `Enrolment`, `Question` and `AssessmentPart` (`Historical*` tables).

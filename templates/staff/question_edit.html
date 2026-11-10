@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load static i18n ccfr %}
+{% block head_title %}{{ question.stable_id }}{% endblock %}
+{% block page_class %} page--wide{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/staff.css' %}">{% endblock %}
+{% block content %}
+  <p><a class="link" href="{% url 'staff_questions' %}">{% icon "arrow-left" "sm" %} {% translate "Questions" %}</a></p>
+  <header class="stack"><h1>{{ question.stable_id }} <small class="muted">· {{ question.get_format_display }} · v{{ version.version }} · {{ question.get_status_display }}</small></h1>
+    <p><a class="btn btn-outline" href="{% url 'staff_question_preview' question.pk %}">{% icon "eye" %}{% translate "Preview as learner" %}</a></p></header>
+  {% if errors %}{% include "components/alert.html" with tone="danger" icon="alert" title=_("This could not be saved") text="" %}<ul class="ticks">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+  <form class="form-stack" method="post">{% csrf_token %}
+    <div class="field"><label for="body">{% translate "Question (JSON, checked against the format's schema when you save)" %}</label>
+      <textarea class="textarea json-editor" id="body" name="body" spellcheck="false">{{ body_text }}</textarea></div>
+    <div class="row">
+      <label>PC tag <input class="input" name="pc" value="{{ pc }}"></label>
+      <label>{% translate "Type" %} <input class="input" name="type" value="{{ qtype }}"></label>
+      <label>{% translate "Pool" %} <select class="select" name="pool">{% for p in pools %}<option value="{{ p }}"{% if p == pool %} selected{% endif %}>{{ p }}</option>{% endfor %}</select></label>
+    </div>
+    {% if is_admin %}<label class="check"><input type="checkbox" name="keep_live"><span>{% translate "Keep it live (publishes this version now)" %}</span></label>{% endif %}
+    <div><button class="btn btn-primary" type="submit">{% translate "Save as a new version" %}</button></div>
+  </form>
+  {% if is_admin %}
+    <section class="card stack"><h2>{% translate "Publishing" %}</h2>
+      {% if live_errors %}<p>{% translate "It cannot go live yet:" %}</p><ul class="ticks">{% for e in live_errors %}<li>{{ e }}</li>{% endfor %}</ul>
+      {% else %}<form method="post" action="{% url 'staff_question_publish' question.pk %}">{% csrf_token %}<button class="btn btn-accent" type="submit">{% translate "Publish" %}</button></form>{% endif %}
+    </section>
+  {% endif %}
+{% endblock %}

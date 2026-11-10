@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Exists, OuterRef
+from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -17,6 +18,7 @@ from apps.batches.models import Enrolment
 from apps.batches.rules import is_accepting, seats_used
 from apps.batches.scoping import batches_for
 
+from . import dashboard, export
 from .forms import CertificateNameForm, MoveLearnerForm, NewBatchForm, RegistrationSettingsForm
 
 NEW_SIGNUP_DAYS = 7
@@ -80,6 +82,7 @@ def batch_detail(request, pk):
         "mentors/batch_detail.html",
         {
             "batch": batch,
+            "overview": dashboard.batch_overview(batch, now),
             "roster": roster,
             "new_signups": [e for e in roster if e.joined_at >= cutoff],
             "accepting_now": is_accepting(batch, now),
@@ -106,6 +109,7 @@ def batch_settings(request, pk):
             "batch": batch,
             "roster": list(_roster(batch)),
             "new_signups": [],
+            "overview": dashboard.batch_overview(batch, now),
             "accepting_now": is_accepting(batch, now),
             "seats": seats_used(batch, now),
             "form": form,
@@ -196,4 +200,28 @@ def learner_reset_link(request, learner_id):
         {"learner": enrolment.user, "url": url, "enrolment": enrolment},
     )
     response["Cache-Control"] = "no-store"
+    return response
+
+
+@mentor_required
+@require_POST
+def batch_auto_issue(request, pk):
+    batch = services.scoped_batch(request.user, pk, request)
+    services.set_auto_issue(request.user, batch, request.POST.get("auto_issue") == "on", request)
+    messages.success(request, "Auto-issue updated.")
+    return redirect("mentor_batch", pk=batch.pk)
+
+
+@mentor_required
+@require_POST
+def batch_export(request, pk):
+    """The batch's results as a CSV download. Audited; every cell is spreadsheet-safe."""
+    batch = services.scoped_batch(request.user, pk, request)
+    overview = dashboard.batch_overview(batch)
+    body = export.batch_csv(overview, batch)
+    audit("batch.exported", actor=request.user, target=batch, request=request, rows=len(overview["rows"]))  # fmt: skip
+    response = HttpResponse(body, content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = f'attachment; filename="{batch.code}-results.csv"'
+    response["Cache-Control"] = "no-store"
+    response["X-Content-Type-Options"] = "nosniff"
     return response

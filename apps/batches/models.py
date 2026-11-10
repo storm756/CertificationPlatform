@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
+from simple_history.models import HistoricalRecords
 
 
 class BatchStatus(models.TextChoices):
@@ -34,6 +35,7 @@ class Batch(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
 
     class Meta:
         verbose_name_plural = "batches"
@@ -77,6 +79,7 @@ class Enrolment(models.Model):
     joined_at = models.DateTimeField(auto_now_add=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"user {self.user_id} in batch {self.batch_id}"

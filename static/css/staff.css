@@ -1,0 +1,6 @@
+.heatmap th, .heatmap td { white-space: nowrap; }
+.heat { text-align: center; font-variant-numeric: tabular-nums; }
+.heat--fail { background: var(--danger-tint); color: var(--danger); font-weight: 700; }
+.impact { display: grid; gap: .5rem; }
+.impact strong { font-size: 1.4rem; }
+.json-editor { width: 100%; min-height: 24rem; font-family: ui-monospace, Consolas, monospace; font-size: .9rem; }
