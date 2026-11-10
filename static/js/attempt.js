@@ -15,45 +15,138 @@
     var text = el.querySelector("[data-pill-text]");
     if (text) { text.textContent = el.getAttribute("data-text-" + state) || ""; }
   };
-  var form = function () { return document.querySelector("[data-answer-form]"); };
+  /* ---- Saving answers: an outbox kept per question ----
+     Each change is copied (with the question number it belongs to) into the outbox at once, so it
+     never depends on which question is on screen later. It is sent after a short pause, or at
+     once when the learner navigates away. A failed save stays in the outbox and is retried for
+     the ORIGINAL question with a growing delay. "Saved" is shown only when the server accepted
+     every answer; an answer the server refuses is shown as "Not saved", never as saved. */
+  var outbox = {};   // question number -> { body, version, sentVersion, inflight, failing, delay, timer }
+  var refused = {};  // question number -> true (the server said no; not retried)
+  var DEBOUNCE = 150, FIRST_RETRY = 2000, LAST_RETRY = 30000, TIMEOUT = 15000;
 
-  /* ---- Retry with a growing delay until the answer is saved ---- */
-  var retryTimer = null, delay = 2000, pendingForm = null;
-  var scheduleRetry = function () {
-    if (retryTimer) { return; }
-    retryTimer = window.setTimeout(function () {
-      retryTimer = null;
-      var f = pendingForm && document.body.contains(pendingForm) ? pendingForm : form();
-      if (f && window.htmx) { window.htmx.trigger(f, "change"); }
-    }, delay);
-    delay = Math.min(delay * 2, 30000);
+  var pending = function () { return Object.keys(outbox).length > 0; };
+  var currentPosition = function () {
+    var f = document.querySelector("[data-answer-form]");
+    return f && f.elements.position ? f.elements.position.value : null;
   };
-  var failed = function (evt) {
-    var target = evt.detail && evt.detail.elt;
-    if (!target || !target.matches || !target.matches("[data-answer-form]")) { return; }
-    pendingForm = target;
-    setState("offline");
-    scheduleRetry();
-  };
-  document.body.addEventListener("htmx:beforeRequest", function (evt) {
-    if (evt.detail.elt.matches && evt.detail.elt.matches("[data-answer-form]")) { setState("saving"); }
-  });
-  document.body.addEventListener("htmx:sendError", failed);
-  document.body.addEventListener("htmx:timeout", failed);
-  document.body.addEventListener("htmx:responseError", function (evt) {
-    var status = evt.detail.xhr && evt.detail.xhr.status;
-    if (status === 409) { return; } // the attempt was submitted elsewhere: the server redirects
-    if (status && status < 500) { setState("saved"); return; } // a refused answer is not retried
-    failed(evt);
-  });
-  document.body.addEventListener("htmx:afterRequest", function (evt) {
-    if (evt.detail.successful && evt.detail.elt.matches && evt.detail.elt.matches("[data-answer-form]")) {
-      delay = 2000; pendingForm = null;
-      if (retryTimer) { window.clearTimeout(retryTimer); retryTimer = null; }
+  var refreshPill = function () {
+    var keys = Object.keys(outbox);
+    if (keys.length) {
+      setState(keys.some(function (k) { return outbox[k].failing; }) ? "offline" : "saving");
+    } else {
+      setState(Object.keys(refused).length ? "error" : "saved");
     }
+  };
+
+  /* What the server sends back for a save is the pill and the refreshed question map. It is
+     applied only while that question is still the one on screen (the map marks the current
+     question). */
+  var applyResponse = function (position, html) {
+    if (String(position) !== String(currentPosition()) || !window.htmx || !window.htmx.swap) { return; }
+    window.htmx.swap("#save-status", html, { swapStyle: "outerHTML" });
+  };
+
+  var send, fail;
+  var schedule = function (entry, ms) {
+    if (entry.timer) { window.clearTimeout(entry.timer); }
+    entry.timer = window.setTimeout(function () { entry.timer = null; send(entry); }, ms);
+  };
+  fail = function (entry) {
+    entry.inflight = false;
+    entry.failing = true;
+    schedule(entry, entry.delay);
+    entry.delay = Math.min(entry.delay * 2, LAST_RETRY);
+    refreshPill();
+  };
+  var finished = function (entry, response, html) {
+    entry.inflight = false;
+    if (response.ok) {
+      entry.failing = false;
+      entry.delay = FIRST_RETRY;
+      if (entry.version !== entry.sentVersion) { send(entry); refreshPill(); return; } // changed meanwhile
+      delete outbox[entry.position];
+      applyResponse(entry.position, html);
+      refreshPill();
+      document.dispatchEvent(new CustomEvent("ccfr:saved", { detail: { position: entry.position } }));
+      return;
+    }
+    if (response.status === 409) { // the attempt was submitted elsewhere
+      delete outbox[entry.position];
+      var to = response.headers.get("HX-Redirect");
+      if (to) { window.location.assign(to); }
+      return;
+    }
+    if (response.status >= 500 || response.status === 408 || response.status === 429) { fail(entry); return; }
+    delete outbox[entry.position]; // refused (400, 403 ...): retrying cannot help, and it is not saved
+    refused[entry.position] = true;
+    refreshPill();
+  };
+  send = function (entry) {
+    if (entry.inflight) { return; }
+    entry.inflight = true;
+    entry.sentVersion = entry.version;
+    var controller = window.AbortController ? new window.AbortController() : null;
+    var timeout = window.setTimeout(function () { if (controller) { controller.abort(); } }, TIMEOUT);
+    window.fetch(entry.path, {
+      method: "POST", body: entry.body, credentials: "same-origin", keepalive: true,
+      headers: { "Content-Type": "application/x-www-form-urlencoded", "HX-Request": "true" },
+      signal: controller ? controller.signal : undefined
+    }).then(function (response) {
+      return response.text().then(function (html) { window.clearTimeout(timeout); finished(entry, response, html); });
+    }, function () { window.clearTimeout(timeout); fail(entry); });
+  };
+
+  var capture = function (answerForm) {
+    var field = answerForm.elements.position;
+    if (!field) { return; }
+    var position = field.value;
+    var entry = outbox[position];
+    if (!entry) {
+      entry = outbox[position] = { position: position, version: 0, sentVersion: 0, inflight: false, failing: false, delay: FIRST_RETRY, timer: null };
+    }
+    entry.path = answerForm.getAttribute("action");
+    entry.body = new window.URLSearchParams(new window.FormData(answerForm)).toString();
+    entry.version += 1;
+    delete refused[position];
+    schedule(entry, DEBOUNCE);
+    refreshPill();
+  };
+  var flushAll = function () {
+    Object.keys(outbox).forEach(function (key) {
+      var entry = outbox[key];
+      if (!entry.inflight) { schedule(entry, 0); }
+    });
+  };
+
+  document.addEventListener("change", function (evt) {
+    var answerForm = evt.target && evt.target.closest ? evt.target.closest("[data-answer-form]") : null;
+    if (answerForm) { capture(answerForm); }
+  }, true);
+  /* Leaving the question (Next, Previous, the map): send what is waiting now. */
+  document.body.addEventListener("htmx:beforeRequest", flushAll);
+  /* Leaving the page: the request is kept alive by the browser. */
+  window.addEventListener("pagehide", flushAll);
+  window.addEventListener("online", function () {
+    Object.keys(outbox).forEach(function (key) { outbox[key].delay = FIRST_RETRY; });
+    flushAll();
   });
-  window.addEventListener("online", function () { if (pendingForm) { delay = 2000; scheduleRetry(); } });
-  window.addEventListener("offline", function () { if (form()) { setState("offline"); } });
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) { flushAll(); } });
+  window.addEventListener("offline", function () { if (pending()) { refreshPill(); } });
+  /* A normal link (such as Review and submit) waits until every answer is saved, so the next
+     page shows them. If a save cannot go through, the learner stays here and sees why. */
+  root.addEventListener("click", function (evt) {
+    var link = evt.target.closest ? evt.target.closest("a[href]") : null;
+    if (!link || link.hasAttribute("hx-get") || evt.defaultPrevented || !pending()) { return; }
+    evt.preventDefault();
+    flushAll();
+    var waited = 0;
+    var timer = window.setInterval(function () {
+      waited += 100;
+      if (!pending()) { window.clearInterval(timer); window.location.assign(link.href); }
+      else if (waited >= 8000) { window.clearInterval(timer); refreshPill(); }
+    }, 100);
+  });
 
   /* ---- After a question loads: move focus to its heading ---- */
   document.body.addEventListener("htmx:afterSwap", function (evt) {

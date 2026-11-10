@@ -26,16 +26,19 @@ const RENDERERS: Record<string, Renderer> = {
   crossword: renderCrossword,
 };
 
+/** Resolves once the server has accepted this question's answer. attempt.js keeps the answer in its
+ * outbox, retries a failed save for this same question, and announces "ccfr:saved" when done. */
 function waitForSave(form: HTMLFormElement): Promise<void> {
+  const position = (form.elements.namedItem("position") as HTMLInputElement | null)?.value;
   return new Promise((resolve) => {
     const handler = (event: Event) => {
-      const detail = (event as CustomEvent).detail as { successful?: boolean } | undefined;
-      if (detail && detail.successful) {
-        form.removeEventListener("htmx:afterRequest", handler);
+      const detail = (event as CustomEvent).detail as { position?: string } | undefined;
+      if (detail && String(detail.position) === position) {
+        document.removeEventListener("ccfr:saved", handler);
         resolve();
       }
     };
-    form.addEventListener("htmx:afterRequest", handler);
+    document.addEventListener("ccfr:saved", handler);
   });
 }
 
@@ -50,18 +53,16 @@ export function mount(root: HTMLElement): void {
     root.textContent = "This question can't be shown.";
     return;
   }
-  let timer: number | undefined;
   const ctx: Ctx = {
     root,
     q,
     imageUrl: root.dataset.imageUrl,
     save(response) {
+      // Handed over at once: attempt.js copies it into its outbox (tagged with this question's
+      // number), so moving on, or a failed save, can never lose it or send it to another question.
       ctx.q.response = response;
-      window.clearTimeout(timer);
-      timer = window.setTimeout(() => {
-        field.value = JSON.stringify(response);
-        form.dispatchEvent(new Event("change", { bubbles: true })); // htmx saves, retries, shows the pill
-      }, 120);
+      field.value = JSON.stringify(response);
+      form.dispatchEvent(new Event("change", { bubbles: true }));
     },
     saved: () => waitForSave(form),
     async refetch() {

@@ -1,8 +1,8 @@
 {% comment %}One question. `q` comes from client_projection(): the stem and the options as random
   one-off tokens. Nothing else about the question reaches this template.{% endcomment %}
 {% load i18n ccfr %}
-<form id="answer-form" class="qcard" method="post" action="{% url 'attempt_answer' attempt.pk %}"
-  hx-post="{% url 'attempt_answer' attempt.pk %}" hx-trigger="change" hx-target="#save-status" hx-swap="outerHTML" data-answer-form>
+{# No hx-post: attempt.js keeps each answer in an outbox and sends it for THIS question, even if the learner moves on or the connection drops. Without JavaScript the form posts normally. #}
+<form id="answer-form" class="qcard" method="post" action="{% url 'attempt_answer' attempt.pk %}" data-answer-form>
   {% csrf_token %}
   <input type="hidden" name="position" value="{{ position }}">
   <input type="hidden" name="flag_present" value="1">
