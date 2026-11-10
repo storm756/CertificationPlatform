@@ -37,7 +37,8 @@ The historical review notes dated 11 Nov describe the earlier draft state. The o
 | 2. Questions and MCQ assessments | ✅ **Merged into `main`** (8c37cd5, PR #5) · content follow-up local | **405 live MCQs with approved hints** in the development database. Nine graded Part A quizzes and a practice pool. |
 | 3. Interactive engine (13 formats) | ✅ **Merged into `main`** (9d7f7f0, PR #6) · content follow-up local | **104 live challenges with approved hints** in the development database. Nine graded Part B assessments, including the six Module 8 crosswords. The standalone practice mock page is pending. |
 | 4. Learning content | ✅ **Merged into `main`** (c55f95f, PR #7) · content follow-up local | On localhost, `/learn/` shows 55 real readings, nine films and handouts, and nine module practice checks. All flagged tables are corrected. Module 10 shows Coming soon. |
-| 5–6 | 🟡 **Saved on local branches** (`stage-5`, `stage-6`) | The pre-test and final remain Coming soon while the team writes the exam bank. |
+| 5. Results, final exam, pre-test, dashboard | 🟡 **In review** (`stage-5-review`, from `origin/main` + 3c81582, af74fd3, 7194479 and the exam-set work) | `compute_results` with Decimal rounding and the §10.3 worked example as a test, the pre-test (anchors, once, resumable) and the final (blueprint draw with anchors, unlock rules, cooldown setting), bands, knowledge gain, the pool rule, and the **My progress** dashboard. See "Stage 5: what to know". |
+| 6. Staff tools | 🟡 **Saved on a local branch** (`stage-6`) | Its own follow-up PR after Stage 5. |
 | 7–10 | ⬜ | In order. One stage = one branch = one PR. |
 
 **Live addresses:**
@@ -238,3 +239,16 @@ left out of the copy. The review fixes are listed in `build-stages.md` under Sta
   * The Caddy CSP now allows `script-src https://www.youtube.com` (needed by the YouTube IFrame API that reports the 80% mark). A person must deploy that Caddyfile change.
   * Some legacy text was extracted from PDFs and contains fragments (for example a "Key term / Figure 1.3" paragraph in M1 topic 1). It is imported as written; the content team should review the topics in the editor.
   * Nothing creates a "Content publisher" permission holder yet: grant `content.publish_unit` to a mentor in the admin.
+
+## Stage 5: what to know (read before Stage 6)
+
+* **Nothing can run the real exams yet.** The pre-test and the final draw from the `final` pool, which the content team writes fresh (D19). Until anchors exist, the pre-test shows "not available yet" and the final stays locked with that reason. Tests and screenshots use invented questions only.
+* **Content decisions needed:** which questions are anchors (mark `is_anchor`; the blueprint may also list ids), and the blueprint counts (today 6/6/5/6/6/6/5/5/5 = 50 in `programme.DEFAULT_PER_MODULE`, editable on the `ProgrammeAssessment` row until Stage 6 adds an editor).
+* **Design calls made in Stage 5** (tell the lead if one is wrong):
+  * A module with no published counted part is not counted yet (it neither enters the mean nor blocks eligibility), following §10.4.
+  * Attempt scores are stored to one decimal, so the mean uses those stored values; the worked example is tested both with full-precision parts and through real attempts.
+  * The pre-test prompt is shown once, right after the first sign-in (`Profile.pretest_prompted_at`); "Later" goes to the dashboard, which keeps a pre-test card. A learner with no pre-test available is not prompted.
+  * The final result shows the overall % and per-module bands only; the pre-test result shows the score only. Neither shows questions, hints or right/wrong marks.
+  * A question that has been shown in any non-final attempt cannot be moved into the final pool (`Question.save` raises `PoolLocked`). Anchors are written directly in the final pool, so showing them in the pre-test is allowed.
+  * The practice mock has no page yet (a placeholder step on the journey strip).
+  * `eligible` does not yet check for an issued certificate (Stage 7 sets `already_issued`).

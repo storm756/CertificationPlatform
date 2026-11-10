@@ -133,6 +133,17 @@ class Attempt(models.Model):
     def is_open(self):
         return self.status == AttemptStatus.IN_PROGRESS
 
+    @property
+    def title(self):
+        """The part's name, or "Final exam" / "Pre-test"."""
+        if self.part_id:
+            return self.part.name
+        return self.programme_assessment.get_kind_display()
+
+    @property
+    def module_number(self):
+        return self.part.module.number if self.part_id else None
+
 
 class AttemptItem(models.Model):
     attempt = models.ForeignKey(Attempt, on_delete=models.CASCADE, related_name="items")

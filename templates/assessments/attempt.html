@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load static i18n ccfr %}
-{% block head_title %}{{ attempt.part.name }}{% endblock %}
+{% block head_title %}{{ attempt.title }}{% endblock %}
 {% block page_class %} page--wide attempt-page{% endblock %}
 {% block extra_head %}
   {# htmx without eval, inline styles or script tags, so it works under the site's CSP. #}
@@ -11,8 +11,8 @@
   <div data-attempt hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' data-elapsed="{{ attempt.started_at|elapsed_seconds }}">
     <div class="attempt-head">
       <div>
-        <p class="eyebrow">{% blocktranslate with n=attempt.part.module.number %}Module {{ n }}{% endblocktranslate %} · {% blocktranslate with n=attempt.number %}Attempt {{ n }}{% endblocktranslate %}</p>
-        <h1>{{ attempt.part.name }}</h1>
+        <p class="eyebrow">{% if attempt.part_id %}{% blocktranslate with n=attempt.module_number %}Module {{ n }}{% endblocktranslate %} · {% endif %}{% blocktranslate with n=attempt.number %}Attempt {{ n }}{% endblocktranslate %}</p>
+        <h1>{{ attempt.title }}</h1>
       </div>
       <div class="row">
         {% include "assessments/_pill.html" with state="saved" %}

@@ -118,3 +118,9 @@
 ## 2026-11-11: Stage 4 re-applied on `origin/main` (`stage-4-review`)
 - Stage 4 (cf79bb7, 24b566d) re-applied on the merged Stage 3. Module and lesson pages now set `data-mod` so the hero and outline use the module's colour. Why: D20.
 
+## 2026-11-10: Stage 5, results, final exam, pre-test and dashboard
+- `compute_results` (Decimal, `round1` only) with the §10.3 worked example and the boundary values as tests; grades and bands. Why: §10, D1, D2.
+- Pre-test (anchors only, once, resumable) and final exam (blueprint draw with anchors, cooldown setting, unlock rules, locked reasons). Final shows overall % and bands; the pre-test shows the score only. Why: §11, D14.
+- Knowledge gain (first final's anchor score minus the pre-test's), weakest PCs, hours. Why: §11, §15.
+- A question shown in a non-final attempt cannot move into the final pool. Why: §11.
+- The learner "My progress" dashboard replaces the placeholder welcome page; the pre-test is offered once after the first sign-in (`Profile.pretest_prompted_at`). Why: §15, Stage 5.

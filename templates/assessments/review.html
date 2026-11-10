@@ -3,7 +3,7 @@
 {% block head_title %}{% translate "Review your answers" %}{% endblock %}
 {% block content %}
   <div>
-    <p class="eyebrow">{{ attempt.part.name }}</p>
+    <p class="eyebrow">{{ attempt.title }}</p>
     <h1>{% translate "Review your answers" %}</h1>
     <p class="muted">{% blocktranslate with answered=total missing=missing %}{{ total }} questions, {{ missing }} not answered yet.{% endblocktranslate %}</p>
   </div>

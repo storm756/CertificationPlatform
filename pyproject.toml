@@ -12,6 +12,9 @@ ignore = ["S101"]
 "apps/content/docx.py" = ["E501"]
 "apps/content/blocks.py" = ["E501"]
 "apps/content/views.py" = ["E501"]
+"apps/results/*.py" = ["E501"]
+"apps/assessments/programme.py" = ["E501"]
+"apps/assessments/views.py" = ["E501"]
 "tests/**" = ["S105", "S106", "E501"]  # long lines in test data and docstrings are fine
 
 [tool.pytest.ini_options]

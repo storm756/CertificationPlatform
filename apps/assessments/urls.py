@@ -5,6 +5,8 @@ from . import views
 urlpatterns = [
     path("assess/<int:part_id>/", views.intro, name="assess_intro"),
     path("assess/<int:part_id>/start/", views.start, name="assess_start"),
+    path("exam/<slug:kind>/", views.programme_intro, name="programme_intro"),
+    path("exam/<slug:kind>/start/", views.programme_start, name="programme_start"),
     path("attempt/<int:pk>/", views.attempt_page, name="attempt_page"),
     path("attempt/<int:pk>/q/<int:position>/", views.attempt_page, name="attempt_question"),
     path(
