@@ -39,7 +39,7 @@
           <div>
             {% include "components/field.html" with field=form.password %}
             <div class="pw-meter" data-pw-meter data-score="0" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-            <p class="hint" aria-live="polite" data-pw-text>{% translate "At least 10 characters. A short sentence works well." %}</p>
+            <p class="hint" aria-live="polite" data-pw-text data-short="{% translate 'Too short' %}" data-levels="{% translate 'Too simple' %}|{% translate 'Getting there' %}|{% translate 'Good' %}|{% translate 'Strong' %}">{% translate "At least 10 characters. A short sentence works well." %}</p>
           </div>
           <div class="grid-2">
             {% include "components/field.html" with field=form.date_of_birth %}

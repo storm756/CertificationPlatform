@@ -1,0 +1,31 @@
+// Browser check of the registration password meter (run against the dev site):
+//   cd tools && node e2e_password_meter.mjs [--base http://localhost:8000]
+import { chromium } from "playwright-core";
+const at = process.argv.indexOf("--base");
+const base = at >= 0 ? process.argv[at + 1] : "http://localhost:8000";
+const browser = await chromium.launch({ channel: "msedge" });
+const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+await page.goto(base + "/register/", { waitUntil: "networkidle" });
+const HINT = "At least 10 characters. A short sentence works well.";
+const state = async () => ({ score: await page.locator("[data-pw-meter]").getAttribute("data-score"), text: (await page.locator("[data-pw-text]").textContent()).trim() });
+let fails = 0;
+const check = (name, got, score, text) => { const ok = got.score === score && got.text === text; console.log((ok ? "ok   " : "FAIL ") + name + (ok ? "" : ` got ${JSON.stringify(got)}`)); if (!ok) fails++; };
+const type = async (value) => { await page.fill("#id_password", ""); if (value) await page.locator("#id_password").pressSequentially(value); };
+check("empty field: zero bars and the original hint", await state(), "0", HINT);
+await type("aB1");
+check("3 characters: Too short", await state(), "1", "Too short");
+await type("Aa1!Aa1!A");
+check("9 characters (mixed, symbols): still Too short", await state(), "1", "Too short");
+await type("aaaaaaaaaa");
+const ten = await state();
+console.log(ten.text !== "Too short" && Number(ten.score) >= 1 ? "ok   10 characters: strength feedback shown (" + ten.text + ")" : "FAIL 10 characters " + JSON.stringify(ten));
+if (!(ten.text !== "Too short" && Number(ten.score) >= 1)) fails++;
+await type("correct horse battery staple 27!");
+check("a strong password: Strong", await state(), "4", "Strong");
+await type("");
+check("clearing it: zero bars and the original hint again", await state(), "0", HINT);
+await type("abc");
+await page.fill("#id_password", "");
+check("typing then clearing with fill: hint restored", await state(), "0", HINT);
+await browser.close();
+process.exit(fails ? 1 : 0);
