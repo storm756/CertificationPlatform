@@ -38,7 +38,7 @@
       {% for error in form.accept_privacy.errors %}<p class="field-error">{% icon "alert" "sm" %}<span>{{ error }}</span></p>{% endfor %}
     </div>
 
-    <button class="btn btn-primary btn-lg btn-block" type="submit">{% translate "Register" %} {% icon "arrow" %}</button>
+    <button class="btn btn-accent btn-lg btn-block" type="submit">{% translate "Register" %} {% icon "arrow" %}</button>
   </form>
 {% endblock %}
 {% block scripts %}<script src="{% static 'js/register.js' %}" defer></script>{% endblock %}
