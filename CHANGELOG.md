@@ -104,3 +104,7 @@
 - DOCX upload (mammoth, nh3) and image/PDF/MP4 upload with sniffing; publish/restore with a "Content publisher" permission. Why: §13.1.
 - Caddy CSP allows `script-src https://www.youtube.com` for the YouTube IFrame API. A person deploys it. Why: D18.
 - New dependencies: `mammoth`, `nh3`.
+
+## 2026-11-10: Stage 4 review fixes
+- Completion and time-tracking requests for an unpublished (draft or retired) lesson are refused (404; the heartbeat counts nothing). A malformed module number in a posted check or heartbeat is a 404, not a server error. Why: no progress against lessons learners cannot see.
+- A signed-out visitor can answer a published practice check and gets the score and full answer; no `LearnCheck` or progress row is written for them (it used to fail). Quiz and final questions are still refused. Why: §8.4, awareness content is public.

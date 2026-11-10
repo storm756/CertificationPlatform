@@ -26,6 +26,11 @@ from .models import (
     VersionStatus,
 )
 
+
+class UnitNotPublished(Exception):
+    pass
+
+
 ACTIVE_WINDOW = timedelta(minutes=5)  # a heartbeat counts only after a recent server interaction
 BEAT_SECONDS = 30
 DAILY_CAP_SECONDS = getattr(settings, "TIMELOG_DAILY_CAP_SECONDS", 6 * 3600)
@@ -136,8 +141,10 @@ def complete(user, unit: Unit, *, how: str) -> bool:
     reading → "end" (scrolled to the end) or "button"; video → "watched" (80%) or "button" when
     the film is not available yet; handout → "opened"; check → "attempted"; practice → "submitted".
     """
-    if not user.is_authenticated or user.role != Role.LEARNER:
+    if not user or not user.is_authenticated or user.role != Role.LEARNER:
         return False
+    if unit.published() is None:  # a draft or retired lesson cannot be completed
+        raise UnitNotPublished(unit.slug)
     allowed = {
         UnitType.READING: {"end", "button"},
         UnitType.VIDEO: {"watched", "button"},
@@ -177,6 +184,8 @@ def heartbeat(user, unit: Unit, session, now=None) -> int:
     now = now or timezone.now()
     today = timezone.localdate(now)
     if not user.is_authenticated or user.role != Role.LEARNER or not may_track_time(user, today):
+        return 0
+    if unit.published() is None:  # no time is counted against a lesson learners cannot see
         return 0
     active = session.get("learn_active_at")
     if not active or now.timestamp() - active > ACTIVE_WINDOW.total_seconds():

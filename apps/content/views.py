@@ -16,6 +16,15 @@ KIND_ICON = {"video": "video", "reading": "book", "handout": "file", "check": "l
 GROUPS = [("watch", "Watch", ["video"]), ("read", "Read", ["reading"]), ("handout", "Handout", ["handout"]), ("practise", "Practise", ["check", "practice_quiz"])]  # fmt: skip
 
 
+def _posted_unit(request):
+    """The unit named by a posted module number and slug; anything malformed is a 404."""
+    try:
+        number = int(request.POST.get("m", ""))
+    except ValueError:
+        raise Http404 from None
+    return get_object_or_404(Unit, module__number=number, slug=request.POST.get("u", ""))
+
+
 def _is_learner(user):
     return user.is_authenticated and user.role == Role.LEARNER
 
@@ -127,6 +136,8 @@ def complete(request, number, slug):
     how = request.POST.get("how", "")
     try:
         created = services.complete(request.user, unit, how=how)
+    except services.UnitNotPublished:
+        raise Http404 from None
     except (ValueError, KeyError):
         return JsonResponse({"ok": False}, status=400)
     return JsonResponse({"ok": True, "first": created})
@@ -148,8 +159,8 @@ def block_action(request, number, slug, index):
         if pick not in ("fact", "myth"):
             return JsonResponse({"error": "pick fact or myth"}, status=400)
         right = (pick == "fact") == block["is_fact"]
-        if _is_learner(request.user):
-            services.complete(request.user, unit, how="attempted") if unit.type == UnitType.CHECK else None  # fmt: skip
+        if _is_learner(request.user) and unit.type == UnitType.CHECK:
+            services.complete(request.user, unit, how="attempted")
         return JsonResponse({"right": right, "is_fact": block["is_fact"], "why": block["why"]})
     raise Http404
 
@@ -158,7 +169,7 @@ def block_action(request, number, slug, index):
 @ratelimit(key="ip", rate="120/h", method="POST", block=True)
 def check(request):
     """POST /learn/check: practice-pool questions only (§8.4)."""
-    unit = get_object_or_404(Unit, module__number=request.POST.get("m") or 0, slug=request.POST.get("u", ""))  # fmt: skip
+    unit = _posted_unit(request)
     try:
         result = learncheck.answer(
             request.user if _is_learner(request.user) else None, unit,
@@ -173,7 +184,9 @@ def check(request):
 def heartbeat(request):
     if not _is_learner(request.user):
         return JsonResponse({"counted": 0})
-    unit = get_object_or_404(Unit, module__number=request.POST.get("m") or 0, slug=request.POST.get("u", ""))  # fmt: skip
+    unit = _posted_unit(request)
+    if unit.published() is None:
+        raise Http404
     return JsonResponse({"counted": services.heartbeat(request.user, unit, request.session)})
 
 

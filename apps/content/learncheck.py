@@ -72,9 +72,10 @@ def answer(user, unit, stable_id: str, choice: str, session) -> dict:
     except formats.ResponseError as exc:
         raise CheckRefused(str(exc)) from None
     score, _gate = formats.score(question.format, version.body, option_map, response)
-    LearnCheck.objects.create(user=user, question_version=version, unit=unit, score=score)
-    if unit.type == UnitType.CHECK:
-        complete(user, unit, how="attempted")
+    if user is not None:  # a signed-out visitor gets feedback but leaves no record
+        LearnCheck.objects.create(user=user, question_version=version, unit=unit, score=score)
+        if unit.type == UnitType.CHECK:
+            complete(user, unit, how="attempted")
     body = version.body
     right_text = next(o["text"] for o in body["options"] if o["id"] == body["correct"])
     return {

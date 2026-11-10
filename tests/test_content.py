@@ -617,3 +617,79 @@ def test_the_admin_upload_turns_a_docx_into_a_draft_unit(client, make_unit, make
     assert unit.published().pk != draft.pk
     bad = client.post(url, {"file": SimpleUploadedFile("x.docx", b"not a docx")})
     assert bad.status_code == 200 and b"not a Word" in bad.content
+
+
+# --- review fixes: unpublished lessons, signed-out practice checks ----------------------------------------
+
+
+def test_completion_is_refused_for_an_unpublished_lesson(learner_client, learner, make_unit):
+    make_unit("draft", UnitType.READING, publish=False)
+    response = learner_client.post(reverse("learn_complete", args=[1, "draft"]), {"how": "end"})
+    assert response.status_code == 404
+    assert not UnitProgress.objects.filter(user=learner).exists()
+    with pytest.raises(services.UnitNotPublished):
+        services.complete(learner, Unit.objects.get(slug="draft"), how="end")
+
+
+def test_a_lesson_that_loses_its_published_version_cannot_be_completed(learner, make_unit):
+    unit = make_unit("t1")
+    UnitVersion.objects.filter(unit=unit).update(status=VersionStatus.SUPERSEDED)
+    with pytest.raises(services.UnitNotPublished):
+        services.complete(learner, unit, how="end")
+
+
+def test_the_heartbeat_ignores_an_unpublished_lesson(client, make_user, make_batch, make_unit):
+    adult = make_user(batch=make_batch(), dob=date(1990, 1, 1))
+    unit = make_unit("draft", publish=False)
+    client.force_login(adult)
+    session = client.session
+    services.touch(session)
+    session.save()
+    assert client.post(reverse("learn_heartbeat"), {"m": 1, "u": "draft"}).status_code == 404
+    assert services.heartbeat(adult, unit, client.session) == 0
+    assert TimeLog.objects.count() == 0
+
+
+def test_a_malformed_module_number_is_a_404_not_a_server_error(learner_client):
+    for url in ("learn_check", "learn_heartbeat"):
+        r = learner_client.post(
+            reverse(url), {"m": "abc", "u": "t1", "question": "x", "choice": "y"}
+        )
+        assert r.status_code == 404
+
+
+def test_a_signed_out_visitor_can_answer_a_practice_check_and_leaves_no_record(client, make_unit):
+    import re
+
+    practice_mcq("M1-P09")
+    make_unit("check", UnitType.CHECK, blocks=[{"type": "check", "question": "M1-P09"}])
+    html = client.get(reverse("learn_unit", args=[1, "check"])).content.decode()
+    tokens = re.findall(r'data-choice="([^"]+)"', html)
+    assert len(tokens) == 4
+    results = [
+        client.post(
+            reverse("learn_check"), {"m": 1, "u": "check", "question": "M1-P09", "choice": t}
+        )
+        for t in tokens
+    ]
+    assert all(r.status_code == 200 for r in results)
+    bodies = [r.json() for r in results]
+    assert sum(1 for b in bodies if b["right"]) == 1 and all(
+        b["right_text"] == SECRET for b in bodies
+    )
+    assert LearnCheck.objects.count() == 0 and UnitProgress.objects.count() == 0
+
+
+def test_a_signed_out_visitor_still_cannot_check_quiz_or_final_questions(client, make_unit):
+    for pool in ("module_quiz", "final"):
+        practice_mcq(f"M1-{pool[:1].upper()}9", pool=pool)
+        make_unit(
+            f"c{pool}",
+            UnitType.CHECK,
+            blocks=[{"type": "check", "question": f"M1-{pool[:1].upper()}9"}],
+        )
+        r = client.post(
+            reverse("learn_check"),
+            {"m": 1, "u": f"c{pool}", "question": f"M1-{pool[:1].upper()}9", "choice": "x"},
+        )
+        assert r.status_code == 400 and SECRET not in r.content.decode()
