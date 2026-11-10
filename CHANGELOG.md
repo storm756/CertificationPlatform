@@ -41,3 +41,4 @@
 - Attempt, review and result pages (htmx, vendored and CSP-safe): autosave, retry when offline, Saved / Saving / Offline pill, count-up timer, question map, mark for review. The result shows score, ✓/✗ and hints, never the correct option. Why: D13, §9.5.
 - Daily `auto_submit_stale_attempts` job in `run_periodic`. Why: §9.3, D27.
 - New dependencies: `django-import-export[xlsx]` and `pydantic`. Why: architecture §3.
+- Stage 2 review fix: the result page no longer prints the learner's chosen option (for a right answer that was the correct option's text). It shows the score, right/wrong and the hint only. Why: D13.

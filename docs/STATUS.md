@@ -136,6 +136,19 @@ left out of the copy. The review fixes are listed in `build-stages.md` under Sta
 
 ## Stage 2: what to know (read before Stage 3 and 5)
 
+**Stage 2 review results (11 Nov 2026, `stage-2-review` = `origin/main` + 7d741ab + a result-page fix).** Run in a fresh dev stack with invented questions only.
+
+| Check | Result |
+| --- | --- |
+| Full test suite (PostgreSQL) | ✅ 232 passed |
+| `ruff check`, `ruff format --check`, `makemigrations --check`, `check --deploy` (prod settings) | ✅ clean |
+| Journey 5 (resume on another device, answer intact), journey 6 (two submits at once → one result), journey 9 (score, right/wrong and hints, no correct option) | ✅ tests, and in a browser under the production CSP |
+| No answer keys, hints or internal option ids in the attempt page or its htmx responses | ✅ tests, and in a browser |
+| Starting twice at once creates one attempt | ✅ tests (2 and 5 parallel starts), and two simultaneous POSTs in a browser |
+| axe on the quiz intro, attempt, review and result pages at 390px and 1366px | ✅ no serious or critical issues; screenshots in `screenshots/stage2-review/` (not committed) |
+| **Fixed in review:** the result page printed the learner's chosen option, which for a right answer is the correct option. It now shows the score, right/wrong and the hint only. | ✅ regression test |
+
+
 * **Content is the blocker, not code.** Run `python manage.py import_legacy_mcq --source <path> --dry-run` to check the legacy bank (it prints counts only). On 10 Nov 2026 it reported 405 valid questions, 30 quiz + 15 practice per module, at least 5 per PC tag in every quiz, and **405 questions with no hint**. **They were not imported**: nothing real is in any database, and real questions and answer keys stay out of Git. When the team sends approved hints, load them with the XLSX sheet (the hint column is required) or the legacy importer, then publish.
 * **Design calls made in Stage 2** (tell the lead if one is wrong):
   * `validate_part()` blocks a part whose counted marks would **exceed** 100. "The module totals exactly 100" can't be checked until the interactive part exists (Stage 3), so `module_marks_total()` reports it instead of blocking.

@@ -12,7 +12,7 @@ from apps.assessments.models import Attempt, AttemptStatus
 from apps.audit.models import AuditEvent
 from apps.questions.projections import client_projection
 
-from .conftest import HINT, PASSWORD, RIGHT, right_token, wrong_token
+from .conftest import HINT, PASSWORD, RIGHT, WRONG, right_token, wrong_token
 
 pytestmark = pytest.mark.django_db
 HX = {"HTTP_HX_REQUEST": "true"}
@@ -267,7 +267,8 @@ def test_journey9_result_shows_right_wrong_and_hints_but_no_correct_option(
     for item in wrongs_and_blank:
         assert RIGHT.format(n=stable_number(item)) not in html  # the correct option is never shown
     for item in rights:  # their own right answer is shown as theirs, nothing more
-        assert f"Your answer: {RIGHT.format(n=stable_number(item))}" in html
+        assert RIGHT.format(n=stable_number(item)) not in html  # not even their own right pick
+    assert "Your answer" not in html
     assert html.count("Not answered") >= 1 and "Not quite" in html
 
 
@@ -403,3 +404,22 @@ def test_the_result_page_never_shows_a_correct_option_for_any_wrong_or_blank_ans
     for item in items:
         assert RIGHT.format(n=stable_number(item)) not in html
     assert_no_keys(html, items, allow_hint=True)
+
+
+def test_the_result_never_prints_option_text_for_right_wrong_or_blank_answers(
+    learner_client, make_part
+):
+    """Regression: the result page used to print the learner's pick, which for a right answer
+    is the correct option. It now shows the score, right/wrong and the hint, and no option text."""
+    attempt = start_attempt(learner_client, make_part())
+    items = list(attempt.items.all())
+    answer(learner_client, attempt, items[0].position, right_token(items[0]), **HX)
+    answer(learner_client, attempt, items[1].position, wrong_token(items[1]), **HX)
+    learner_client.post(reverse("attempt_submit", args=[attempt.pk]))
+    html = learner_client.get(reverse("attempt_result", args=[attempt.pk])).content.decode()
+    for item in items:
+        n = stable_number(item)
+        assert RIGHT.format(n=n) not in html
+        assert WRONG.format(n=n, k=1) not in html and WRONG.format(n=n, k=2) not in html
+        assert HINT.format(n=n) in html
+    assert "20.0%" in html and "Right" in html and "Not quite" in html and "Not answered" in html

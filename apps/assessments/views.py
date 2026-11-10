@@ -223,7 +223,11 @@ def submit(request, pk):
 
 @learner_required
 def result(request, pk):
-    """Score, ✓/✗ and the hint for each question. The correct option is never shown (D13)."""
+    """Score, right/wrong and the hint for each question (D13).
+
+    No option text is shown, not even the learner's own pick: for a right answer that text is
+    the correct option, so repeating it would reveal the key.
+    """
     attempt = _own_attempt(request, pk)
     if attempt.status == AttemptStatus.IN_PROGRESS:
         return redirect("attempt_page", pk=attempt.pk)
@@ -231,14 +235,12 @@ def result(request, pk):
     for item in attempt.items.select_related("question_version"):
         body = item.question_version.body
         chosen_key = item.option_map["tokens"].get((item.response or {}).get("choice"))
-        chosen_text = next((o["text"] for o in body["options"] if o["id"] == chosen_key), None)
         rows.append(
             {
                 "position": item.position,
                 "stem": body["stem"],
                 "right": item.score == 1,
-                "answered": chosen_text is not None,
-                "your_answer": chosen_text,
+                "answered": chosen_key is not None,
                 "hint": body.get("hint", ""),
                 "gated": item.gate_flag,
             }
