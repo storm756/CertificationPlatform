@@ -107,3 +107,8 @@
 - Knowledge gain (first final's anchor score minus the pre-test's), weakest PCs, hours. Why: §11, §15.
 - A question shown in a non-final attempt cannot move into the final pool. Why: §11.
 - The learner "My progress" dashboard replaces the placeholder welcome page; the pre-test is offered once after the first sign-in (`Profile.pretest_prompted_at`). Why: §15, Stage 5.
+
+## 2026-11-10: Stage 5 review fixes
+- Combined results use unrounded marks: `compute_results` recomputes each attempt's percentage from its saved question-level marks (`Attempt.score` is only a rounded display value). 13/15 and 5/38 in equal-weight parts now give 49.9% (fail), not 50.0. Why: §10.1, D2.
+- The final stays locked, and eligibility is withheld, when a counted module has no published counted assessment or a counted assessment is unpublished; the learner sees "Course setup is incomplete" (on the dashboard, the final's page and in the blockers). Why: §10.2. This replaces the Stage 5 call that treated such modules as not counted.
+- The pre-test result and attempts list show the overall score only, even when a safety gate was triggered (no gate message, no "doesn't count"). Why: §11.

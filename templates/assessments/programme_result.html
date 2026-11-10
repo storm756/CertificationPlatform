@@ -20,7 +20,7 @@
     </div>
   </div>
 
-  {% if attempt.gate_breached %}
+  {% if kind == "final" and attempt.gate_breached %}
     {% include "components/alert.html" with tone="danger" icon="shield-alert" title=_("Safety gate") text=_("This attempt doesn't count: one of your choices would have put a citizen at risk. Revise the safety steps and retake.") %}
   {% endif %}
 

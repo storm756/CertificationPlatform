@@ -166,7 +166,7 @@ left out of the copy. The review fixes are listed in `build-stages.md` under Sta
 * **Nothing can run the real exams yet.** The pre-test and the final draw from the `final` pool, which the content team writes fresh (D19). Until anchors exist, the pre-test shows "not available yet" and the final stays locked with that reason. Tests and screenshots use invented questions only.
 * **Content decisions needed:** which questions are anchors (mark `is_anchor`; the blueprint may also list ids), and the blueprint counts (today 6/6/5/6/6/6/5/5/5 = 50 in `programme.DEFAULT_PER_MODULE`, editable on the `ProgrammeAssessment` row until Stage 6 adds an editor).
 * **Design calls made in Stage 5** (tell the lead if one is wrong):
-  * A module with no published counted part is not counted yet (it neither enters the mean nor blocks eligibility), following §10.4.
+  * A counted module with no published counted assessment, or an unpublished counted assessment, keeps the final locked and shows "Course setup is incomplete" (a content-team problem, not the learner's). Combined results use the unrounded question-level marks, not the stored one-decimal scores.
   * Attempt scores are stored to one decimal, so the mean uses those stored values; the worked example is tested both with full-precision parts and through real attempts.
   * The pre-test prompt is shown once, right after the first sign-in (`Profile.pretest_prompted_at`); "Later" goes to the dashboard, which keeps a pre-test card. A learner with no pre-test available is not prompted.
   * The final result shows the overall % and per-module bands only; the pre-test result shows the score only. Neither shows questions, hints or right/wrong marks.

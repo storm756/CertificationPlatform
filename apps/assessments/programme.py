@@ -81,6 +81,11 @@ def final_locked_reasons(user) -> list[str]:
     """Why the final cannot be started now; empty when it can (§10.2)."""
     result = compute_results([user.pk])[user.pk]
     reasons = []
+    if result.setup_gaps:
+        reasons.append(
+            "Course setup is incomplete, so the final cannot open yet. "
+            + " ".join(result.setup_gaps)
+        )
     if not result.pretest_done:
         reasons.append(
             "Do the pre-test first."
