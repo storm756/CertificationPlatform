@@ -95,3 +95,12 @@
 - The nine Stage 3 commits (engine, review fixes, guardian and purge fixes, autosave) were re-applied on top of the merged Stage 1.5 and Stage 2 work. Where they overlapped, main's Stage 2 behaviour wins: the Excel-import fix, the explicit `X-Answer-Saved` confirmation, expired-session recovery (`attempt.js`) and the result page that shows no option text. The engine's saves go through the same outbox.
 - `tools/e2e_save_retry.mjs` now covers multiple-choice and interactive questions, including the expired-session case.
 
+## 2026-11-10: Stage 4, learning content
+- Added `Unit`, `UnitVersion` (immutable text, one published version), `MediaAsset`, `UnitProgress`, `TimeLog` and `LearnCheck`, and the block schema. Why: §6, §13.1.
+- `/learn/` pages: catalogue, module page and unit pages (reading, film, handout, myth-or-fact check) in the approved design, with outline, previous/next and completion rules. Why: §8, D20.
+- `import_legacy_lessons`: 9 modules, 55 reading topics (each with at least one inline interaction), 9 film pages (poster and English/Hindi transcript), 9 handout pages and 9 myth-or-fact checks, as published versions. 31 jumbled tables carry a "table being fixed" notice. Why: Stage 4 done-when.
+- Predict-then-reveal, flip cards and myth-or-fact keep their answers on the server until the learner acts; `POST /learn/check` accepts practice-pool questions only. Why: CLAUDE.md answer-key rule, §8.4.
+- Adult-only time heartbeat with caps; under-18s write no `TimeLog` rows. Why: D16.
+- DOCX upload (mammoth, nh3) and image/PDF/MP4 upload with sniffing; publish/restore with a "Content publisher" permission. Why: §13.1.
+- Caddy CSP allows `script-src https://www.youtube.com` for the YouTube IFrame API. A person deploys it. Why: D18.
+- New dependencies: `mammoth`, `nh3`.

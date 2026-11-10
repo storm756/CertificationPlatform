@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load static i18n ccfr %}
+{% block head_title %}{{ version.title }} · {% translate "Module" %} {{ module.number }}{% endblock %}
+{% block page_class %} page--wide{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/learn.css' %}">{% endblock %}
+{% block content %}
+  <div data-unit data-type="{{ unit.type }}" data-done="{{ this.done|yesno:'1,0' }}" data-learner="{{ learner|yesno:'1,0' }}"
+    data-complete-url="{% url 'learn_complete' module.number unit.slug %}" data-heartbeat-url="{% url 'learn_heartbeat' %}" data-m="{{ module.number }}" data-u="{{ unit.slug }}">
+    {% csrf_token %}
+    <div class="reading-progress" data-read-progress aria-hidden="true" hidden></div>
+    <div class="course">
+      {% with current=unit %}{% include "learn/_outline.html" %}{% endwith %}
+      <article>
+        <nav class="crumbs" aria-label="{% translate 'Breadcrumb' %}"><a href="{% url 'learn_catalogue' %}">{% translate "Modules" %}</a>{% icon "chevron-right" %}<a href="{% url 'learn_module' module.number %}">{% translate "Module" %} {{ module.number }}</a>{% icon "chevron-right" %}<span aria-current="page">{{ unit.get_type_display }}</span></nav>
+        <header class="unit-head"><p class="eyebrow">{{ unit.get_type_display }} · {{ unit.nominal_minutes }} {% translate "min" %}</p><h1>{{ version.title }}</h1></header>
+        <div class="prose">{% include "learn/_blocks.html" with blocks=blocks %}</div>
+        <div data-end-sentinel class="sentinel"></div>
+        <div class="complete-bar{% if this.done %} is-done{% endif %}" data-complete-bar>
+          <span class="status{% if this.done %} status--done{% endif %}" data-complete-status>{% if this.done %}{% icon "check-circle" %}{% translate "Completed" %}{% else %}{% icon "info" %}{{ complete_rule }}{% endif %}</span>
+          {% if learner and unit.type == "reading" or learner and unit.type == "video" %}<button class="btn btn-primary" type="button" data-mark{% if this.done %} hidden{% endif %}>{% icon "check" %}{% translate "Mark as complete" %}</button>{% endif %}
+        </div>
+        <nav class="unit-nav" aria-label="{% translate 'Lesson navigation' %}">
+          {% if prev %}<a class="btn btn-ghost" href="{% url 'learn_unit' module.number prev.unit.slug %}">{% icon "arrow-left" %}<span><small class="muted">{% translate "Previous" %}</small> {{ prev.version.title }}</span></a>{% else %}<span></span>{% endif %}
+          {% if next %}<a class="btn btn-outline" href="{% url 'learn_unit' module.number next.unit.slug %}"><span><small class="muted">{% translate "Next" %}</small> {{ next.version.title }}</span>{% icon "arrow" %}</a>{% else %}<a class="btn btn-outline" href="{% url 'learn_module' module.number %}">{% translate "Module" %} {{ module.number }} {% icon "arrow" %}</a>{% endif %}
+        </nav>
+      </article>
+    </div>
+  </div>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/learn.js' %}" defer></script>{% endblock %}

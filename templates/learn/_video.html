@@ -1,0 +1,12 @@
+{% load i18n ccfr %}
+<div class="film" data-film data-duration="{{ b.duration }}">
+  {% if b.youtube_id %}
+    <div class="film__stage"><iframe class="film__frame" title="{% translate 'Film' %}" src="https://www.youtube-nocookie.com/embed/{{ b.youtube_id }}?enablejsapi=1&amp;cc_load_policy=1&amp;rel=0" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" data-yt="{{ b.youtube_id }}"></iframe></div>
+  {% elif b.mp4_url %}
+    <video class="film__stage" controls preload="metadata"{% if b.poster_url %} poster="{{ b.poster_url }}"{% endif %} data-mp4><source src="{{ b.mp4_url }}" type="video/mp4"></video>
+  {% else %}
+    <div class="film__stage">{% if b.poster_url %}<img src="{{ b.poster_url }}" alt="" width="1280" height="720">{% endif %}<div class="film__shade"></div></div>
+    <p class="notice notice--mustard">{% icon "clock" %}<span>{% translate "The film is being uploaded. Read the transcript below in the meantime." %}</span></p>
+  {% endif %}
+</div>
+{% if b.transcript %}<h2>{% translate "Transcript" %}</h2><div class="transcript" tabindex="0" role="region" aria-label="{% translate "Transcript" %}">{% for l in b.transcript %}<p class="transcript__line"><time>{{ l.t0|floatformat:0 }}s</time> <span lang="en">{{ l.en }}</span>{% if l.hi %}<span class="transcript__hi" lang="hi">{{ l.hi }}</span>{% endif %}</p>{% endfor %}</div>{% endif %}

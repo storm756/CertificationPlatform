@@ -18,7 +18,7 @@
 # and scripts, so it is not covered here; it is staff-only and behind 2FA.
 (csp) {
 	@notadmin not path /admin/*
-	header @notadmin Content-Security-Policy "default-src 'self'; img-src 'self' data:; frame-src https://www.youtube-nocookie.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+	header @notadmin Content-Security-Policy "default-src 'self'; img-src 'self' data:; script-src 'self' https://www.youtube.com; frame-src https://www.youtube-nocookie.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 }
 
 # /media is deliberately NOT served in stage 0. It arrives with the Django forward_auth check.

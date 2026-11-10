@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load static i18n ccfr %}
+{% block head_title %}{% translate "Modules" %}{% endblock %}
+{% block page_class %} page--wide{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/learn.css' %}">{% endblock %}
+{% block content %}
+  <header class="stack"><p class="eyebrow">{{ PROGRAMME_SHORT }}</p><h1>{% translate "The nine modules" %}</h1><p class="lede">{% translate "Learn at your own pace. Nothing is locked." %}</p></header>
+  <div class="grid-cards">
+    {% for c in cards %}{% url 'learn_module' c.module.number as href %}
+      {% include "components/module_card.html" with number=c.module.number title=c.module.display_title blurb=c.module.tagline topics=c.topics hours=c.module.hours progress=c.progress colour="teal" href=href %}
+    {% endfor %}
+  </div>
+{% endblock %}
