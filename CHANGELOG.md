@@ -129,3 +129,6 @@
 - Combined results use unrounded marks: `compute_results` recomputes each attempt's percentage from its saved question-level marks (`Attempt.score` is only a rounded display value). 13/15 and 5/38 in equal-weight parts now give 49.9% (fail), not 50.0. Why: §10.1, D2.
 - The final stays locked, and eligibility is withheld, when a counted module has no published counted assessment or a counted assessment is unpublished; the learner sees "Course setup is incomplete" (on the dashboard, the final's page and in the blockers). Why: §10.2. This replaces the Stage 5 call that treated such modules as not counted.
 - The pre-test result and attempts list show the overall score only, even when a safety gate was triggered (no gate message, no "doesn't count"). Why: §11.
+
+## 2026-11-10: Stage 5, exactly 100 marks per counted module
+- The course-setup check now also requires the published counted marks of every counted module to total exactly 100 (D11). A module with only a 50-mark part keeps the final locked and the learner ineligible, and the message names the module and the configured marks ("Module 1 has 50 published marks configured; it needs exactly 100."). The unpublished-part check is unchanged. Why: §10.1 assumes 100.
