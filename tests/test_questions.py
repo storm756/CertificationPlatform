@@ -393,3 +393,87 @@ def test_admin_xlsx_import_dry_run_then_confirm(staff):
     html = response.content.decode()
     assert "A hint is required." in html  # the row error is shown
     assert Question.objects.count() == 0  # the preview saved nothing
+
+
+def _preview(staff, rows):
+    """Upload a workbook to the admin import page (the dry run). Returns the preview HTML."""
+    from django.core.files.uploadedfile import SimpleUploadedFile
+    from import_export.formats.base_formats import DEFAULT_FORMATS
+
+    workbook = SimpleUploadedFile(
+        "questions.xlsx",
+        sheet(*rows).export("xlsx"),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    names = [f.__name__ for f in DEFAULT_FORMATS]
+    response = staff.post(
+        "/admin/questions/question/import/",
+        {"import_file": workbook, "format": names.index("XLSX")},
+    )
+    assert response.status_code == 200
+    return response.content.decode()
+
+
+def _confirm_fields(html):
+    """The hidden fields of the preview's Confirm form, as a browser would send them."""
+    import re
+
+    form = html[html.index('action="/admin/questions/question/process_import/"') :]
+    form = form[: form.index("</form>")]
+    fields = {}
+    for tag in re.findall(r"<input[^>]+>", form):
+        name = re.search(r'name="([^"]+)"', tag)
+        value = re.search(r'value="([^"]*)"', tag)
+        if name:
+            fields[name.group(1)] = value.group(1) if value else ""
+    return fields
+
+
+def test_admin_import_confirm_saves_shows_a_confirmation_and_logs_the_saved_questions(staff):
+    """Regression: Confirm saved the questions, then crashed (HTTP 500) writing the admin log,
+    because the rows carried no saved instance."""
+    from django.contrib.admin.models import ADDITION, LogEntry
+
+    html = _preview(staff, [good_row(1), good_row(2)])
+    assert Question.objects.count() == 0
+    response = staff.post("/admin/questions/question/process_import/", _confirm_fields(html))
+    assert response.status_code == 302 and response["Location"] == "/admin/questions/question/"
+    page = staff.get(response["Location"]).content.decode()
+    assert "Import finished" in page and "2 new" in page
+    saved = {q.stable_id: q for q in Question.objects.all()}
+    assert set(saved) == {"M1-X01", "M1-X02"}
+    entries = LogEntry.objects.filter(action_flag=ADDITION).order_by("object_id")
+    assert {(e.object_id, e.object_repr) for e in entries} == {
+        (str(q.pk), q.stable_id) for q in saved.values()
+    }
+
+
+def test_admin_import_that_fails_at_confirm_leaves_no_partial_changes(staff, module1):
+    """A sheet that was valid in the preview but has a row that fails when confirmed (here, the
+    id was taken by another module's question in between) saves nothing at all."""
+    from django.contrib.admin.models import LogEntry
+
+    html = _preview(staff, [good_row(1), good_row(2)])
+    other = (
+        Module.objects.create(number=8, slug="module-8-x", title_key="x")
+        if not Module.objects.filter(number=8).exists()
+        else Module.objects.get(number=8)
+    )
+    services.create_question(
+        stable_id="M1-X02", module=other, body=body(), tags={"pc": "PC1"}, pool="module_quiz"
+    )
+    before = Question.objects.count()
+    response = staff.post(
+        "/admin/questions/question/process_import/", _confirm_fields(html), follow=True
+    )
+    assert response.status_code == 200
+    assert "Nothing was imported" in response.content.decode()
+    assert Question.objects.count() == before  # M1-X01 was rolled back with the bad row
+    assert not Question.objects.filter(stable_id="M1-X01").exists()
+    assert not LogEntry.objects.exists()
+
+
+def test_admin_import_preview_with_a_bad_row_offers_no_confirm(staff):
+    html = _preview(staff, [good_row(1), good_row(2, correct="Z")])
+    assert "process_import" not in html  # no Confirm form when any row is invalid
+    assert Question.objects.count() == 0

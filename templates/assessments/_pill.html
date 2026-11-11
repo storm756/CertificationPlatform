@@ -1,7 +1,7 @@
-{% comment %}The Saved / Saving / Offline pill. The three texts are data attributes so attempt.js can
+{% comment %}The Saved / Saving / Offline / Not saved pill. The four texts are data attributes so attempt.js can
   switch state without writing HTML (it only sets textContent).{% endcomment %}
 {% load i18n ccfr %}
 <span id="save-status" class="save-pill" data-state="{{ state|default:'saved' }}" role="status"
-  data-text-saved="{% translate 'Saved' %}" data-text-saving="{% translate 'Saving…' %}" data-text-offline="{% translate 'Offline. Retrying…' %}">
+  data-text-saved="{% translate 'Saved' %}" data-text-saving="{% translate 'Saving…' %}" data-text-offline="{% translate 'Offline. Retrying…' %}" data-text-error="{% translate 'Not saved' %}">
   {% icon "check" "sm" %}<span data-pill-text>{% translate "Saved" %}</span>
 </span>

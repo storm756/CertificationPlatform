@@ -42,3 +42,6 @@
 - Daily `auto_submit_stale_attempts` job in `run_periodic`. Why: §9.3, D27.
 - New dependencies: `django-import-export[xlsx]` and `pydantic`. Why: architecture §3.
 - Stage 2 review fix: the result page no longer prints the learner's chosen option (for a right answer that was the correct option's text). It shows the score, right/wrong and the hint only. Why: D13.
+- Stage 2 review fix: the Django-admin Excel import no longer returns HTTP 500 after saving. Each imported row now carries its saved question, so the confirmation shows and the admin log names the questions; a failure at confirm rolls the whole import back. Why: §13.2.
+- Stage 2 review fix: quiz autosave keeps each answer in a per-question outbox (`attempt.js`) and retries it for its own question, so a failed save on Question 1 can no longer be replaced by Question 2's. "Saved" means the server accepted every pending answer; a refused answer shows "Not saved"; Review stays put while an answer is refused. Browser test: `tools/e2e_save_retry.mjs` (with `tools/seed_e2e.py`). Why: no lost or misattributed answers.
+

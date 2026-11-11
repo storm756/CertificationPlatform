@@ -242,6 +242,7 @@
 .save-pill { display: inline-flex; align-items: center; gap: .4rem; padding: .3rem .75rem; border-radius: 999px; background: var(--surface-3); font-size: .86rem; font-weight: 600; color: var(--ink-muted); }
 .save-pill[data-state="saved"] { background: var(--teal-tint); color: var(--teal-ink); }
 .save-pill[data-state="offline"] { background: var(--mustard-tint); color: var(--mustard-ink); }
+.save-pill[data-state="error"] { background: var(--danger-tint); color: var(--danger); }
 .timer { display: inline-flex; align-items: center; gap: .35rem; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink-muted); }
 .attempt-progress { height: 5px; background: var(--surface-3); }
 .attempt-progress i { display: block; height: 100%; width: calc(var(--v, 0) * 1%); background: var(--m, var(--teal)); transition: width 300ms var(--ease); }

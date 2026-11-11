@@ -204,10 +204,14 @@ class MCQResource(resources.Resource):
             )
             return result
         result.diff = [_cell(row, c) for c in DIFF_COLUMNS]
-        result.import_type = self._apply(parsed, question)
+        result.import_type, question = self._apply(parsed, question)
+        # The admin logs each imported row from its instance (a LogEntry per saved question).
+        result.instance = question
+        result.object_id = question.pk
+        result.object_repr = question.stable_id
         return result
 
-    def _apply(self, parsed: ParsedRow, question: Question | None) -> str:
+    def _apply(self, parsed: ParsedRow, question: Question | None) -> tuple[str, Question]:
         if question is None:
             question = services.create_question(
                 stable_id=parsed.stable_id,
@@ -233,7 +237,7 @@ class MCQResource(resources.Resource):
             outcome = (
                 outcome if outcome != RowResult.IMPORT_TYPE_SKIP else RowResult.IMPORT_TYPE_UPDATE
             )
-        return outcome
+        return outcome, question
 
 
 def import_sheet(dataset: tablib.Dataset, *, dry_run: bool):

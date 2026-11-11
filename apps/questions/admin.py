@@ -34,6 +34,30 @@ class QuestionAdmin(ImportMixin, ModelAdmin):
     inlines = [VersionInline]
     actions = ["publish_selected", "retire_selected"]
 
+    # --- the confirmed import: all or nothing, and logged against the saved questions ----------
+
+    def get_import_data_kwargs(self, **kwargs):
+        """One bad row at confirm time (the sheet was valid in the preview, but something
+        changed since) must roll back the whole import, like `importing.import_sheet`."""
+        data = super().get_import_data_kwargs(**kwargs)
+        data["rollback_on_validation_errors"] = True
+        return data
+
+    def process_result(self, result, request):
+        if result.has_errors() or result.has_validation_errors():
+            problems = len(result.invalid_rows) + len(result.row_errors())
+            self.message_user(
+                request,
+                f"Nothing was imported: {problems} row(s) failed when saving. "
+                "Run the preview again.",
+                messages.ERROR,
+            )
+            from django.http import HttpResponseRedirect
+            from django.urls import reverse
+
+            return HttpResponseRedirect(reverse("admin:questions_question_import"))
+        return super().process_result(result, request)
+
     @admin.display(boolean=True, description="Hint")
     def has_hint(self, obj):
         version = obj.current_version
