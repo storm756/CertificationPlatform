@@ -24,6 +24,7 @@ urlpatterns = [
     path("privacy/", account_views.privacy_view, name="privacy"),
     path("start/", account_views.start, name="start"),
     path("mentor/", include("apps.mentors.urls")),
+    path("learn/", include("apps.content.urls")),
     path("", include("apps.assessments.urls")),
     path("", home, name="home"),
 ]

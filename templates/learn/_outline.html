@@ -1,0 +1,17 @@
+{% load i18n ccfr %}
+<nav class="outline" aria-label="{% translate 'Module outline' %}" data-outline>
+  <button class="outline-toggle" type="button" aria-expanded="false" data-outline-toggle>{% translate "Module outline" %} · {{ pct }}% {% icon "chevron" %}</button>
+  <div class="outline__body">
+    <div class="outline__head">
+      {% include "components/progress_ring.html" with value=pct caption="" %}
+      <div><p class="muted outline__kicker">{% translate "Module" %} {{ module.number }}</p><h2><a href="{% url 'learn_module' module.number %}">{{ module.display_title }}</a></h2></div>
+    </div>
+    {% for g in groups %}<div class="outline__group"><p>{{ g.title }}</p><ul>
+      {% for r in g.rows %}<li><a href="{% url 'learn_unit' module.number r.unit.slug %}" class="{% if r.done %}is-done{% endif %}"{% if current and r.unit.pk == current.pk %} aria-current="page"{% endif %}>{% if r.done %}{% icon "check-circle" %}{% else %}{% icon r.icon %}{% endif %}<span>{% if r.unit.type == "reading" %}{{ r.index }}. {% endif %}{{ r.version.title }}<small>{% if r.done %}{% translate "Completed" %}{% else %}{{ r.unit.nominal_minutes }} {% translate "min" %}{% endif %}</small></span></a></li>{% endfor %}
+    </ul></div>{% endfor %}
+    <div class="outline__group"><p>{% translate "Assess" %}</p><ul>
+      {% for p in parts %}<li><a href="{% url 'assess_intro' p.part.pk %}">{% icon "square-check" %}<span>{{ p.part.name }}<small>{% if p.attempts %}{% translate "Best" %} {{ p.best|default_if_none:"—" }}{% else %}{% translate "Not started" %}{% endif %}</small></span></a></li>
+      {% empty %}<li><span class="outline__pending">{% icon "clock" %}<span>{% translate "Assessments are being prepared" %}</span></span></li>{% endfor %}
+    </ul></div>
+  </div>
+</nav>

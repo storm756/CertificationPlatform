@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load static i18n ccfr %}
+{% block head_title %}{{ module.display_title }} · {% translate "Module" %} {{ module.number }}{% endblock %}
+{% block body_attrs %} data-page="module" data-mod="{{ module.number }}"{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/learn.css' %}">{% endblock %}
+{% block body %}
+<main id="main" tabindex="-1" data-mod="{{ module.number }}">
+  <section class="band band--mod"><div class="shell">
+    <nav class="crumbs" aria-label="{% translate 'Breadcrumb' %}"><a href="{% url 'home' %}">{% translate "Home" %}</a>{% icon "chevron-right" %}<a href="{% url 'learn_catalogue' %}">{% translate "Modules" %}</a>{% icon "chevron-right" %}<span aria-current="page">{% translate "Module" %} {{ module.number }}</span></nav>
+    <div class="dash-hero">
+      <div>
+        <p class="eyebrow eyebrow--cyan">{% translate "Module" %} {{ module.number }} {% translate "of 9" %}</p>
+        <h1>{{ module.display_title }}</h1>
+        <p class="lede">{{ module.tagline }}</p>
+        <div class="band-meta">
+          {% if module.hours %}<span>{% icon "clock" %}≈ {{ module.hours|floatformat:"-1" }} h{% if module.theory_hours %} · {{ module.theory_hours|floatformat:"-1" }} {% translate "theory" %} + {{ module.practical_hours|floatformat:"-1" }} {% translate "practical" %}{% endif %}</span>{% endif %}
+          <span>{% icon "book" %}{{ topics|length }} {% translate "topics" %}</span>
+          <span>{% icon "video" %}{% translate "1 film" %}</span>
+          <span>{% icon "award" %}100 {% translate "marks" %}</span>
+        </div>
+        <div class="row hero-actions">
+          {% if next %}<a class="btn btn-accent btn-lg" href="{% url 'learn_unit' module.number next.unit.slug %}">{% if done %}{% translate "Continue" %}{% else %}{% translate "Start" %}{% endif %} {% icon "arrow" %}</a>{% endif %}
+          <a class="btn btn-ghost-dark" href="#assess" data-tab-link="assess">{% translate "Assessments" %}</a>
+        </div>
+      </div>
+      <div class="ring" data-v="{{ pct }}" role="img" aria-label="{{ pct }}% {% translate 'of this module complete' %}"><div><strong>{{ pct }}%</strong><small>{{ done }}/{{ total }} {% translate "units" %}</small></div></div>
+    </div>
+  </div></section>
+
+  <div class="shell course">
+    {% include "learn/_outline.html" %}
+    <div>
+      <div class="tabs" role="tablist" aria-label="{% translate 'Module sections' %}">
+        <button class="tab" role="tab" id="tab-overview" aria-controls="panel-overview" aria-selected="true" data-tab="overview">{% translate "Overview" %}</button>
+        <button class="tab" role="tab" id="tab-content" aria-controls="panel-content" aria-selected="false" tabindex="-1" data-tab="content">{% translate "Course content" %}</button>
+        <button class="tab" role="tab" id="tab-assess" aria-controls="panel-assess" aria-selected="false" tabindex="-1" data-tab="assess">{% translate "Assessments" %}</button>
+      </div>
+
+      <section class="stack-lg" role="tabpanel" id="panel-overview" aria-labelledby="tab-overview">
+        <div class="prose"><h2>{% translate "What is it?" %}</h2><p>{{ overview.what }}</p></div>
+        {% if overview.outcomes %}<div class="card"><h3>{% translate "By the end of this module you can" %}</h3><ul class="outcomes">{% for o in overview.outcomes %}<li>{% icon "check-circle" %}<span>{{ o }}</span></li>{% endfor %}</ul></div>{% endif %}
+        {% if overview.callout %}<aside class="callout callout--key">{% icon "shield-alert" %}<span class="callout__label">{% translate "Key rule" %}</span><p>{{ overview.callout }}</p></aside>{% endif %}
+        <div><h3>{% translate "Topics in this module" %}</h3>
+          {% if topics %}<ol class="unit-list">{% for r in topics %}<li><a class="unit-row" href="{% url 'learn_unit' module.number r.unit.slug %}"><span class="unit-row__icon"><strong>{{ r.index }}</strong></span><span><h4>{{ r.version.title }}</h4></span>{% icon "chevron-right" %}</a></li>{% endfor %}</ol>
+          {% else %}<p class="notice">{% icon "clock" %}<span>{% translate "The reading topics for this module are being prepared." %}</span></p>{% endif %}</div>
+        {% if overview.stop or overview.save or overview.report %}<div><h3>{% translate "Stop · Save · Report" %}</h3><div class="ssr"><div class="s1"><h4>{% icon "stop" %}{% translate "Stop" %}</h4><ul>{% for i in overview.stop %}<li>{{ i }}</li>{% endfor %}</ul></div><div class="s2"><h4>{% icon "save" %}{% translate "Save" %}</h4><ul>{% for i in overview.save %}<li>{{ i }}</li>{% endfor %}</ul></div><div class="s3"><h4>{% icon "megaphone" %}{% translate "Report" %}</h4><ul>{% for i in overview.report %}<li>{{ i }}</li>{% endfor %}</ul></div></div></div>{% endif %}
+      </section>
+
+      <section role="tabpanel" id="panel-content" aria-labelledby="tab-content" hidden>
+        {% for g in groups %}<div class="unit-group"><h3><span>{{ forloop.counter }}</span>{{ g.title }}</h3><div class="unit-list">
+          {% for r in g.rows %}<a class="unit-row" href="{% url 'learn_unit' module.number r.unit.slug %}"><span class="unit-row__icon">{% icon r.icon %}</span><span><h4>{% if r.unit.type == "reading" %}{% translate "Topic" %} {{ r.index }} · {% endif %}{{ r.version.title }}</h4><small>{{ r.unit.nominal_minutes }} {% translate "min" %}</small></span><span class="status status--{% if r.done %}done{% else %}todo{% endif %}">{% if r.done %}{% icon "check-circle" %}<span class="sr-only">{% translate "Completed" %}</span>{% else %}{% icon "circle" %}<span class="sr-only">{% translate "Not started" %}</span>{% endif %}</span></a>{% endfor %}
+        </div></div>{% endfor %}
+        <div class="notice notice--mustard">{% icon "clock" %}<p>{% translate "Still to come from the content team: the film is shown as a poster and transcript until its video is uploaded, and the handout is read here until its PDF arrives." %}</p></div>
+      </section>
+
+      <section role="tabpanel" id="panel-assess" aria-labelledby="tab-assess" hidden class="stack-lg">
+        <div class="notice">{% icon "info" %}<p>{% blocktranslate %}Your module score is <strong>Part A (50 marks) + Part B (50 marks)</strong>, using your best attempt at each. You see your score, which questions to revisit and a hint for each, but never the correct option.{% endblocktranslate %}</p></div>
+        {% for p in parts %}
+          <article class="part-card">
+            <div class="part-card__head"><div><p class="eyebrow">{% if p.part.family == "interactive" %}{% translate "Interactive" %}{% else %}{% translate "Multiple choice" %}{% endif %}</p><h3>{{ p.part.name }}</h3></div>
+              <span class="status status--{% if p.attempts %}done{% else %}todo{% endif %}">{% if p.attempts %}{% icon "check-circle" %}{% translate "Attempted" %} · {{ p.attempts }}{% else %}{% icon "circle" %}{% translate "Not started" %}{% endif %}</span></div>
+            <dl><div><dt>{% translate "Marks" %}</dt><dd>{{ p.part.marks }} {% translate "of 100" %}</dd></div><div><dt>{% translate "Attempts" %}</dt><dd>{% translate "Unlimited · best counts" %}</dd></div><div><dt>{% translate "Best" %}</dt><dd>{% if p.best is not None %}{{ p.best }}%{% else %}—{% endif %}</dd></div></dl>
+            <div class="row"><a class="btn {% if p.attempts %}btn-outline{% else %}btn-primary{% endif %}" href="{% url 'assess_intro' p.part.pk %}">{% if p.attempts %}{% icon "retry" %}{% translate "Retake" %}{% else %}{% icon "arrow" %}{% translate "Start" %}{% endif %}</a><span class="muted">{% translate "Pass mark 50%. Answer every question so it counts towards unlocking the final." %}</span></div>
+          </article>
+        {% empty %}
+          <article class="part-card part-card--pending"><div class="notice notice--mustard">{% icon "clock" %}<div><h3>{% translate "Assessments are being prepared" %}</h3><p>{% translate "This module's multiple-choice and interactive parts will appear here when the content team has approved the questions. The lessons are open now." %}</p></div></div></article>
+        {% endfor %}
+      </section>
+
+      <nav class="unit-nav" aria-label="{% translate 'Other modules' %}">
+        {% if prev_module %}<a class="btn btn-ghost" href="{% url 'learn_module' prev_module.number %}">{% icon "arrow-left" %}{% translate "Module" %} {{ prev_module.number }}</a>{% else %}<span></span>{% endif %}
+        {% if next_module %}<a class="btn btn-outline" href="{% url 'learn_module' next_module.number %}">{% translate "Module" %} {{ next_module.number }} {% icon "arrow" %}</a>{% endif %}
+      </nav>
+    </div>
+  </div>
+</main>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/learn-nav.js' %}" defer></script>{% endblock %}

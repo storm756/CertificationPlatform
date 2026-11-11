@@ -1,0 +1,9 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <p>Unit: <strong>{{ unit }}</strong>. The Word file becomes a <strong>draft</strong>: plain text, headings, lists, tables and links. Pictures inside the file are left out; upload them separately.</p>
+    {{ form.as_p }}
+    <button type="submit" class="button">Create draft</button>
+  </form>
+{% endblock %}

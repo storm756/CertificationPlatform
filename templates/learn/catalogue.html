@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load static i18n ccfr %}
+{% block head_title %}{% translate "Modules" %}{% endblock %}
+{% block body_attrs %} data-page="catalog"{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/learn.css' %}">{% endblock %}
+{% block body %}
+<main id="main" tabindex="-1">
+  <section class="band">
+    <div class="shell">
+      <nav class="crumbs" aria-label="{% translate 'Breadcrumb' %}"><a href="{% url 'home' %}">{% translate "Home" %}</a>{% icon "chevron-right" %}<span aria-current="page">{% translate "Modules" %}</span></nav>
+      <p class="eyebrow eyebrow--cyan">{% translate "Course catalogue" %}</p>
+      <h1>{% translate "Nine modules. One clear route." %}</h1>
+      <p class="lede">{% translate "Each module has a short film, six or seven readings, a handout and practice checks. It ends in a two-part assessment worth 100 marks. Nothing is locked, so start anywhere and come back any time." %}</p>
+      <div class="band-meta">
+        <span>{% icon "layers" %}{% blocktranslate with n=stats.modules %}{{ n }} counted modules + capstone{% endblocktranslate %}</span>
+        <span>{% icon "book" %}{% blocktranslate with n=stats.topics %}{{ n }} readings{% endblocktranslate %}</span>
+        <span>{% icon "video" %}{% blocktranslate with n=stats.films %}{{ n }} films{% endblocktranslate %}</span>
+        <span>{% icon "clock" %}{% blocktranslate with n=stats.hours|floatformat:"-1" %}≈ {{ n }} hours of guided study{% endblocktranslate %}</span>
+        <span>{% icon "globe" %}English · हिन्दी · मराठी · ગુજરાતી</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="shell section">
+    <ol class="journey-map journey-map--catalogue" aria-label="{% translate 'Programme structure' %}">
+      <li class="journey-step">{% icon "target" %}<strong>{% translate "Pre-test" %}</strong><small>{% translate "One short attempt, so we can measure what you learn" %}</small></li>
+      <li class="journey-step">{% icon "layers" %}<strong>{% translate "Modules 1–9" %}</strong><small>{% translate "Learn, practise, then pass each part with 50%" %}</small></li>
+      <li class="journey-step">{% icon "flag" %}<strong>{% translate "Capstone" %}</strong><small>{% translate "Bring it all together (not graded)" %}</small></li>
+      <li class="journey-step">{% icon "retry" %}<strong>{% translate "Practice mock" %}</strong><small>{% translate "18 mixed challenges before the final" %}</small></li>
+      <li class="journey-step">{% icon "award" %}<strong>{% translate "Final + certificate" %}</strong><small>{% translate "About 60 min. Result = 50% modules + 50% final" %}</small></li>
+    </ol>
+
+    <div class="catalog-tools">
+      <div class="search">
+        {% icon "search" %}
+        <label class="sr-only" for="cat-search">{% translate "Search modules and topics" %}</label>
+        <input class="input" id="cat-search" type="search" placeholder="{% translate 'Search modules and topics, e.g. UPI, deepfake, router' %}" autocomplete="off" data-cat-search>
+      </div>
+      <div class="seg" role="group" aria-label="{% translate 'Filter modules' %}">
+        <button type="button" aria-pressed="true" data-filter="all">{% translate "All" %}</button>
+        <button type="button" aria-pressed="false" data-filter="progress">{% translate "In progress" %}</button>
+        <button type="button" aria-pressed="false" data-filter="todo">{% translate "Not started" %}</button>
+        <button type="button" aria-pressed="false" data-filter="done">{% translate "Completed" %}</button>
+      </div>
+    </div>
+    <p class="sr-only" aria-live="polite" data-cat-count></p>
+
+    <div class="mod-grid" data-cat-grid>
+      {% for c in cards %}
+        <a class="mod-card" href="{% url 'learn_module' c.module.number %}" data-mod="{{ c.module.number }}" data-state="{{ c.state }}" data-search="{{ c.search }}">
+          <div class="mod-card__top">
+            {% if c.poster %}<img class="mod-card__poster" src="{% static c.poster %}" alt="" loading="lazy" width="640" height="360">{% endif %}
+            <div class="mod-card__id"><p class="mod-card__kicker">{% if c.capstone %}{% translate "Capstone" %}{% else %}{% translate "Module" %}{% endif %}</p><p class="mod-card__num">{{ c.module.number|stringformat:"02d" }}</p></div>
+            <div class="mod-card__tag"><span class="badge badge--glass">{% if c.capstone %}{% translate "Not graded" %}{% else %}100 {% translate "marks" %}{% endif %}</span></div>
+          </div>
+          <div class="mod-card__body">
+            <h3>{{ c.title }}</h3>
+            <p>{{ c.tagline }}</p>
+            <div class="mod-card__meta">
+              {% if c.capstone %}
+                {% if c.module.hours %}<span>{% icon "clock" "sm" %}≈ {{ c.module.hours|floatformat:"-1" }} h</span>{% endif %}<span>{% icon "users" "sm" %}{% translate "Classroom simulation" %}</span>
+              {% else %}
+                <span>{% icon "book" "sm" %}{{ c.topics }} {% translate "topics" %}</span>
+                {% if c.module.hours %}<span>{% icon "clock" "sm" %}≈ {{ c.module.hours|floatformat:"-1" }} h</span>{% endif %}
+                {% if c.counts.mcq %}<span>{% icon "square-check" "sm" %}{{ c.counts.mcq }} MCQs</span>{% endif %}
+                {% if c.counts.interactive %}<span>{% icon "layers" "sm" %}{{ c.counts.interactive }} {% translate "challenges" %}</span>{% endif %}
+              {% endif %}
+            </div>
+            {% if not c.capstone and not c.counts.mcq and not c.counts.interactive %}<p class="mod-card__pending">{% icon "clock" "sm" %}{% translate "Assessment questions are being prepared." %}</p>{% endif %}
+          </div>
+          {% if c.capstone %}
+            <div class="mod-card__foot"><p class="muted">{% translate "Content arriving from the programme team" %}</p></div>
+          {% else %}
+            <div class="mod-card__foot">
+              <div class="row"><span class="status status--{{ c.state }}">{% if c.state == "done" %}{% icon "check-circle" "sm" %}{% translate "Completed" %}{% elif c.state == "progress" %}{% icon "circle-dot" "sm" %}{% translate "In progress" %}{% else %}{% icon "circle" "sm" %}{% translate "Not started" %}{% endif %}</span><span>{{ c.pct }}%</span></div>
+              {% include "components/progress_bar.html" with value=c.pct label=c.title %}
+            </div>
+          {% endif %}
+        </a>
+      {% endfor %}
+    </div>
+    <div class="notice" data-cat-empty hidden>{% icon "search" %}<p>{% translate "No modules match. Try another word, or clear the filter." %}</p></div>
+
+    <article class="card card--edge accent--plum mock-callout">
+      <div class="row">
+        <div class="mock-callout__text">
+          <p class="eyebrow">{% translate "Before the final" %}</p>
+          <h2>{% translate "Practice mock: mixed challenges" %}</h2>
+          <p class="muted">{% translate "Eighteen rounds, two from each module, each one playing differently: fix settings, spot scams, sort evidence, match, order, dial and more. It is practice only, so try it as often as you like." %}</p>
+        </div>
+        <span class="btn btn-accent btn-disabled" aria-disabled="true">{% translate "Practice mock: coming soon" %}</span>
+      </div>
+    </article>
+  </section>
+</main>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/learn-nav.js' %}" defer></script>{% endblock %}

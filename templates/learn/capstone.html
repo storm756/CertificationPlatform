@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load static i18n ccfr %}
+{% block head_title %}{{ card.title }} · {% translate "Module" %} {{ module.number }}{% endblock %}
+{% block body_attrs %} data-page="module" data-mod="{{ module.number }}"{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/learn.css' %}">{% endblock %}
+{% block body %}
+<main id="main" tabindex="-1" data-mod="{{ module.number }}">
+  <section class="band band--mod"><div class="shell">
+    <nav class="crumbs" aria-label="{% translate 'Breadcrumb' %}"><a href="{% url 'learn_catalogue' %}">{% translate "Modules" %}</a>{% icon "chevron-right" %}<span aria-current="page">{% translate "Module" %} {{ module.number }}</span></nav>
+    <p class="eyebrow eyebrow--cyan">{% translate "Module" %} {{ module.number }} · {% translate "Capstone" %}</p>
+    <h1>{{ card.title }}</h1>
+    <p class="lede">{{ card.tagline }}</p>
+    <div class="band-meta">{% if module.hours %}<span>{% icon "clock" %}≈ {{ module.hours|floatformat:"-1" }} h</span>{% endif %}<span>{% icon "users" %}{% translate "Run in the classroom with your mentor" %}</span><span>{% icon "info" %}{% translate "Learning module, not graded" %}</span></div>
+  </div></section>
+  <section class="shell section stack-lg capstone-body">
+    <div class="notice notice--plum">{% icon "flag" %}<div><h2>{% translate "What the capstone is" %}</h2><p>{% translate "A realistic case that uses every module: identify the incident, triage it, preserve evidence, report it and support the person. It doesn't count towards your result, but it is the best preparation for the final." %}</p></div></div>
+    <p class="slot">{% icon "clock" %} {% translate "Not available yet: the capstone brief, case material and handout are being prepared by the programme team." %}</p>
+    <div class="row"><a class="btn btn-outline" href="{% url 'learn_catalogue' %}">{% icon "arrow-left" %}{% translate "Back to the modules" %}</a></div>
+  </section>
+</main>
+{% endblock %}
