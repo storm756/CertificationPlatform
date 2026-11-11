@@ -4,6 +4,7 @@
 {% block page_class %} page--wide{% endblock %}
 {% block extra_head %}<link rel="stylesheet" href="{% static 'css/learn.css' %}">{% endblock %}
 {% block content %}
+  <div data-mod="{{ module.number }}">
   <nav class="crumbs" aria-label="{% translate 'Breadcrumb' %}"><a href="{% url 'learn_catalogue' %}">{% translate "Modules" %}</a>{% icon "chevron-right" %}<span aria-current="page">{% translate "Module" %} {{ module.number }}</span></nav>
   <section class="band band--mod"><div class="stack">
     <p class="eyebrow eyebrow--cyan">{% translate "Module" %} {{ module.number }} {% translate "of 9" %}</p>
@@ -23,5 +24,6 @@
       {% for p in assessments %}<section class="part-card"><h3>{{ p.name }}</h3><p><a class="btn btn-primary" href="{% url 'assess_intro' p.pk %}">{% translate "Go to the assessment" %}</a></p></section>{% endfor %}
       <nav class="unit-nav" aria-label="{% translate 'Other modules' %}">{% if prev_module %}<a class="btn btn-ghost" href="{% url 'learn_module' prev_module.number %}">{% icon "arrow-left" %}{% translate "Module" %} {{ prev_module.number }}</a>{% else %}<span></span>{% endif %}{% if next_module %}<a class="btn btn-outline" href="{% url 'learn_module' next_module.number %}">{% translate "Module" %} {{ next_module.number }} {% icon "arrow" %}</a>{% endif %}</nav>
     </div>
+  </div>
   </div>
 {% endblock %}

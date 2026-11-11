@@ -4,7 +4,7 @@
 {% block page_class %} page--wide{% endblock %}
 {% block extra_head %}<link rel="stylesheet" href="{% static 'css/learn.css' %}">{% endblock %}
 {% block content %}
-  <div data-unit data-type="{{ unit.type }}" data-done="{{ this.done|yesno:'1,0' }}" data-learner="{{ learner|yesno:'1,0' }}"
+  <div data-unit data-mod="{{ module.number }}" data-type="{{ unit.type }}" data-done="{{ this.done|yesno:'1,0' }}" data-learner="{{ learner|yesno:'1,0' }}"
     data-complete-url="{% url 'learn_complete' module.number unit.slug %}" data-heartbeat-url="{% url 'learn_heartbeat' %}" data-m="{{ module.number }}" data-u="{{ unit.slug }}">
     {% csrf_token %}
     <div class="reading-progress" data-read-progress aria-hidden="true" hidden></div>
