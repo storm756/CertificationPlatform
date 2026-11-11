@@ -1,0 +1,8 @@
+{% comment %}The question map plus the "review and submit" link. Used on the page, and as an
+  out-of-band swap (oob=True) whenever an answer is saved or a question is loaded.{% endcomment %}
+{% load i18n ccfr %}
+<div{% if oob %} id="palette-wrap" hx-swap-oob="outerHTML"{% endif %}>
+  {% url 'attempt_question' attempt.pk 1 as q1 %}
+  {% include "components/question_palette.html" with items=palette palette_url=q1|slice:":-2" %}
+  <p><a class="btn btn-outline btn-block" href="{% url 'attempt_review' attempt.pk %}">{% icon "list" %}{% translate "Review and submit" %}</a></p>
+</div>

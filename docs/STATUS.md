@@ -21,8 +21,9 @@ If two of these still disagree, or something is missing, **stop and ask in chat*
 | --- | --- | --- |
 | 0. Foundation and server | ✅ **Done, merged (PR #1)** | Django 5.2 + Postgres 17 + Caddy on the VPS. `staging.cyberfirstresponse.io` serves HTTPS. Key-only SSH. Encrypted off-site backups. Staff 2FA. The CSP is set by Caddy. |
 | 1. Accounts, batches, registration | ✅ **Merged into `main`** (6b95bdc) · 🟡 **staging check still open** | Finish items 1 and 2 are done and were checked before the merge (results below). On the last check `https://staging.cyberfirstresponse.io/register/` still returned **404**: a person must deploy `main` to staging and confirm `/register/` loads before Stage 1 counts as verified on staging. |
-| 1.5. UI shell and components | 🟡 **Ready for a PR** (`stage-1-5-review`, from `origin/main` + a02123e; `stage-1-5-ui` kept as a backup) | Design tokens, self-hosted fonts incl. Gujarati, shared base template and components, `/styleguide`, language wiring, `tools/screenshots.mjs`, every Stage 0–1 page restyled. Review results below. |
-| 2 to 10 | ⬜ | In order. One stage = one branch = one PR. |
+| 1.5. UI shell and components | ✅ **Merged into `main`** (040c25a) · 🟡 **staging check still open** | Design tokens, self-hosted fonts incl. Gujarati, shared base template and components, `/styleguide`, language wiring, `tools/screenshots.mjs`, every Stage 0–1 page restyled, and the prototype's sign-in and registration design (navy panel, numbered sections, certificate-name preview, password meter). Staging stays unverified until a person deploys `main` and confirms the pages there. |
+| 2. Questions and MCQ assessments | 🟡 **Ready for a PR** (`stage-2-review`, from `origin/main` + 7d741ab; `stage-2` kept as a backup) | `Question` and immutable `QuestionVersion`, MCQ schema, XLSX import with dry run, private legacy importer (drafts only), `AssessmentPart` + `validate_part()`, attempts with random option tokens, server-side scoring, the HTMX attempt, review and result pages, auto-submit job. **The 405 legacy MCQs were only dry-run checked, not imported; none can go live until approved hints arrive.** See "Stage 2: what to know". |
+| 3 to 10 | ⬜ | In order. One stage = one branch = one PR. |
 
 **Live addresses:**
 * Staging: `https://staging.cyberfirstresponse.io`. It runs Stage 0 code; Stage 1 isn't deployed yet, so `/register` returns 404.
@@ -99,7 +100,7 @@ left out of the copy. The review fixes are listed in `build-stages.md` under Sta
 | Consent from the three people whose photos are on the landing page | Lead (being arranged) | Their photos stay out of git, in `content-data/people/` only |
 | Privacy notice, terms, grievance officer, guardian-consent method (DPDP) | CyberPeace legal | Placeholder pages, marked "draft" |
 | YouTube video IDs, and Marathi/Gujarati captions | Teammate B | Poster plus transcript |
-| New final-pool questions, hints for all questions, fixed tables (m1.t0, m1.t4, m2.t3, m4.t0, m4.t3), Module 8 replacement challenges | Teammate A | Placeholder notices |
+| **Approved hints for all 405 legacy MCQs** (the legacy bank has none; a question can't go live without one, §13.2), the content team's sheet deciding `module_quiz` vs `practice` (today: 30 quiz / 15 practice per module), new final-pool questions, fixed tables (m1.t0, m1.t4, m2.t3, m4.t0, m4.t3), Module 8 replacement challenges | Teammate A | The 405 legacy MCQs were only dry-run checked; they are **not imported** and stay in the private source file (`content-data/`, never in Git). Until hints arrive, no module quiz part can be published, so learners can't take real assessments. Tests use invented questions. |
 | Reviewed translations | Teammate B + reviewers | Lessons show draft translations with a "draft translation" tag. Assessments show English until a translation is reviewed (architecture §14, D24). |
 | Branch protection on `main` (require a PR and a passing CI, 0 approvals, no force pushes) | Lead (GitHub settings) | Never push to `main` directly |
 
@@ -132,3 +133,32 @@ left out of the copy. The review fixes are listed in `build-stages.md` under Sta
 * **Prototype data:** the prototype's `data/` folder (question data and `data/i18n/*.js` draft translations) goes into `content-data/prototype/`. Never into git.
 * **Team content** (question sheets, video IDs, reviewed translations): from the private shared drive into `content-data/`.
 * **Local tools:** Docker Desktop (dev stack and tests), Git, and Node (the engine bundle in Stage 3, screenshots and accessibility checks).
+
+## Stage 2: what to know (read before Stage 3 and 5)
+
+**Stage 2 review results (11 Nov 2026, `stage-2-review` = `origin/main` + 7d741ab + a result-page fix).** Run in a fresh dev stack with invented questions only.
+
+| Check | Result |
+| --- | --- |
+| Full test suite (PostgreSQL) | ✅ 232 passed |
+| `ruff check`, `ruff format --check`, `makemigrations --check`, `check --deploy` (prod settings) | ✅ clean |
+| Journey 5 (resume on another device, answer intact), journey 6 (two submits at once → one result), journey 9 (score, right/wrong and hints, no correct option) | ✅ tests, and in a browser under the production CSP |
+| No answer keys, hints or internal option ids in the attempt page or its htmx responses | ✅ tests, and in a browser |
+| Starting twice at once creates one attempt | ✅ tests (2 and 5 parallel starts), and two simultaneous POSTs in a browser |
+| axe on the quiz intro, attempt, review and result pages at 390px and 1366px | ✅ no serious or critical issues; screenshots in `screenshots/stage2-review/` (not committed) |
+| **Fixed in review:** the result page printed the learner's chosen option, which for a right answer is the correct option. It now shows the score, right/wrong and the hint only. | ✅ regression test |
+| **Fixed in review:** the Django-admin Excel import saved the questions and then returned HTTP 500 while writing the admin log (the imported rows carried no saved question). Confirm now redirects with "Import finished", logs each saved question, and a sheet that fails at confirm saves nothing | ✅ admin-flow regression tests (valid workbook, failure at confirm leaves no partial changes and no log, bad row offers no Confirm) |
+| **Fixed in review:** quiz autosave. After a failed save on Question 1 and a click on Next, the retry re-sent whichever question was on screen. Each answer is now kept in an outbox tagged with its own question and retried for that question; the pill says "Saved" only once the server accepted every pending answer; a refused answer shows "Not saved"; Review and submit stays on the quiz while an answer is refused; closing the tab with an unsaved answer asks first | ✅ `tools/e2e_save_retry.mjs` (invented data, production CSP, 390px and 1366px): fails Question 1, moves to Question 2, restores the connection and checks what the server saved; refused save; quick Next; Review; tab close. The browser test fails on the old code |
+| **Fixed in review:** a session that expires while the quiz is open. The answer endpoint is redirected to sign-in and the page used to treat the sign-in page (HTTP 200) as a saved answer and drop its form into the save indicator. "Saved" now needs the server's explicit confirmation (`X-Answer-Saved`); on a redirect to sign-in the quiz and indicator stay, the answer stays in memory, the pill says "Sign in again to save" with a notice and a Sign in link, and the answer is saved to its own question after the learner signs in again (the CSRF token is re-read from the cookie, since signing in changes it) | ✅ `tools/e2e_save_retry.mjs` scenario 7 at 390px and 1366px (fails on the old code), plus a test that only a real save carries the confirmation |
+
+
+* **Content is the blocker, not code.** Run `python manage.py import_legacy_mcq --source <path> --dry-run` to check the legacy bank (it prints counts only). On 10 Nov 2026 it reported 405 valid questions, 30 quiz + 15 practice per module, at least 5 per PC tag in every quiz, and **405 questions with no hint**. **They were not imported**: nothing real is in any database, and real questions and answer keys stay out of Git. When the team sends approved hints, load them with the XLSX sheet (the hint column is required) or the legacy importer, then publish.
+* **Design calls made in Stage 2** (tell the lead if one is wrong):
+  * `validate_part()` blocks a part whose counted marks would **exceed** 100. "The module totals exactly 100" can't be checked until the interactive part exists (Stage 3), so `module_marks_total()` reports it instead of blocking.
+  * `AssessmentPart.is_published` (not in §6) is set only by `publish_part()`, which runs `validate_part()`. Learners can only start published parts.
+  * `ProgrammeAssessment` exists as a table (so `Attempt` matches §6) but is unused until Stage 5.
+  * `Module` is a minimal table seeded with modules 1–9 (counted) and 10 (capstone, not counted, D26). Stage 4 adds units and titles.
+  * XLSX import errors say "row N" where N counts data rows, not the header. A real import is all-or-nothing.
+  * Option ids inside a question body (`o1`…) are internal only; the browser gets random per-attempt tokens. Scores are stored with `round1()` (one decimal).
+  * The auto-submit job treats an auto-submitted attempt like a submitted one (`counted` unless gated); `all_answered` still says whether it was complete.
+* **htmx** is vendored at `static/js/htmx.min.js` (v2.0.4, BSD-0 licence beside it) and configured without eval or inline styles, so Caddy's CSP is unchanged.

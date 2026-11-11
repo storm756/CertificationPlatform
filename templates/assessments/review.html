@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load i18n ccfr %}
+{% block head_title %}{% translate "Review your answers" %}{% endblock %}
+{% block content %}
+  <div>
+    <p class="eyebrow">{{ attempt.part.name }}</p>
+    <h1>{% translate "Review your answers" %}</h1>
+    <p class="muted">{% blocktranslate with answered=total missing=missing %}{{ total }} questions, {{ missing }} not answered yet.{% endblocktranslate %}</p>
+  </div>
+  {% if missing %}
+    {% include "components/alert.html" with tone="mustard" icon="alert-triangle" title=_("Some questions are blank") text=_("You can still submit, but this attempt won't count towards unlocking the final unless every question is answered.") %}
+  {% else %}
+    {% include "components/alert.html" with tone="teal" icon="check-circle" title=_("Every question is answered") text=_("You can't change answers after submitting.") %}
+  {% endif %}
+  <ul class="result-list">
+    {% for item in items %}
+      <li class="result-item">
+        <span class="status status--{% if item.answered %}done{% else %}todo{% endif %}">{% if item.answered %}{% icon "check-circle" %}{% else %}{% icon "circle" %}{% endif %}</span>
+        <span><strong>{{ item.position }}.</strong> {{ item.stem|truncatechars:110 }}
+          {% if item.flagged %}{% include "components/badge.html" with text=_("marked for review") colour="terracotta" icon="flag" %}{% endif %}</span>
+        <a class="btn btn-sm btn-outline" href="{% url 'attempt_question' attempt.pk item.position %}">{% if item.answered %}{% translate "Change" %}{% else %}{% translate "Answer" %}{% endif %}</a>
+      </li>
+    {% endfor %}
+  </ul>
+  <div class="row">
+    <a class="btn btn-outline" href="{% url 'attempt_page' attempt.pk %}">{% icon "arrow-left" %}{% translate "Back to questions" %}</a>
+    <form method="post" action="{% url 'attempt_submit' attempt.pk %}" data-confirm="{% translate 'Submit this attempt?' %}" data-confirm-body="{% translate 'You can’t change answers after submitting.' %}" data-confirm-yes="{% translate 'Submit' %}">{% csrf_token %}
+      <button class="btn btn-primary btn-lg" type="submit">{% translate "Submit" %}</button>
+    </form>
+  </div>
+{% endblock %}

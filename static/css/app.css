@@ -242,6 +242,7 @@
 .save-pill { display: inline-flex; align-items: center; gap: .4rem; padding: .3rem .75rem; border-radius: 999px; background: var(--surface-3); font-size: .86rem; font-weight: 600; color: var(--ink-muted); }
 .save-pill[data-state="saved"] { background: var(--teal-tint); color: var(--teal-ink); }
 .save-pill[data-state="offline"] { background: var(--mustard-tint); color: var(--mustard-ink); }
+.save-pill[data-state="error"], .save-pill[data-state="signin"] { background: var(--danger-tint); color: var(--danger); }
 .timer { display: inline-flex; align-items: center; gap: .35rem; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink-muted); }
 .attempt-progress { height: 5px; background: var(--surface-3); }
 .attempt-progress i { display: block; height: 100%; width: calc(var(--v, 0) * 1%); background: var(--m, var(--teal)); transition: width 300ms var(--ease); }
@@ -255,10 +256,10 @@
 }
 .palette h2 { font-family: var(--font-body); font-size: .8rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: .75rem; }
 .palette__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr)); gap: .4rem; }
-.palette__grid button { position: relative; min-height: 44px; border: 2px solid var(--line-strong); border-radius: .6rem; background: var(--surface); font-weight: 700; cursor: pointer; }
-.palette__grid button.is-answered { background: var(--m-tint, var(--teal-tint)); border-color: var(--m, var(--teal)); }
-.palette__grid button[aria-current="true"] { outline: 3px solid var(--ink); outline-offset: 1px; }
-.palette__grid button.is-flagged::after { content: ""; position: absolute; top: 3px; right: 3px; width: .5rem; height: .5rem; border-radius: 50%; background: var(--terracotta); }
+.palette__grid :is(button, a) { position: relative; min-height: 44px; border: 2px solid var(--line-strong); border-radius: .6rem; background: var(--surface); font-weight: 700; cursor: pointer; }
+.palette__grid :is(button, a).is-answered { background: var(--m-tint, var(--teal-tint)); border-color: var(--m, var(--teal)); }
+.palette__grid :is(button, a)[aria-current="true"] { outline: 3px solid var(--ink); outline-offset: 1px; }
+.palette__grid :is(button, a).is-flagged::after { content: ""; position: absolute; top: 3px; right: 3px; width: .5rem; height: .5rem; border-radius: 50%; background: var(--terracotta); }
 .palette__legend { display: grid; gap: .3rem; margin-top: .9rem; font-size: .85rem; color: var(--ink-muted); }
 .palette__legend span { display: inline-flex; gap: .45rem; align-items: center; }
 .palette__legend i { width: .9rem; height: .9rem; border-radius: .25rem; border: 2px solid var(--line-strong); }
@@ -475,9 +476,9 @@ fieldset.form-section { margin: 0; }
 
 /* Question map: "answered" is a tinted square, "marked for review" is a dashed border with a flag
    corner, so the two never rely on colour alone (Stage 1.5 review fix). */
-.palette__grid button.is-flagged { border-style: dashed; border-color: var(--terracotta); }
-.palette__grid button.is-flagged.is-answered { background: var(--m-tint, var(--teal-tint)); }
-.palette__grid button.is-flagged::after { top: 0; right: 0; width: .7rem; height: .7rem; border-radius: 0 .45rem 0 .7rem; }
+.palette__grid :is(button, a).is-flagged { border-style: dashed; border-color: var(--terracotta); }
+.palette__grid :is(button, a).is-flagged.is-answered { background: var(--m-tint, var(--teal-tint)); }
+.palette__grid :is(button, a).is-flagged::after { top: 0; right: 0; width: .7rem; height: .7rem; border-radius: 0 .45rem 0 .7rem; }
 .palette__legend i.f { border-radius: 0 .45rem 0 .9rem; background: var(--terracotta); border: 0; }
 .palette__legend i.d { border-style: dashed; border-color: var(--terracotta); }
 /* "Answer every question": a bold word inside running text is not a flex item (phone layout fix). */
@@ -511,3 +512,16 @@ fieldset.form-section { margin: 0; }
 .auth__main { align-content: start; }
 .form-section .pw-meter { margin-top: .6rem; }
 .form-section > .hint, .form-section > div > .hint { font-size: .9rem; color: var(--ink-muted); margin-top: .35rem; }
+
+/* Stage 2: the quiz */
+.palette__grid a { display: grid; place-items: center; text-decoration: none; color: inherit; font-weight: 700; }
+/* Options are real radio buttons inside a label, so they work without JavaScript. */
+.opt input[type="radio"] { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.opt:has(input:checked) { border-color: var(--m, var(--teal)); background: var(--m-tint, var(--teal-tint)); font-weight: 600; }
+.opt:has(input:checked) .opt__mark { border-color: var(--m, var(--teal)); background: var(--m, var(--teal)); color: #fff; }
+.opt:has(input:checked) .opt__mark .icon { opacity: 1; }
+.opt:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+.save-pill[data-state="saving"] { background: var(--surface-3); }
+.attempt-head { display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; align-items: flex-end; justify-content: space-between; margin-bottom: 1.25rem; }
+.result-list .result-item--block { display: grid; grid-template-columns: minmax(0, 1fr); gap: .5rem; align-items: start; }
+.result-list .result-item--block .callout { margin: 0; }

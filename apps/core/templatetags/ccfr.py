@@ -1,5 +1,6 @@
 from django import template
 from django.templatetags.static import static
+from django.utils import timezone
 from django.utils.html import format_html
 
 register = template.Library()
@@ -80,3 +81,18 @@ def is_checkbox(field):
 @register.filter
 def is_password(field):
     return getattr(field.field.widget, "input_type", "") == "password"
+
+
+@register.filter
+def letter(index):
+    """0 -> A, 1 -> B ...: the label beside an option (its screen position, nothing more)."""
+    try:
+        return "ABCDEF"[int(index)]
+    except (TypeError, ValueError, IndexError):
+        return ""
+
+
+@register.filter
+def elapsed_seconds(since):
+    """Whole seconds from `since` until now (the count-up timer starts from this)."""
+    return max(0, int((timezone.now() - since).total_seconds()))
