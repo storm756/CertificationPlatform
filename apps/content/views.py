@@ -36,24 +36,93 @@ def _module(number):
 def _rows(user, module):
     units = services.published_units(module)
     done = services.completed_unit_ids(user, [u for u, _ in units])
-    return [{"unit": u, "version": v, "done": u.pk in done, "icon": KIND_ICON[u.type]} for u, v in units]  # fmt: skip
+    rows, reading = [], 0
+    for u, v in units:
+        if u.type == "reading":
+            reading += 1
+        rows.append({"unit": u, "version": v, "done": u.pk in done, "icon": KIND_ICON[u.type], "index": reading if u.type == "reading" else None})  # fmt: skip
+    return rows
 
 
 def _grouped(rows):
     return [{"key": k, "title": title, "rows": [r for r in rows if r["unit"].type in types]} for k, title, types in GROUPS if any(r["unit"].type in types for r in rows)]  # fmt: skip
 
 
+POSTERS = {n: f"img/films/m{n}.jpg" for n in range(1, 10)}  # the prototype's film posters
+CAPSTONE_TITLE = "Capstone simulation"
+CAPSTONE_TAGLINE = "Bring every module together in one realistic case."
+
+
+def _state(pct):
+    return "done" if pct >= 100 else "progress" if pct > 0 else "todo"
+
+
+def _question_counts(module):
+    """Live (published) questions of this module that learners can be assessed on."""
+    from apps.questions.models import Pool, Question, QuestionStatus
+
+    live = Question.objects.filter(module=module, status=QuestionStatus.LIVE, pool=Pool.MODULE_QUIZ)
+    return {
+        "mcq": live.filter(format="mcq").count(),
+        "interactive": live.exclude(format="mcq").count(),
+    }
+
+
+def _module_card(user, module):
+    rows = _rows(user, module)
+    done = sum(1 for r in rows if r["done"])
+    pct = round(100 * done / len(rows)) if rows else 0
+    capstone = module.kind == "capstone"
+    topics = [r["version"].title for r in rows if r["unit"].type == "reading"]
+    title = module.title or (CAPSTONE_TITLE if capstone else module.display_title)
+    tagline = module.tagline or (CAPSTONE_TAGLINE if capstone else "")
+    counts = _question_counts(module) if not capstone else {"mcq": 0, "interactive": 0}
+    return {
+        "module": module, "title": title, "tagline": tagline, "capstone": capstone,
+        "topics": len(topics), "pct": pct, "state": _state(pct), "has_content": bool(rows),
+        "poster": POSTERS.get(module.number), "counts": counts,
+        "search": " ".join([title, tagline, *topics]).lower(),
+    }  # fmt: skip
+
+
 def catalogue(request):
-    cards = []
-    for module in Module.objects.filter(kind="learning"):
-        rows = _rows(request.user, module)
-        done = sum(1 for r in rows if r["done"])
-        cards.append({"module": module, "topics": sum(1 for r in rows if r["unit"].type == "reading"), "units": len(rows), "progress": round(100 * done / len(rows)) if rows else 0})  # fmt: skip
-    return render(request, "learn/catalogue.html", {"cards": cards})
+    cards = [_module_card(request.user, m) for m in Module.objects.all()]
+    learning = [c for c in cards if not c["capstone"]]
+    return render(
+        request,
+        "learn/catalogue.html",
+        {
+            "cards": cards,
+            "stats": {
+                "modules": len(learning),
+                "topics": sum(c["topics"] for c in learning),
+                "films": sum(
+                    1
+                    for c in learning
+                    if any(u.type == "video" for u, _ in services.published_units(c["module"]))
+                ),  # fmt: skip
+                "hours": sum((c["module"].hours or 0) for c in cards),
+            },
+        },
+    )
+
+
+def _part_cards(user, module):
+    """The module's published assessment parts, each with the learner's attempts and best score."""
+    from apps.assessments.models import Attempt
+
+    out = []
+    for part in AssessmentPart.objects.filter(module=module, is_published=True).order_by("pk"):
+        tries = list(Attempt.objects.filter(user=user, part=part).order_by("number")) if _is_learner(user) else []  # fmt: skip
+        best = max((a.score for a in tries if a.counted and a.score is not None), default=None)
+        out.append({"part": part, "attempts": len(tries), "best": best})
+    return out
 
 
 def module_page(request, number):
-    module = _module(number)
+    module = get_object_or_404(Module, number=number)
+    if module.kind == "capstone":
+        return render(request, "learn/capstone.html", {"card": _module_card(request.user, module), "module": module})  # fmt: skip
     rows = _rows(request.user, module)
     done = sum(1 for r in rows if r["done"])
     nxt = next((r for r in rows if not r["done"]), rows[0] if rows else None)
@@ -65,8 +134,9 @@ def module_page(request, number):
             "topics": [r for r in rows if r["unit"].type == "reading"],
             "done": done, "total": len(rows), "pct": round(100 * done / len(rows)) if rows else 0,
             "next": nxt, "prev_module": Module.objects.filter(number=number - 1, kind="learning").first(),
-            "next_module": Module.objects.filter(number=number + 1, kind="learning").first(),
-            "assessments": AssessmentPart.objects.filter(module=module, is_published=True),
+            "next_module": Module.objects.filter(number=number + 1).first(),
+            "parts": _part_cards(request.user, module),
+            "poster": POSTERS.get(module.number),
         },
     )  # fmt: skip
 
@@ -124,6 +194,7 @@ def unit_page(request, number, slug):
                 "practice_quiz": "Completes when submitted once",
             }[unit.type],  # fmt: skip
             "learner": _is_learner(request.user),
+            "parts": _part_cards(request.user, module),
         },
     )
 

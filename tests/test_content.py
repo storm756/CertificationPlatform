@@ -213,9 +213,11 @@ def test_catalogue_module_and_unit_pages_render_for_a_guest(client, make_unit):
     assert "Invented module" in page and "Title t1" in page
     assert client.get(reverse("learn_unit", args=[1, "t1"])).status_code == 200
     assert client.get(reverse("learn_unit", args=[1, "nope"])).status_code == 404
-    assert (
-        client.get(reverse("learn_module", args=[10])).status_code == 404
-    )  # the capstone has no page yet
+    cap = client.get(
+        reverse("learn_module", args=[10])
+    )  # the capstone has a page with a clear pending state
+    assert cap.status_code == 200 and b"Not available yet" in cap.content
+    assert client.get(reverse("learn_module", args=[11])).status_code == 404
 
 
 def test_a_draft_is_not_visible_to_learners(client, make_unit):

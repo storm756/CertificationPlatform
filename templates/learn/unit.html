@@ -1,19 +1,20 @@
 {% extends "base.html" %}
 {% load static i18n ccfr %}
 {% block head_title %}{{ version.title }} · {% translate "Module" %} {{ module.number }}{% endblock %}
-{% block page_class %} page--wide{% endblock %}
+{% block body_attrs %} data-page="unit" data-mod="{{ module.number }}"{% endblock %}
 {% block extra_head %}<link rel="stylesheet" href="{% static 'css/learn.css' %}">{% endblock %}
-{% block content %}
+{% block body %}
+<main id="main" tabindex="-1">
   <div data-unit data-mod="{{ module.number }}" data-type="{{ unit.type }}" data-done="{{ this.done|yesno:'1,0' }}" data-learner="{{ learner|yesno:'1,0' }}"
     data-complete-url="{% url 'learn_complete' module.number unit.slug %}" data-heartbeat-url="{% url 'learn_heartbeat' %}" data-m="{{ module.number }}" data-u="{{ unit.slug }}">
     {% csrf_token %}
     <div class="reading-progress" data-read-progress aria-hidden="true" hidden></div>
-    <div class="course">
+    <div class="shell course">
       {% with current=unit %}{% include "learn/_outline.html" %}{% endwith %}
       <article>
         <nav class="crumbs" aria-label="{% translate 'Breadcrumb' %}"><a href="{% url 'learn_catalogue' %}">{% translate "Modules" %}</a>{% icon "chevron-right" %}<a href="{% url 'learn_module' module.number %}">{% translate "Module" %} {{ module.number }}</a>{% icon "chevron-right" %}<span aria-current="page">{{ unit.get_type_display }}</span></nav>
         <header class="unit-head"><p class="eyebrow">{{ unit.get_type_display }} · {{ unit.nominal_minutes }} {% translate "min" %}</p><h1>{{ version.title }}</h1></header>
-        <div class="prose">{% include "learn/_blocks.html" with blocks=blocks %}</div>
+        <div class="prose{% if unit.type == 'reading' %} prose--reading{% endif %}">{% include "learn/_blocks.html" with blocks=blocks %}</div>
         <div data-end-sentinel class="sentinel"></div>
         <div class="complete-bar{% if this.done %} is-done{% endif %}" data-complete-bar>
           <span class="status{% if this.done %} status--done{% endif %}" data-complete-status>{% if this.done %}{% icon "check-circle" %}{% translate "Completed" %}{% else %}{% icon "info" %}{{ complete_rule }}{% endif %}</span>
@@ -26,5 +27,6 @@
       </article>
     </div>
   </div>
+</main>
 {% endblock %}
-{% block scripts %}<script src="{% static 'js/learn.js' %}" defer></script>{% endblock %}
+{% block scripts %}<script src="{% static 'js/learn-nav.js' %}" defer></script><script src="{% static 'js/learn.js' %}" defer></script>{% endblock %}

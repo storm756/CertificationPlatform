@@ -271,8 +271,8 @@ def test_question_map_legend_distinguishes_answered_from_marked_by_shape(client,
 def test_translated_sample_text_lives_only_in_the_styleguide_template():
     """Stage 8 owns real translations; Devanagari/Gujarati elsewhere would be a hidden copy."""
     for path in (ROOT / "templates").rglob("*.html"):
-        if path.name in ("styleguide.html", "login.html", "header.html"):
-            continue  # login's language ticks and the header language names are labels, not copy
+        if path.name in ("styleguide.html", "login.html", "header.html", "catalogue.html"):
+            continue  # the language names (login ticks, header, catalogue banner) are labels, not copy
         assert not re.search("[ऀ-ॿ઀-૿]", path.read_text(encoding="utf-8")), path
 
 
