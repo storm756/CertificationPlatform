@@ -45,3 +45,53 @@
 - Stage 2 review fix: the Django-admin Excel import no longer returns HTTP 500 after saving. Each imported row now carries its saved question, so the confirmation shows and the admin log names the questions; a failure at confirm rolls the whole import back. Why: §13.2.
 - Stage 2 review fix: quiz autosave keeps each answer in a per-question outbox (`attempt.js`) and retries it for its own question, so a failed save on Question 1 can no longer be replaced by Question 2's. "Saved" means the server accepted every pending answer; a refused answer shows "Not saved"; Review stays put while an answer is refused. Browser test: `tools/e2e_save_retry.mjs` (with `tools/seed_e2e.py`). Why: no lost or misattributed answers.
 - Stage 2 review fix: an expired session during the quiz is no longer treated as a saved answer. "Saved" requires the server's `X-Answer-Saved` confirmation; after a redirect to sign-in the pending answer stays in memory, the pill reads "Sign in again to save", a notice offers a Sign in link, and the answer is sent to its own question once the learner signs in again. Why: no silently lost answers.
+
+## 2026-11-10: Stage 3, interactive engine (13 formats)
+- Added pydantic bodies, allow-list projections, per-attempt random token maps, `clean_response` validation and Decimal scorers for mc, cards, spot, hotspot, sort, match, order, pick, build, settings, dial, chat and crossword; MCQ moved into the same format registry unchanged. Gates fire only on something the learner did. Why: §9.2, §9.6, D13.
+- Scorer parity with the legacy `engine.js`: 128 frozen cases from invented questions (including gates), plus `check_legacy_parity` for the private bank (counts only). Why: Stage 3 done-when.
+- `AttemptItem.format` and a wider numeric score column; `ProgrammeAssessmentKind.MOCK`; "Partly right" on the result page. Why: partial credit.
+- Hotspots: uploaded raster images (Pillow re-encode, metadata stripped, SVG rejected) served only to the attempt's owner, plus numeric regions drawn by the engine. Why: no raw SVG or HTML from content.
+- `import_legacy_interactive` (create-only, drafts, counts only). The 104 legacy challenges validate but are **not loaded**: they have no hints. The 405 Stage 2 MCQs were also only dry-run checked and stay in the source file. Why: §13.2.
+- TypeScript renderer (`engine/`, esbuild bundle `static/js/engine.js`, `static/css/engine.css`) with colour triage as four labelled buttons; saves through the Stage 2 htmx form; chat fetches its next step after the save. Checked in a real browser at 390px and 1366px under the production CSP, axe clean. Why: D20, Stage 3.
+- New dependency: Pillow. Dev dependencies in `tools/`: esbuild, typescript, jsdom.
+
+## 2026-11-10: Stage 3 review fixes
+- Untouched questions now earn zero in manual and automatic submissions. Before, a blank free "tick the right ones" question earned 1/2 and a blank settings question 1/3 (the legacy engine's credit for leaving things alone), which inflated blank and auto-submitted attempts. Real answers, including a deliberate "finished, nothing picked", keep their partial credit. Why: scoring must follow what the learner did.
+- The result page no longer prints "Your answer: ..." (for a right answer that was the correct option's text). It shows right / partly right / not quite and the hint. Why: D13, never repeat the correct option.
+- Regression tests for both.
+
+
+## 2026-11-10: Review fixes (accounts, language, auto-submit)
+- The purge job now locks the email-verification and guardian-consent rows of its candidates and asks the rule again before deleting, so a learner who verifies (or whose guardian confirms) while it runs is kept. Why: DPDP minimisation must not delete someone who just finished signing up.
+- A guardian resend keeps the old link working until the new email has really gone out. A full budget or a mail failure used to replace the link without sending it. Failures are logged and the waiting page says the email could not be sent. Why: D16.
+- A signed-in learner's saved language now wins over a stale language cookie, and choosing a language no longer has its cookie reset to the old saved one on a new device. Why: D7.
+- `submit()` takes `stale_before`: the auto-submit job rechecks the last save under the attempt lock, so a quiz saved after the job looked is left open. Why: §9.3.
+- A regression test for each (`tests/test_review_fixes.py`).
+
+## 2026-11-10: Guardian send result and auto-submit count
+- `guardian.send_request()` treats `send_mail()` returning 0 as a failed send: the old link keeps working (and keeps its original expiry), nothing is recorded against the email budget. Why: D16.
+- `submit()` marks the attempt it returns with `just_closed`, decided under the attempt lock. `auto_submit_stale()` counts and audits only the attempts this call really closed, so a manual submit that won the race, or another worker's auto-submit, is not counted. Why: §9.3, audit accuracy.
+
+## 2026-11-10: Guardian confirmation and resend overlap
+- `guardian.confirm()` locks the consent row and rechecks it, so two overlapping confirmations (or a double tap) record and audit once; the first name stands. Why: audit accuracy, D16.
+- `guardian.resend()` holds the consent row from the email to the save, so overlapping resends can no longer leave the newest email with a dead link. Why: D16.
+
+## 2026-11-10: Answer saves are kept per question and retried
+- `static/js/attempt.js` now keeps every answer in an outbox tagged with its own question number. It is sent after a short pause, or at once when the learner clicks Next, Previous, the question map or Review and submit. A failed save (network, timeout, server error) stays in the outbox and is retried for the original question with a growing delay, even after the learner has moved on. Before, the retry re-sent whichever question was on screen, so question 1's answer was lost. Why: no lost answers.
+- The pill says "Saved" only when the server has accepted every answer. A refused answer (400, 403) shows a new "Not saved" state. Before, any 4xx showed "Saved".
+- The engine hands each change over at once instead of waiting 120 ms, so a quick Next can no longer drop an interactive answer. The question forms no longer use `hx-post`; without JavaScript they post as before.
+- `tools/e2e_save_retry.mjs` (with `tools/seed_e2e.py`, invented data) is the browser test: it fails question 1's save, moves to question 2, restores the connection and checks the server holds question 1's answer, for multiple choice and interactive questions, at 390px and 1366px, under the production CSP. It also covers a quick Next, a refused answer, Review and submit, and a chat reply.
+
+## 2026-11-10: Guardian confirmation rechecks the link under the lock
+- `guardian.confirm()` locks the consent row and checks that the link the page was opened with is still the stored one and still live. A link replaced by a resend (or expired, or already used) can no longer approve consent; the consent page then shows the invalid-link page. Why: D16.
+
+## 2026-11-10: Stay on the quiz when an answer was refused; guardian record removed mid-confirm
+- Review and submit (or any plain link on the attempt page) no longer leaves the quiz when an answer was refused, whether the learner clicks after the "Not saved" message or while that save is still in progress. Focus moves to the pill and, if the refused answer belongs to another question, that question is shown. Why: the learner would otherwise submit without knowing an answer was not saved.
+- Closing or reloading the tab while an answer is still waiting to be saved now makes the browser ask first (the outbox lives in the page). Why: no silent loss of answers.
+- `guardian.confirm()` returns False when the consent record was removed between the link lookup and the confirmation (account cleanup), so the consent page shows the existing invalid-link page instead of a server error. It now locks only the consent row. Why: D16, robustness.
+- Tests: browser scenarios in `tools/e2e_save_retry.mjs`; Python regression tests in `tests/test_review_fixes.py`.
+
+## 2026-11-11: Stage 3 re-applied on `origin/main` (`stage-3-review`)
+- The nine Stage 3 commits (engine, review fixes, guardian and purge fixes, autosave) were re-applied on top of the merged Stage 1.5 and Stage 2 work. Where they overlapped, main's Stage 2 behaviour wins: the Excel-import fix, the explicit `X-Answer-Saved` confirmation, expired-session recovery (`attempt.js`) and the result page that shows no option text. The engine's saves go through the same outbox.
+- `tools/e2e_save_retry.mjs` now covers multiple-choice and interactive questions, including the expired-session case.
+

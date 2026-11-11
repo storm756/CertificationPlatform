@@ -22,8 +22,9 @@ If two of these still disagree, or something is missing, **stop and ask in chat*
 | 0. Foundation and server | ✅ **Done, merged (PR #1)** | Django 5.2 + Postgres 17 + Caddy on the VPS. `staging.cyberfirstresponse.io` serves HTTPS. Key-only SSH. Encrypted off-site backups. Staff 2FA. The CSP is set by Caddy. |
 | 1. Accounts, batches, registration | ✅ **Merged into `main`** (6b95bdc) · 🟡 **staging check still open** | Finish items 1 and 2 are done and were checked before the merge (results below). On the last check `https://staging.cyberfirstresponse.io/register/` still returned **404**: a person must deploy `main` to staging and confirm `/register/` loads before Stage 1 counts as verified on staging. |
 | 1.5. UI shell and components | ✅ **Merged into `main`** (040c25a) · 🟡 **staging check still open** | Design tokens, self-hosted fonts incl. Gujarati, shared base template and components, `/styleguide`, language wiring, `tools/screenshots.mjs`, every Stage 0–1 page restyled, and the prototype's sign-in and registration design (navy panel, numbered sections, certificate-name preview, password meter). Staging stays unverified until a person deploys `main` and confirms the pages there. |
-| 2. Questions and MCQ assessments | 🟡 **Ready for a PR** (`stage-2-review`, from `origin/main` + 7d741ab; `stage-2` kept as a backup) | `Question` and immutable `QuestionVersion`, MCQ schema, XLSX import with dry run, private legacy importer (drafts only), `AssessmentPart` + `validate_part()`, attempts with random option tokens, server-side scoring, the HTMX attempt, review and result pages, auto-submit job. **The 405 legacy MCQs were only dry-run checked, not imported; none can go live until approved hints arrive.** See "Stage 2: what to know". |
-| 3 to 10 | ⬜ | In order. One stage = one branch = one PR. |
+| 2. Questions and MCQ assessments | ✅ **Merged into `main`** (8c37cd5, PR #5; `stage-2` kept as a backup) | `Question` and immutable `QuestionVersion`, MCQ schema, XLSX import with dry run, private legacy importer (drafts only), `AssessmentPart` + `validate_part()`, attempts with random option tokens, server-side scoring, the HTMX attempt, review and result pages, auto-submit job. **The 405 legacy MCQs were only dry-run checked, not imported; none can go live until approved hints arrive.** See "Stage 2: what to know". |
+| 3. Interactive engine (13 formats) | 🟡 **Ready for a PR** (`stage-3-review`, from `origin/main` + the nine Stage 3 commits; `stage-3` kept as a backup) | The 13 formats (mc, cards, spot, hotspot, sort, match, order, pick, build, settings, dial, chat, crossword) plus colour triage, with pydantic bodies, allow-list projections, random per-attempt tokens, Decimal scorers and safety gates ported from the legacy `engine.js` (parity proved on 128 frozen cases), a private legacy importer, safe hotspot images, and a TypeScript/esbuild renderer (`engine/`, bundle `static/js/engine.js`). Journeys 8 and 10 pass. **The 104 real legacy challenges validate but are not imported, and none can go live: they have no hints.** See "Stage 3: what to know" below. |
+| 4 to 10 | ⬜ | In order. One stage = one branch = one PR. |
 
 **Live addresses:**
 * Staging: `https://staging.cyberfirstresponse.io`. It runs Stage 0 code; Stage 1 isn't deployed yet, so `/register` returns 404.
@@ -101,6 +102,7 @@ left out of the copy. The review fixes are listed in `build-stages.md` under Sta
 | Privacy notice, terms, grievance officer, guardian-consent method (DPDP) | CyberPeace legal | Placeholder pages, marked "draft" |
 | YouTube video IDs, and Marathi/Gujarati captions | Teammate B | Poster plus transcript |
 | **Approved hints for all 405 legacy MCQs** (the legacy bank has none; a question can't go live without one, §13.2), the content team's sheet deciding `module_quiz` vs `practice` (today: 30 quiz / 15 practice per module), new final-pool questions, fixed tables (m1.t0, m1.t4, m2.t3, m4.t0, m4.t3), Module 8 replacement challenges | Teammate A | The 405 legacy MCQs were only dry-run checked; they are **not imported** and stay in the private source file (`content-data/`, never in Git). Until hints arrive, no module quiz part can be published, so learners can't take real assessments. Tests use invented questions. |
+| **Approved hints for the 104 legacy interactive challenges** (they have a `why`, the practice explanation, but no hint), the `module_quiz` vs `practice` split, and a decision on the mixed set (below) | Teammate A | Run `import_legacy_interactive` only when the hints are ready. Tests and screenshots use invented questions (`tests/fixtures/legacy_invented.json`). |
 | Reviewed translations | Teammate B + reviewers | Lessons show draft translations with a "draft translation" tag. Assessments show English until a translation is reviewed (architecture §14, D24). |
 | Branch protection on `main` (require a PR and a passing CI, 0 approvals, no force pushes) | Lead (GitHub settings) | Never push to `main` directly |
 
@@ -162,3 +164,31 @@ left out of the copy. The review fixes are listed in `build-stages.md` under Sta
   * Option ids inside a question body (`o1`…) are internal only; the browser gets random per-attempt tokens. Scores are stored with `round1()` (one decimal).
   * The auto-submit job treats an auto-submitted attempt like a submitted one (`counted` unless gated); `all_answered` still says whether it was complete.
 * **htmx** is vendored at `static/js/htmx.min.js` (v2.0.4, BSD-0 licence beside it) and configured without eval or inline styles, so Caddy's CSP is unchanged.
+
+## Stage 3: what to know (read before Stage 5)
+
+**Stage 3 review results (11 Nov 2026, `stage-3-review` = `origin/main` + the nine Stage 3 commits, `f375771` and earlier; `stage-3` kept as a backup).** Run in a fresh dev stack with invented questions only. The overlaps with the merged Stage 2 work were resolved in favour of main's behaviour: the Excel-import fix, the `X-Answer-Saved` confirmation, expired-session recovery and the no-option result page all still work, now with interactive questions too.
+
+| Check | Result |
+| --- | --- |
+| Full test suite (PostgreSQL) | ✅ 456 passed |
+| `ruff check`, `ruff format --check`, `makemigrations --check`, `check --deploy` (prod settings) | ✅ clean |
+| TypeScript engine (`tools/build_engine.mjs`: type-check + esbuild) | ✅ builds; the committed bundle is identical to the build |
+| Journey 8 (gate choice scored, not counted, hint shown) and journey 10 (no keys or markers in any attempt page or JSON) | ✅ tests |
+| Scorer parity with the legacy `engine.js` | ✅ 128 frozen invented cases; 624 of 624 on the private bank (counts only) |
+| Answer data stays on the server (allow-list projections, random per-attempt tokens, private hotspot images) | ✅ projection and flow tests |
+| Browser autosave checks for multiple-choice **and** interactive questions (`tools/e2e_save_retry.mjs`, production CSP, 390px and 1366px): failed save then Next, refused save, quick Next, Review while refused, tab close, chat, and the expired session (Not saved, kept in memory, saved to the right question after signing in again) | ✅ 85 checks |
+| axe on the interactive quiz questions (mc, colour triage, tick list, chat) and the review page at 390px and 1366px | ✅ no serious or critical issues; screenshots in `screenshots/stage3-review/` (not committed) |
+| Private content | ✅ nothing from `content-data/` is in Git. **The 104 legacy interactive challenges were dry-run checked only (0 invalid; 80 quiz, 24 practice) and are not imported; approved hints for them (and for the 405 MCQs) are still pending.** |
+
+
+* **The Stage 2 legacy MCQ bank was only dry-run checked, not loaded.** The 405 questions stay in the private source file (`content-data/legacy/`). Nothing real is in any database. Hints will be added by the team and imported later. The working MCQ quiz is unchanged.
+* **The legacy interactive set was also dry-run checked only**, with `check_legacy_parity` and the importer's validation (counts only, no content printed): 104 challenges, 0 invalid (build 12, cards 1, chat 12, crossword 6, dial 1, hotspot 1, match 1, mc 32, order 2, pick 11, settings 12, sort 2, spot 11), 80 for module quizzes and 24 for practice. The Python scorers agree with the real legacy engine on 624 of 624 private cases. All 104 lack hints, so they would import as drafts.
+* **Content calls made by the importer** (tell the lead if one is wrong):
+  * Legacy markup is flattened to plain text (content is never HTML). Sort-bin descriptions (`d`) are dropped.
+  * Hotspot art is rasterised from the legacy SVG (rect, text, group only) to a PNG by the importer. Learners get the picture plus numeric regions.
+  * The legacy mixed set (m11) has 18 questions, not 20. It goes to `practice`, and also becomes a `ProgrammeAssessment(kind="mock")`. Mixed questions that name no module go to Module 10.
+  * Module 8 crosswords are practice only.
+  * Interactive questions need no PC tag to be published (only MCQs do).
+* **Rules of the engine:** a blank answer never triggers a safety gate; a gate needs something the learner actually did (and "I'm finished" for spot). Formats with nothing to leave blank use an explicit `done` flag. The format scorers keep the legacy engine's credit for leaving things alone (untouched pick-free 0.5, untouched settings 1/3) so parity holds, but at submission, manual or automatic, an item the learner never touched (or only flagged) scores 0 and cannot gate. A finished-with-nothing-picked answer is an answer and keeps its credit. The result page shows right / partly right / not quite and the hint, and never repeats an option's text, not even the learner's own right pick.
+* **Verified:** the full test suite, a real-browser end-to-end of all formats at 390px and 1366px under the production CSP (no violations), axe clean on every attempt, review and result page. Screenshots are in `screenshots/stage3/` (not committed).

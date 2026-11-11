@@ -36,11 +36,11 @@
       {% for r in rows %}
         <li class="result-item result-item--block">
           <div class="row">
-            <span class="status status--{% if r.right %}done{% else %}todo{% endif %}">{% if r.right %}{% icon "check-circle" %}{% else %}{% icon "x" %}{% endif %}</span>
+            <span class="status status--{% if r.right %}done{% elif r.partial %}progress{% else %}todo{% endif %}">{% if r.right %}{% icon "check-circle" %}{% elif r.partial %}{% icon "minus" %}{% else %}{% icon "x" %}{% endif %}</span>
             <strong>{{ r.position }}. {{ r.stem }}</strong>
           </div>
           <p class="muted">
-            {% if r.right %}<span class="sr-only">{% translate "Right." %}</span>{% translate "Right" %}{% else %}<span class="sr-only">{% translate "Wrong." %}</span>{% translate "Not quite" %}{% endif %}
+            {% if r.right %}<span class="sr-only">{% translate "Right." %}</span>{% translate "Right" %}{% elif r.partial %}<span class="sr-only">{% translate "Partly right." %}</span>{% translate "Partly right" %}{% else %}<span class="sr-only">{% translate "Wrong." %}</span>{% translate "Not quite" %}{% endif %}
             {% if not r.answered %} · {% translate "Not answered" %}{% endif %}
           </p>
           {% if r.hint %}<p class="callout callout--ask"><span class="callout__label">{% translate "Hint" %}</span> {{ r.hint }}</p>{% endif %}

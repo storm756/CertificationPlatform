@@ -151,8 +151,9 @@ def test_purge_removes_guardian_waiters_seven_days_after_their_link_expired(make
 
 
 def test_purge_keeps_a_learner_whose_guardian_confirmed(make_user):
-    user = make_pending_minor(make_user, 30)
-    guardian.confirm(user.guardian_consent, "Guardian")
+    user = make_pending_minor(make_user, 3)
+    assert guardian.confirm(user.guardian_consent, "Guardian")  # confirmed while the link was live
+    GuardianConsent.objects.filter(user=user).update(sent_at=timezone.now() - timedelta(days=30))
     call_command("purge_unverified")
     assert User.objects.filter(pk=user.pk).exists()
 

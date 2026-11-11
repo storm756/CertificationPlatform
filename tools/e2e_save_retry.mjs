@@ -1,18 +1,18 @@
-// Browser check: a failed answer save stays tied to its own question and is retried for it (Stage 2).
+// Browser check: a failed answer save is kept and retried for its own question (Stage 3 review fix).
 //
 //   docker compose -f deploy/compose.dev.yml up -d db web
 //   cd tools && node e2e_save_retry.mjs [--base http://localhost:8000]
 //
-// Before every scenario it re-runs tools/seed_e2e.py in the dev web container (invented data, a fresh
-// attempt, nothing answered). Set E2E_COMPOSE if your compose command differs. Every check reads what the
-// SERVER holds by loading the question again, never only what the page shows. Pages run under the
-// production CSP.
+// Before every scenario it re-runs tools/seed_e2e.py in the dev web container (fresh invented attempts, nothing
+// answered). Set E2E_COMPOSE if your compose command differs (default: docker compose -f ../deploy/compose.dev.yml).
+// It uses invented data only. Pages run under the production CSP. For each scenario it checks what the
+// SERVER holds afterwards (by loading the question again), never only what the page shows.
 import { execSync } from "node:child_process";
 import { chromium } from "playwright-core";
 
 const args = process.argv.slice(2);
-const at = args.indexOf("--base");
-const base = at >= 0 ? args[at + 1] : "http://localhost:8000";
+const baseAt = args.indexOf("--base");
+const base = baseAt >= 0 ? args.splice(baseAt, 2)[1] : "http://localhost:8000";
 const compose = process.env.E2E_COMPOSE ?? "docker compose -f ../deploy/compose.dev.yml";
 const seedFile = new URL("./seed_e2e.py", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
 function reseed() {
@@ -21,14 +21,14 @@ function reseed() {
 }
 let seed = reseed();
 const CSP = "default-src 'self'; img-src 'self' data:; frame-src https://www.youtube-nocookie.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'";
-const ANSWER = "**/attempt/*/answer/";
+
 const browser = await chromium.launch({ channel: "msedge" });
-const bad = [];
-let fails = 0;
+const bad = []; let fails = 0;
 const check = (name, ok, extra = "") => { console.log((ok ? "ok   " : "FAIL ") + name + (ok ? "" : ` ${extra}`)); if (!ok) fails++; };
+const ANSWER = "**/attempt/*/answer/";
 
 async function fresh(viewport) {
-  seed = reseed();
+  seed = reseed();  // new attempts, nothing answered
   const ctx = await browser.newContext({ viewport });
   await ctx.route("**/*", async (route) => {
     if (route.request().resourceType() !== "document") return route.continue();
@@ -49,151 +49,223 @@ async function fresh(viewport) {
   await Promise.all([page.waitForLoadState("load"), page.click("main button[type=submit]")]);
   return { ctx, page };
 }
+
 const pill = (page) => page.locator("#save-status").getAttribute("data-state");
-const open = (page, n) => page.goto(`${base}/attempt/${seed.attempt}/q/${n}/`, { waitUntil: "networkidle" });
+const open = (page, attempt, n) => page.goto(`${base}/attempt/${attempt}/q/${n}/`, { waitUntil: "networkidle" });
+const position = (page) => page.locator("#answer-form input[name=position]").inputValue();
 const waitPill = (page, state, ms = 15000) => page.waitForFunction((s) => document.getElementById("save-status")?.dataset.state === s, state, { timeout: ms });
 const next = (page) => page.locator(".qnav a.btn-primary").click();
 const onQuestion = (page, n) => page.waitForFunction((x) => document.querySelector("#answer-form input[name=position]")?.value === String(x), n, { timeout: 8000 });
-const choose = (page, i) => page.locator(".opt").nth(i).click();
 
-// What the server holds for a question: the saved choice, read from a fresh page load.
-async function serverChoice(page, n) {
-  const html = await (await page.request.get(`${base}/attempt/${seed.attempt}/q/${n}/`)).text();
-  const m = /<input type="radio" name="choice" value="([^"]+)" checked/.exec(html);
-  return m ? m[1] : null;
+// What the server holds for a question: the saved answer, read from a fresh page load.
+async function serverAnswer(page, attempt, n) {
+  const html = await (await page.request.get(`${base}/attempt/${attempt}/q/${n}/`)).text();
+  const mcq = /<input type="radio" name="choice" value="([^"]+)" checked/.exec(html);
+  if (mcq) return { choice: mcq[1] };
+  const data = /data-q="([^"]*)"/.exec(html);
+  if (!data) return {};
+  const q = JSON.parse(data[1].replace(/&quot;/g, '"').replace(/&#x27;/g, "'").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">"));
+  return q.response ?? {};
 }
-const checked = (page) => page.locator(".opt input:checked").inputValue().catch(() => null);
+const hasAnswer = (r) => Object.values(r).some((v) => (Array.isArray(v) ? v.length : v && typeof v === "object" ? Object.keys(v).length : v === true || (typeof v === "string" && v)));
+
+// Make an answer on whatever question is shown (a radio option, an engine choice, or a tick).
+async function answerHere(page) {
+  if (await page.locator(".engine").count()) {
+    if (await page.locator(".engine [role=radio]").count()) { await page.locator(".engine [role=radio]").nth(1).click(); return; }
+    if (await page.locator(".engine .tri__btn").count()) { await page.locator(".engine .tri__btn").nth(2).click(); return; }
+    await page.locator(".engine .eng-tile").first().click(); await page.locator(".engine .eng-done").click(); return;
+  }
+  await page.locator(".opt").nth(1).click();
+}
 
 for (const viewport of [{ width: 390, height: 844 }, { width: 1366, height: 900 }]) {
   const tag = `${viewport.width}px `;
+  for (const [kind, key] of [["multiple choice", "mcq"], ["interactive", "interactive"]]) {
+    const label = `${tag}${kind}: `;
 
-  // --- 1. Question 1's save fails, the learner clicks Next, the connection comes back -------------
+    // --- 1. the save fails, the learner clicks Next, the connection comes back -------------------
+    {
+      const { ctx, page } = await fresh(viewport);
+      const attempt = seed[key];
+      await open(page, attempt, 1);
+      const posts = [];
+      page.on("request", (r) => { if (r.method() === "POST" && /\/answer\/$/.test(r.url())) posts.push({ at: Date.now(), body: r.postData() ?? "", url: r.url() }); });
+      await page.route(ANSWER, (route) => route.abort("internetdisconnected"));
+      await answerHere(page);
+      await waitPill(page, "offline");
+      check(label + "a failed save shows Offline, never Saved", (await pill(page)) === "offline");
+      await next(page);
+      await onQuestion(page, 2);
+      check(label + "after Next (question 2) the pill still says the answer is not saved", (await pill(page)) === "offline");
+      await answerHere(page);  // question 2 fails as well
+      await page.waitForTimeout(400);
+      const recoveredAt = Date.now();
+      await page.unroute(ANSWER);
+      await waitPill(page, "saved", 20000);
+      const one = await serverAnswer(page, attempt, 1), two = await serverAnswer(page, attempt, 2);
+      check(label + "question 1's answer reached the server after recovery", hasAnswer(one), JSON.stringify(one));
+      check(label + "question 2's own answer was saved too", hasAnswer(two), JSON.stringify(two));
+      const after = posts.filter((p) => p.at >= recoveredAt);
+      const positions = after.map((p) => new URLSearchParams(p.body).get("position"));
+      check(label + "the retry for question 1 was sent for question 1", positions.includes("1"), JSON.stringify(positions));
+      check(label + "no retry for question 1 was sent as question 2", after.every((p) => { const q = new URLSearchParams(p.body); return q.get("position") !== "2" || !q.get("choice") || q.get("choice") !== new URLSearchParams(after.find((x) => new URLSearchParams(x.body).get("position") === "1")?.body ?? "").get("choice"); }));
+      const states = await page.evaluate(() => window.__pill);
+      const firstOffline = states.find((s) => s.state === "offline");
+      const savedWhileFailing = states.filter((s) => s.state === "saved" && firstOffline && s.at > firstOffline.at && s.at < recoveredAt);
+      check(label + "Saved was never shown while the server had not accepted the answer", savedWhileFailing.length === 0, JSON.stringify(states));
+      await ctx.close();
+    }
+
+    // --- 2. Next clicked at once, before the save has even started -------------------------------
+    {
+      const { ctx, page } = await fresh(viewport);
+      const attempt = seed[key];
+      await open(page, attempt, 1);
+      await answerHere(page);  // no waiting: the very next action is Next
+      await next(page);
+      await onQuestion(page, 2);
+      await waitPill(page, "saved");
+      const one = await serverAnswer(page, attempt, 1);
+      check(label + "a quick Next still saves question 1", hasAnswer(one), JSON.stringify(one));
+      await ctx.close();
+    }
+
+    // --- 3. the server refuses the answer: it must not say Saved ----------------------------------
+    {
+      const { ctx, page } = await fresh(viewport);
+      const attempt = seed[key];
+      await open(page, attempt, 1);
+      await page.route(ANSWER, (route) => route.fulfill({ status: 400, body: "" }));
+      await answerHere(page);
+      await waitPill(page, "error");
+      check(label + "a refused answer shows Not saved, not Saved", (await page.locator("#save-status [data-pill-text]").textContent()).trim() === "Not saved");
+      await ctx.close();
+    }
+
+    // --- 9. the session expires while the quiz is open: not Saved, kept in memory, saved after sign-in ----
+    {
+      const { ctx, page } = await fresh(viewport);
+      const attempt = seed[key];
+      await open(page, attempt, 1);
+      const before = await page.locator("#save-status").count();
+      await ctx.clearCookies({ name: "sessionid" });  // only the session cookie goes
+      await answerHere(page);
+      await waitPill(page, "signin");
+      check(label + "session ended: the pill says to sign in again, not Saved", (await pill(page)) === "signin" && (await page.locator("#save-status [data-pill-text]").textContent()).trim() === "Sign in again to save");
+      check(label + "session ended: a notice tells the learner to sign in", await page.locator("#session-notice").isVisible());
+      const quizStill = key === "mcq" ? (await page.locator(".opt").count()) === 4 : (await page.locator(".engine").count()) === 1;
+      check(label + "session ended: the question and the save indicator stay, with no sign-in form inside", before === 1 && (await page.locator("#save-status").count()) === 1 && quizStill && (await page.locator("form[action*='login'], input[name=login]").count()) === 0);
+      await page.waitForTimeout(3000);
+      check(label + "session ended: still not Saved after waiting (no blind retry)", (await pill(page)) === "signin");
+      const login = await ctx.newPage();  // sign in again, in another tab
+      await login.goto(base + "/accounts/login/");
+      await login.fill("input[name=login]", seed.email);
+      await login.fill("input[name=password]", seed.password);
+      await Promise.all([login.waitForLoadState("load"), login.click("main button[type=submit]")]);
+      check(label + "session ended: nothing reached the server while signed out", !hasAnswer(await serverAnswer(login, attempt, 1)));
+      await login.close();
+      await page.bringToFront();
+      await page.locator("#session-retry").click();
+      await waitPill(page, "saved", 15000);
+      check(label + "after signing in again the pending answer is saved to the right question", hasAnswer(await serverAnswer(page, attempt, 1)));
+      check(label + "the notice goes away once it is saved", !(await page.locator("#session-notice").isVisible()));
+      await ctx.close();
+    }
+  }
+
+  // --- 5. a chat reply: the next message appears only once the reply has been saved ---------------------
   {
     const { ctx, page } = await fresh(viewport);
-    await open(page, 1);
-    const posts = [];
-    page.on("request", (r) => { if (r.method() === "POST" && /\/answer\/$/.test(r.url())) posts.push({ at: Date.now(), body: new URLSearchParams(r.postData() ?? "") }); });
-    await page.route(ANSWER, (route) => route.abort("internetdisconnected"));
-    await choose(page, 1);
-    const q1Choice = await checked(page);
-    await waitPill(page, "offline");
-    check(tag + "a failed save shows Offline, never Saved", (await pill(page)) === "offline");
-    await next(page);
-    await onQuestion(page, 2);
-    check(tag + "on question 2 the pill still says the answer is not saved", (await pill(page)) === "offline");
-    await choose(page, 2);  // question 2 fails as well
-    const q2Choice = await checked(page);
-    await page.waitForTimeout(400);
-    const recoveredAt = Date.now();
-    await page.unroute(ANSWER);
-    await waitPill(page, "saved", 20000);
-    check(tag + "question 1's own answer reached the server", (await serverChoice(page, 1)) === q1Choice, String(await serverChoice(page, 1)));
-    check(tag + "question 2's answer is its own, not question 1's", (await serverChoice(page, 2)) === q2Choice && q1Choice !== q2Choice);
-    const after = posts.filter((p) => p.at >= recoveredAt);
-    const sent1 = after.find((p) => p.body.get("position") === "1");
-    check(tag + "the retry for question 1 was sent as question 1, with its own choice", !!sent1 && sent1.body.get("choice") === q1Choice, JSON.stringify(after.map((p) => [p.body.get("position"), p.body.get("choice")])));
-    check(tag + "no retry sent question 1's choice as question 2", after.every((p) => p.body.get("position") !== "2" || p.body.get("choice") === q2Choice));
-    const states = await page.evaluate(() => window.__pill);
-    const firstOffline = states.find((s) => s.state === "offline");
-    const savedTooEarly = states.filter((s) => s.state === "saved" && firstOffline && s.at > firstOffline.at && s.at < recoveredAt);
-    check(tag + "Saved was never shown while the server had not accepted the answers", savedTooEarly.length === 0, JSON.stringify(states));
+    const chat = seed.interactive_count;  // the chat is the last question of the interactive part
+    await open(page, seed.interactive, chat);
+    const before = await page.locator(".engine .eng-bub--them").count();
+    await page.locator(".engine .eng-reply").first().click();
+    await page.waitForFunction((n) => document.querySelectorAll(".engine .eng-bub--them").length > n, before, { timeout: 10000 }).catch(() => {});
+    check(`${tag}chat: the next step appears after the reply is saved`, (await page.locator(".engine .eng-bub--them").count()) === before + 1);
+    const saved = await serverAnswer(page, seed.interactive, chat);
+    check(`${tag}chat: the reply is on the server`, hasAnswer(saved), JSON.stringify(saved));
     await ctx.close();
   }
 
-  // --- 2. a quick Next, before the save has even started ---------------------------------------------
-  {
+  // --- 6. a refused answer, then Review and submit: the learner stays on the quiz ----------------------
+  for (const when of ["after the error", "while the save is still in progress"]) {
     const { ctx, page } = await fresh(viewport);
-    await open(page, 1);
-    await choose(page, 1);
-    const want = await checked(page);
-    await next(page);
-    await onQuestion(page, 2);
-    await waitPill(page, "saved");
-    check(tag + "a quick Next still saves question 1", (await serverChoice(page, 1)) === want);
-    await ctx.close();
-  }
-
-  // --- 3. the server refuses the answer: Not saved, never Saved --------------------------------------
-  {
-    const { ctx, page } = await fresh(viewport);
-    await open(page, 1);
-    await page.route(ANSWER, (route) => route.fulfill({ status: 400, body: "" }));
-    await choose(page, 1);
-    await waitPill(page, "error");
-    check(tag + "a refused answer shows Not saved", (await page.locator("#save-status [data-pill-text]").textContent()).trim() === "Not saved");
-    check(tag + "a refused answer is not on the server", (await serverChoice(page, 1)) === null);
-    await page.unroute(ANSWER);
-    await ctx.close();
-  }
-
-  // --- 4. a refused answer, then "Review and submit": the learner stays on the quiz -------------------
-  {
-    const { ctx, page } = await fresh(viewport);
-    await open(page, seed.count);
-    const quiz = page.url();
-    await page.route(ANSWER, (route) => route.fulfill({ status: 400, body: "" }));
-    await choose(page, 1);
-    await waitPill(page, "error");
+    const last = seed.mcq_count;
+    await open(page, seed.mcq, last);
+    const quizUrl = page.url();
+    if (when === "after the error") {
+      await page.route(ANSWER, (route) => route.fulfill({ status: 400, body: "" }));
+      await page.locator(".opt").nth(1).click();
+      await waitPill(page, "error");
+    } else {
+      await page.route(ANSWER, async (route) => { await new Promise((r) => setTimeout(r, 1200)); await route.fulfill({ status: 400, body: "" }); });
+      await page.locator(".opt").nth(1).click();
+    }
     await page.locator(".qnav a.btn-primary").click();  // "Review and submit"
     await page.waitForTimeout(2500);
-    check(tag + "Review is not opened while an answer was refused", page.url() === quiz && !/\/review\//.test(page.url()), page.url());
+    check(`${tag}refused answer, Review clicked ${when}: still on the quiz`, page.url() === quizUrl && !/\/review\//.test(page.url()), page.url());
+    check(`${tag}refused answer, Review clicked ${when}: the pill says Not saved and has focus`,
+      (await pill(page)) === "error" && (await page.evaluate(() => document.activeElement?.id)) === "save-status");
     await ctx.close();
   }
 
-  // --- 5. Review and submit straight after the last answer waits for it to be saved -------------------
+  // --- 8. the refused answer is on an earlier question: Review shows that question ---------------------
   {
     const { ctx, page } = await fresh(viewport);
-    await open(page, seed.count);
-    await choose(page, 1);
-    const want = await checked(page);
-    await page.locator(".qnav a.btn-primary").click();
-    await page.waitForURL(/\/review\//, { timeout: 12000 });
-    check(tag + "Review waits for the last answer to be saved", (await serverChoice(page, seed.count)) === want);
+    const last = seed.mcq_count;
+    await open(page, seed.mcq, last - 1);
+    await page.route(ANSWER, (route) => route.fulfill({ status: 400, body: "" }));
+    await page.locator(".opt").nth(1).click();
+    await waitPill(page, "error");
+    await page.unroute(ANSWER);
+    await next(page);
+    await onQuestion(page, last);
+    await page.locator(".qnav a.btn-primary").click();  // "Review and submit"
+    await onQuestion(page, last - 1).catch(() => {});
+    check(`${tag}Review with an earlier refused answer shows that question and stays on the quiz`,
+      !/\/review\//.test(page.url()) && (await position(page)) === String(last - 1) && (await pill(page)) === "error", await position(page));
     await ctx.close();
   }
 
-  // --- 6. closing the tab with an unsaved answer: the browser asks first -------------------------------
+  // --- 7. closing or reloading the tab with an unsaved answer: the browser asks first --------------------
   {
     const { ctx, page } = await fresh(viewport);
-    await open(page, 1);
+    await open(page, seed.mcq, 1);
     await page.route(ANSWER, (route) => route.abort("internetdisconnected"));
-    await choose(page, 1);
+    await page.locator(".opt").nth(1).click();
     await waitPill(page, "offline");
     let asked = false;
     page.on("dialog", async (d) => { if (d.type() === "beforeunload") asked = true; await d.dismiss(); });
     await page.close({ runBeforeUnload: true });
     await new Promise((r) => setTimeout(r, 800));
-    check(tag + "leaving with an unsaved answer asks the learner first", asked);
+    check(`${tag}leaving with an unsaved answer asks the learner first`, asked);
+    await ctx.close();
+  }
+  {
+    const { ctx, page } = await fresh(viewport);
+    await open(page, seed.mcq, 1);
+    await page.locator(".opt").nth(1).click();
+    await waitPill(page, "saved");
+    let asked = false;
+    page.on("dialog", async (d) => { asked = true; await d.dismiss(); });
+    await page.close({ runBeforeUnload: true });
+    await new Promise((r) => setTimeout(r, 800));
+    check(`${tag}leaving with everything saved does not ask`, !asked);
     await ctx.close();
   }
 
-  // --- 7. the session expires while the quiz is open ------------------------------------------------------
+  // --- 4. Review and submit clicked straight after answering the last question -----------------------
   {
     const { ctx, page } = await fresh(viewport);
-    await open(page, 1);
-    const before = await page.locator("#save-status").count();
-    await ctx.clearCookies({ name: "sessionid" });  // only the session cookie goes
-    await choose(page, 1);
-    const want = await checked(page);
-    await waitPill(page, "signin");
-    check(tag + "session ended: the pill asks the learner to sign in again, not Saved", (await pill(page)) === "signin" && (await page.locator("#save-status [data-pill-text]").textContent()).trim() === "Sign in again to save");
-    check(tag + "session ended: a notice tells the learner to sign in", await page.locator("#session-notice").isVisible());
-    check(tag + "session ended: the quiz and the save indicator are still on the page, with no sign-in form inside", before === 1 && (await page.locator("#save-status").count()) === 1 && (await page.locator(".opt").count()) === 4 && (await page.locator("form[action*='login'], input[name=login]").count()) === 0);
-    check(tag + "session ended: the chosen answer is still selected (kept in memory)", (await checked(page)) === want);
-    await page.waitForTimeout(3000);  // no blind retry loop, still not Saved
-    check(tag + "session ended: still not Saved after waiting", (await pill(page)) === "signin");
-    const login = await ctx.newPage();  // sign in again, in another tab
-    await login.goto(base + "/accounts/login/");
-    await login.fill("input[name=login]", seed.email);
-    await login.fill("input[name=password]", seed.password);
-    await Promise.all([login.waitForLoadState("load"), login.click("main button[type=submit]")]);
-    check(tag + "session ended: nothing reached the server while signed out", (await serverChoice(login, 1)) === null);
-    await login.close();
-    await page.bringToFront();
-    await page.locator("#session-retry").click();
-    await waitPill(page, "saved", 15000);
-    check(tag + "after signing in again the pending answer is saved to the right question", (await serverChoice(page, 1)) === want);
-    check(tag + "the notice goes away once it is saved", !(await page.locator("#session-notice").isVisible()));
+    const last = seed.mcq_count;
+    await open(page, seed.mcq, last);
+    await page.locator(".opt").nth(1).click();
+    await page.locator(".qnav a.btn-primary").click();  // "Review and submit", at once
+    await page.waitForURL(/\/review\//, { timeout: 12000 });
+    const html = await page.content();
+    const saved = await serverAnswer(page, seed.mcq, last);
+    check(`${tag}Review and submit waits for the last answer to be saved`, hasAnswer(saved) && /answered/i.test(html), JSON.stringify(saved));
     await ctx.close();
   }
 }

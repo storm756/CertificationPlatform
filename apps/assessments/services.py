@@ -7,7 +7,6 @@ learner can never create two attempts or score one attempt twice.
 
 import logging
 import random
-import secrets
 from datetime import timedelta
 from decimal import Decimal
 
@@ -18,12 +17,13 @@ from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.audit.services import audit
+from apps.questions import formats
 from apps.questions.models import QuestionVersion
 from apps.results.policy import percent
 
 from .models import Attempt, AttemptItem, AttemptStatus
 from .rules import live_questions
-from .scoring import SCORERS
+from .scoring import score_item
 
 logger = logging.getLogger(__name__)
 
@@ -102,23 +102,8 @@ def draw(part, user, rng=None) -> list[QuestionVersion]:
 
 
 def make_option_map(body: dict, rng=None) -> dict:
-    """Shuffle the options and give each a one-off random token (§9.1, CLAUDE.md "Never").
-
-    Tokens are random per attempt item, never derived from the option's position in the source,
-    so they say nothing about which option is right. The map stays on the server.
-    """
-    rng = rng or random.SystemRandom()
-    keys = [o["id"] for o in body["options"]]
-    rng.shuffle(keys)
-    tokens = {}
-    order = []
-    for key in keys:
-        token = secrets.token_urlsafe(9)
-        while token in tokens:  # astronomically unlikely, but cheap to be sure
-            token = secrets.token_urlsafe(9)
-        tokens[token] = key
-        order.append(token)
-    return {"order": order, "tokens": tokens}
+    """MCQ's option map: shuffled options with random one-off tokens (see formats.make_map)."""
+    return formats.make_option_map(body, rng)
 
 
 # --- start / resume ----------------------------------------------------------------------------
@@ -151,7 +136,8 @@ def start(user, part, rng=None) -> tuple[Attempt, bool]:
             position=position,
             question_version=version,  # frozen: edits make new versions, never change this one
             points=version.question.points,  # frozen
-            option_map=make_option_map(version.body, rng),
+            format=version.question.format,
+            option_map=formats.make_map(version.question.format, version.body, rng),
         )
         for position, version in enumerate(versions, start=1)
     )
@@ -170,26 +156,38 @@ def start(user, part, rng=None) -> tuple[Attempt, bool]:
 
 
 @transaction.atomic
-def save_answer(attempt_id, user, position, *, choice=None, flag=None, now=None) -> AttemptItem:
-    """Save the learner's choice (a token) and/or the "mark for review" flag. Returns no score.
+def save_answer(
+    attempt_id, user, position, *, choice=None, flag=None, response=None, now=None
+) -> AttemptItem:
+    """Save the learner's answer and/or the "mark for review" flag. Returns no score.
 
-    Validates the owner, that the attempt is in progress, the position and the token (§9.3).
+    `choice` is MCQ's token. `response` is an interactive format's whole answer (tokens only); it
+    replaces the saved one after the format checks that every token belongs to this item (§9.3).
     """
     attempt = Attempt.objects.select_for_update().get(pk=attempt_id, user=user)
     if not attempt.is_open:
         raise AttemptClosed("This attempt has already been submitted.")
     try:
-        item = attempt.items.select_for_update().get(position=position)
+        item = (
+            attempt.items.select_for_update()
+            .select_related("question_version")
+            .get(position=position)
+        )
     except AttemptItem.DoesNotExist:
         raise InvalidAnswer("No such question.") from None
-    response = dict(item.response or {})
-    if choice is not None:
-        if choice not in item.option_map["tokens"]:
-            raise InvalidAnswer("That is not one of the options.")
-        response["choice"] = choice
+    saved = dict(item.response or {})
+    body = item.question_version.body
+    try:
+        if choice is not None:
+            response = {"choice": choice}
+        if response is not None:
+            cleaned = formats.clean_response(item.format, body, item.option_map, response)
+            saved = {**cleaned, **({"flag": saved["flag"]} if "flag" in saved else {})}
+    except formats.ResponseError as exc:
+        raise InvalidAnswer(str(exc)) from None
     if flag is not None:
-        response["flag"] = bool(flag)
-    item.response = response
+        saved["flag"] = bool(flag)
+    item.response = saved
     item.save(update_fields=["response"])
     attempt.last_saved_at = now or timezone.now()
     attempt.save(update_fields=["last_saved_at", "updated_at"])
@@ -200,26 +198,34 @@ def save_answer(attempt_id, user, position, *, choice=None, flag=None, now=None)
 
 
 @transaction.atomic
-def submit(attempt_id, user_id, *, auto=False, now=None) -> Attempt:
+def submit(attempt_id, user_id, *, auto=False, now=None, stale_before=None) -> Attempt:
     """Score an attempt with its frozen question versions. Safe to call twice (§9.4).
 
     Locks the user, then the attempt. A second call finds a closed attempt and returns it
     unchanged, so a double tap on Submit gives one result.
+
+    `stale_before` is for the automatic job: once the attempt is locked, the last save is checked
+    again, and an attempt saved since the job looked is left open for the learner.
+
+    The returned attempt carries `just_closed`: True only when *this* call moved it from in
+    progress to closed, decided while the lock is held (a retry, a manual submit that won the
+    race, or another worker's auto-submit all give False).
     """
     User.objects.select_for_update().get(pk=user_id)
     attempt = Attempt.objects.select_for_update().get(pk=attempt_id, user_id=user_id)
+    attempt.just_closed = False
     if not attempt.is_open:
         return attempt
+    if stale_before is not None and attempt.last_saved_at >= stale_before:
+        return attempt
 
-    items = list(attempt.items.select_related("question_version__question"))
+    items = list(attempt.items.select_related("question_version"))
     earned = Decimal("0")
     total = Decimal("0")
     gate = False
     for item in items:
         version = item.question_version
-        score, flagged = SCORERS[version.question.format](
-            version.body, item.option_map, item.response
-        )
+        score, flagged = score_item(item.format, version.body, item.option_map, item.response)
         item.score, item.gate_flag = score, flagged
         earned += score * item.points
         total += item.points
@@ -242,6 +248,7 @@ def submit(attempt_id, user_id, *, auto=False, now=None) -> Attempt:
         all_answered=attempt.all_answered,
         gate_breached=gate,
     )
+    attempt.just_closed = True
     return attempt
 
 
@@ -260,8 +267,8 @@ def auto_submit_stale(now=None) -> int:
     done = 0
     for attempt_id, user_id in stale:
         try:
-            submit(attempt_id, user_id, auto=True, now=now)
-            done += 1
+            submitted = submit(attempt_id, user_id, auto=True, now=now, stale_before=cutoff)
+            done += 1 if getattr(submitted, "just_closed", False) else 0
         except Exception:
             logger.exception("auto-submit of attempt %s failed", attempt_id)
     if done:

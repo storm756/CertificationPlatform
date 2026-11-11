@@ -266,7 +266,7 @@ def test_journey9_result_shows_right_wrong_and_hints_but_no_correct_option(
     wrongs_and_blank = items[2:]
     for item in wrongs_and_blank:
         assert RIGHT.format(n=stable_number(item)) not in html  # the correct option is never shown
-    for item in rights:  # their own right answer is shown as theirs, nothing more
+    for item in rights:  # not even a right answer is repeated: status and hint only
         assert RIGHT.format(n=stable_number(item)) not in html  # not even their own right pick
     assert "Your answer" not in html
     assert html.count("Not answered") >= 1 and "Not quite" in html
@@ -380,7 +380,7 @@ def test_client_projection_is_an_allow_list_with_no_key(learner, make_part):
 
 def test_the_projection_refuses_formats_it_does_not_know():
     with pytest.raises(ValueError):
-        client_projection("hotspot", {}, {})
+        client_projection("not-a-format", {}, {})
 
 
 def test_the_save_response_never_carries_a_score_or_a_key(learner_client, make_part):
