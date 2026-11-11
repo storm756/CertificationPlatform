@@ -166,6 +166,36 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1366, height: 900 
     check(tag + "leaving with an unsaved answer asks the learner first", asked);
     await ctx.close();
   }
+
+  // --- 7. the session expires while the quiz is open ------------------------------------------------------
+  {
+    const { ctx, page } = await fresh(viewport);
+    await open(page, 1);
+    const before = await page.locator("#save-status").count();
+    await ctx.clearCookies({ name: "sessionid" });  // only the session cookie goes
+    await choose(page, 1);
+    const want = await checked(page);
+    await waitPill(page, "signin");
+    check(tag + "session ended: the pill asks the learner to sign in again, not Saved", (await pill(page)) === "signin" && (await page.locator("#save-status [data-pill-text]").textContent()).trim() === "Sign in again to save");
+    check(tag + "session ended: a notice tells the learner to sign in", await page.locator("#session-notice").isVisible());
+    check(tag + "session ended: the quiz and the save indicator are still on the page, with no sign-in form inside", before === 1 && (await page.locator("#save-status").count()) === 1 && (await page.locator(".opt").count()) === 4 && (await page.locator("form[action*='login'], input[name=login]").count()) === 0);
+    check(tag + "session ended: the chosen answer is still selected (kept in memory)", (await checked(page)) === want);
+    await page.waitForTimeout(3000);  // no blind retry loop, still not Saved
+    check(tag + "session ended: still not Saved after waiting", (await pill(page)) === "signin");
+    const login = await ctx.newPage();  // sign in again, in another tab
+    await login.goto(base + "/accounts/login/");
+    await login.fill("input[name=login]", seed.email);
+    await login.fill("input[name=password]", seed.password);
+    await Promise.all([login.waitForLoadState("load"), login.click("main button[type=submit]")]);
+    check(tag + "session ended: nothing reached the server while signed out", (await serverChoice(login, 1)) === null);
+    await login.close();
+    await page.bringToFront();
+    await page.locator("#session-retry").click();
+    await waitPill(page, "saved", 15000);
+    check(tag + "after signing in again the pending answer is saved to the right question", (await serverChoice(page, 1)) === want);
+    check(tag + "the notice goes away once it is saved", !(await page.locator("#session-notice").isVisible()));
+    await ctx.close();
+  }
 }
 
 check("no CSP violations or page errors", bad.length === 0);

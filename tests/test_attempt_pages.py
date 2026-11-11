@@ -423,3 +423,20 @@ def test_the_result_never_prints_option_text_for_right_wrong_or_blank_answers(
         assert WRONG.format(n=n, k=1) not in html and WRONG.format(n=n, k=2) not in html
         assert HINT.format(n=n) in html
     assert "20.0%" in html and "Right" in html and "Not quite" in html and "Not answered" in html
+
+
+def test_a_saved_answer_is_confirmed_explicitly_and_a_signed_out_post_is_not(
+    client, learner_client, make_part
+):
+    """The browser shows "Saved" only for a response that carries X-Answer-Saved. A signed-out
+    request is redirected to sign-in and never carries it."""
+    attempt = start_attempt(learner_client, make_part())
+    item = attempt.items.first()
+    ok = answer(learner_client, attempt, item.position, right_token(item), **HX)
+    assert (
+        ok.status_code == 200 and ok["X-Answer-Saved"] == "1" and ok["Cache-Control"] == "no-store"
+    )
+    learner_client.logout()
+    out = answer(learner_client, attempt, item.position, wrong_token(item), **HX)
+    assert out.status_code == 302 and "/accounts/login/" in out["Location"]
+    assert "X-Answer-Saved" not in out

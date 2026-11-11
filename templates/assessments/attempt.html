@@ -18,6 +18,14 @@
         <span class="timer" role="timer" aria-label="{% translate 'Time spent' %}">{% icon "clock" "sm" %}<span data-timer>00:00</span></span>
       </div>
     </div>
+    <div id="session-notice" class="notice notice--mustard" role="alert" hidden>
+      {% icon "alert-triangle" %}
+      <div>
+        <p><strong>{% translate "You have been signed out." %}</strong> {% translate "Your answers are kept on this page but are not saved yet. Sign in again in a new tab, then come back and save." %}</p>
+        <p class="row"><a class="btn btn-sm btn-primary" href="{% url 'account_login' %}?next={{ request.path|urlencode }}" target="_blank" rel="noopener">{% translate "Sign in" %}</a>
+          <button class="btn btn-sm btn-outline" type="button" id="session-retry">{% translate "I have signed in: save now" %}</button></p>
+      </div>
+    </div>
     <div class="attempt">
       <div id="question-panel" data-panel>
         {% include "assessments/_question_panel.html" %}

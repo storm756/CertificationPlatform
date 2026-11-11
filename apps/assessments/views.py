@@ -142,6 +142,8 @@ def _saved_response(request, attempt, position, status=200):
         {"attempt": attempt, "palette": _palette(attempt, position), "state": "saved"},
         status=status,
     )
+    response["X-Answer-Saved"] = "1"  # the browser shows "Saved" only when it sees this
+    response["Cache-Control"] = "no-store"
     return response
 
 

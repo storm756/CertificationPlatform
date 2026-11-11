@@ -23,6 +23,7 @@
      every answer; an answer the server refuses is shown as "Not saved", never as saved. */
   var outbox = {};   // question number -> { body, version, sentVersion, inflight, failing, delay, timer }
   var refused = {};  // question number -> true (the server said no; not retried)
+  var expired = false; // the session ended: answers wait in this page until the learner signs in again
   var DEBOUNCE = 150, FIRST_RETRY = 2000, LAST_RETRY = 30000, TIMEOUT = 15000;
 
   var pending = function () { return Object.keys(outbox).length > 0; };
@@ -30,8 +31,12 @@
     var f = document.querySelector("[data-answer-form]");
     return f && f.elements.position ? f.elements.position.value : null;
   };
+  var notice = function () { return document.getElementById("session-notice"); };
   var refreshPill = function () {
     var keys = Object.keys(outbox);
+    var box = notice();
+    if (box) { box.hidden = !expired; }
+    if (expired && keys.length) { setState("signin"); return; }
     if (keys.length) {
       setState(keys.some(function (k) { return outbox[k].failing; }) ? "offline" : "saving");
     } else {
@@ -47,6 +52,7 @@
     window.htmx.swap("#save-status", html, { swapStyle: "outerHTML" });
   };
 
+  var leaving = false; // keepalive lets a request outlive the page, so it is used only while leaving
   var send, fail;
   var schedule = function (entry, ms) {
     if (entry.timer) { window.clearTimeout(entry.timer); }
@@ -59,9 +65,21 @@
     entry.delay = Math.min(entry.delay * 2, LAST_RETRY);
     refreshPill();
   };
+  var sessionEnded = function (entry) {
+    // The answer endpoint answered with the sign-in page (after a redirect). Nothing was saved.
+    // Keep the answer in memory, do not retry blindly, and tell the learner.
+    entry.inflight = false;
+    entry.failing = true;
+    if (entry.timer) { window.clearTimeout(entry.timer); entry.timer = null; }
+    expired = true;
+    refreshPill();
+  };
   var finished = function (entry, response, html) {
     entry.inflight = false;
+    if (response.redirected || /\/accounts\/login\//.test(response.url || "")) { sessionEnded(entry); return; }
+    if (response.ok && response.headers.get("X-Answer-Saved") !== "1") { fail(entry); return; } // not confirmed
     if (response.ok) {
+      expired = false;
       entry.failing = false;
       entry.delay = FIRST_RETRY;
       if (entry.version !== entry.sentVersion) { send(entry); refreshPill(); return; } // changed meanwhile
@@ -82,6 +100,12 @@
     refused[entry.position] = true;
     refreshPill();
   };
+  /* Signing in again changes the CSRF token, so a waiting answer uses the token in the cookie now,
+     not the one this page was loaded with. */
+  var csrfToken = function (entry) {
+    var m = /(?:^|; )csrftoken=([^;]+)/.exec(document.cookie || "");
+    return m ? decodeURIComponent(m[1]) : entry.csrf;
+  };
   send = function (entry) {
     if (entry.inflight) { return; }
     entry.inflight = true;
@@ -89,8 +113,8 @@
     var controller = window.AbortController ? new window.AbortController() : null;
     var timeout = window.setTimeout(function () { if (controller) { controller.abort(); } }, TIMEOUT);
     window.fetch(entry.path, {
-      method: "POST", body: entry.body, credentials: "same-origin", keepalive: true,
-      headers: { "Content-Type": "application/x-www-form-urlencoded", "HX-Request": "true" },
+      method: "POST", body: entry.body, credentials: "same-origin", keepalive: leaving,
+      headers: { "Content-Type": "application/x-www-form-urlencoded", "HX-Request": "true", "X-CSRFToken": csrfToken(entry) },
       signal: controller ? controller.signal : undefined
     }).then(function (response) {
       return response.text().then(function (html) { window.clearTimeout(timeout); finished(entry, response, html); });
@@ -106,7 +130,10 @@
       entry = outbox[position] = { position: position, version: 0, sentVersion: 0, inflight: false, failing: false, delay: FIRST_RETRY, timer: null };
     }
     entry.path = answerForm.getAttribute("action");
-    entry.body = new window.URLSearchParams(new window.FormData(answerForm)).toString();
+    var params = new window.URLSearchParams(new window.FormData(answerForm));
+    entry.csrf = params.get("csrfmiddlewaretoken") || "";
+    params.delete("csrfmiddlewaretoken"); // sent as a header instead, from the current cookie
+    entry.body = params.toString();
     entry.version += 1;
     delete refused[position];
     schedule(entry, DEBOUNCE);
@@ -128,18 +155,26 @@
   /* Leaving the page: the request is kept alive by the browser. If an answer is still waiting
      (offline, or a save not yet accepted), the browser first asks the learner to stay, because
      the outbox lives in this page and a reload or a closed tab would lose it. */
-  window.addEventListener("pagehide", flushAll);
+  window.addEventListener("pagehide", function () { leaving = true; flushAll(); });
   window.addEventListener("beforeunload", function (evt) {
     if (!pending()) { return; }
     flushAll();
     evt.preventDefault();
     evt.returnValue = "";
   });
+  var retrySignedIn = document.getElementById("session-retry");
+  if (retrySignedIn) {
+    retrySignedIn.addEventListener("click", function () {
+      Object.keys(outbox).forEach(function (key) { outbox[key].delay = FIRST_RETRY; });
+      flushAll();
+    });
+  }
   window.addEventListener("online", function () {
     Object.keys(outbox).forEach(function (key) { outbox[key].delay = FIRST_RETRY; });
     flushAll();
   });
   document.addEventListener("visibilitychange", function () { if (!document.hidden) { flushAll(); } });
+  window.addEventListener("focus", function () { if (expired) { flushAll(); } });
   window.addEventListener("offline", function () { if (pending()) { refreshPill(); } });
   /* A normal link (such as Review and submit) waits until every answer is saved, so the next
      page shows them. If a save cannot go through, the learner stays here and sees why. */
