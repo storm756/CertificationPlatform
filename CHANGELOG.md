@@ -90,3 +90,8 @@
 - Closing or reloading the tab while an answer is still waiting to be saved now makes the browser ask first (the outbox lives in the page). Why: no silent loss of answers.
 - `guardian.confirm()` returns False when the consent record was removed between the link lookup and the confirmation (account cleanup), so the consent page shows the existing invalid-link page instead of a server error. It now locks only the consent row. Why: D16, robustness.
 - Tests: browser scenarios in `tools/e2e_save_retry.mjs`; Python regression tests in `tests/test_review_fixes.py`.
+
+## 2026-11-11: Stage 3 re-applied on `origin/main` (`stage-3-review`)
+- The nine Stage 3 commits (engine, review fixes, guardian and purge fixes, autosave) were re-applied on top of the merged Stage 1.5 and Stage 2 work. Where they overlapped, main's Stage 2 behaviour wins: the Excel-import fix, the explicit `X-Answer-Saved` confirmation, expired-session recovery (`attempt.js`) and the result page that shows no option text. The engine's saves go through the same outbox.
+- `tools/e2e_save_retry.mjs` now covers multiple-choice and interactive questions, including the expired-session case.
+

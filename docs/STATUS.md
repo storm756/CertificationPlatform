@@ -167,6 +167,21 @@ left out of the copy. The review fixes are listed in `build-stages.md` under Sta
 
 ## Stage 3: what to know (read before Stage 5)
 
+**Stage 3 review results (11 Nov 2026, `stage-3-review` = `origin/main` + the nine Stage 3 commits, `f375771` and earlier; `stage-3` kept as a backup).** Run in a fresh dev stack with invented questions only. The overlaps with the merged Stage 2 work were resolved in favour of main's behaviour: the Excel-import fix, the `X-Answer-Saved` confirmation, expired-session recovery and the no-option result page all still work, now with interactive questions too.
+
+| Check | Result |
+| --- | --- |
+| Full test suite (PostgreSQL) | ✅ 456 passed |
+| `ruff check`, `ruff format --check`, `makemigrations --check`, `check --deploy` (prod settings) | ✅ clean |
+| TypeScript engine (`tools/build_engine.mjs`: type-check + esbuild) | ✅ builds; the committed bundle is identical to the build |
+| Journey 8 (gate choice scored, not counted, hint shown) and journey 10 (no keys or markers in any attempt page or JSON) | ✅ tests |
+| Scorer parity with the legacy `engine.js` | ✅ 128 frozen invented cases; 624 of 624 on the private bank (counts only) |
+| Answer data stays on the server (allow-list projections, random per-attempt tokens, private hotspot images) | ✅ projection and flow tests |
+| Browser autosave checks for multiple-choice **and** interactive questions (`tools/e2e_save_retry.mjs`, production CSP, 390px and 1366px): failed save then Next, refused save, quick Next, Review while refused, tab close, chat, and the expired session (Not saved, kept in memory, saved to the right question after signing in again) | ✅ 85 checks |
+| axe on the interactive quiz questions (mc, colour triage, tick list, chat) and the review page at 390px and 1366px | ✅ no serious or critical issues; screenshots in `screenshots/stage3-review/` (not committed) |
+| Private content | ✅ nothing from `content-data/` is in Git. **The 104 legacy interactive challenges were dry-run checked only (0 invalid; 80 quiz, 24 practice) and are not imported; approved hints for them (and for the 405 MCQs) are still pending.** |
+
+
 * **The Stage 2 legacy MCQ bank was only dry-run checked, not loaded.** The 405 questions stay in the private source file (`content-data/legacy/`). Nothing real is in any database. Hints will be added by the team and imported later. The working MCQ quiz is unchanged.
 * **The legacy interactive set was also dry-run checked only**, with `check_legacy_parity` and the importer's validation (counts only, no content printed): 104 challenges, 0 invalid (build 12, cards 1, chat 12, crossword 6, dial 1, hotspot 1, match 1, mc 32, order 2, pick 11, settings 12, sort 2, spot 11), 80 for module quizzes and 24 for practice. The Python scorers agree with the real legacy engine on 624 of 624 private cases. All 104 lack hints, so they would import as drafts.
 * **Content calls made by the importer** (tell the lead if one is wrong):

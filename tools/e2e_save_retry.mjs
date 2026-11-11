@@ -142,6 +142,36 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1366, height: 900 
       check(label + "a refused answer shows Not saved, not Saved", (await page.locator("#save-status [data-pill-text]").textContent()).trim() === "Not saved");
       await ctx.close();
     }
+
+    // --- 9. the session expires while the quiz is open: not Saved, kept in memory, saved after sign-in ----
+    {
+      const { ctx, page } = await fresh(viewport);
+      const attempt = seed[key];
+      await open(page, attempt, 1);
+      const before = await page.locator("#save-status").count();
+      await ctx.clearCookies({ name: "sessionid" });  // only the session cookie goes
+      await answerHere(page);
+      await waitPill(page, "signin");
+      check(label + "session ended: the pill says to sign in again, not Saved", (await pill(page)) === "signin" && (await page.locator("#save-status [data-pill-text]").textContent()).trim() === "Sign in again to save");
+      check(label + "session ended: a notice tells the learner to sign in", await page.locator("#session-notice").isVisible());
+      const quizStill = key === "mcq" ? (await page.locator(".opt").count()) === 4 : (await page.locator(".engine").count()) === 1;
+      check(label + "session ended: the question and the save indicator stay, with no sign-in form inside", before === 1 && (await page.locator("#save-status").count()) === 1 && quizStill && (await page.locator("form[action*='login'], input[name=login]").count()) === 0);
+      await page.waitForTimeout(3000);
+      check(label + "session ended: still not Saved after waiting (no blind retry)", (await pill(page)) === "signin");
+      const login = await ctx.newPage();  // sign in again, in another tab
+      await login.goto(base + "/accounts/login/");
+      await login.fill("input[name=login]", seed.email);
+      await login.fill("input[name=password]", seed.password);
+      await Promise.all([login.waitForLoadState("load"), login.click("main button[type=submit]")]);
+      check(label + "session ended: nothing reached the server while signed out", !hasAnswer(await serverAnswer(login, attempt, 1)));
+      await login.close();
+      await page.bringToFront();
+      await page.locator("#session-retry").click();
+      await waitPill(page, "saved", 15000);
+      check(label + "after signing in again the pending answer is saved to the right question", hasAnswer(await serverAnswer(page, attempt, 1)));
+      check(label + "the notice goes away once it is saved", !(await page.locator("#session-notice").isVisible()));
+      await ctx.close();
+    }
   }
 
   // --- 5. a chat reply: the next message appears only once the reply has been saved ---------------------
