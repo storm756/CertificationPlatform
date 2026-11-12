@@ -1,9 +1,13 @@
-{% load i18n ccfr %}
+{% load static i18n ccfr %}
 <div class="film" data-film data-duration="{{ b.duration }}">
   {% if b.youtube_id %}
     <div class="film__stage"><iframe class="film__frame" title="{% translate 'Film' %}" src="https://www.youtube-nocookie.com/embed/{{ b.youtube_id }}?enablejsapi=1&amp;cc_load_policy=1&amp;rel=0" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" data-yt="{{ b.youtube_id }}"></iframe></div>
   {% elif b.mp4_url %}
-    <video class="film__stage" controls preload="metadata"{% if b.poster_url %} poster="{{ b.poster_url }}"{% endif %} data-mp4><source src="{{ b.mp4_url }}" type="video/mp4"></video>
+    <video class="film__stage" controls preload="metadata"{% if b.poster_url %} poster="{{ b.poster_url }}"{% endif %} data-mp4>
+      <source src="{{ b.mp4_url }}" type="video/mp4">
+      {% if b.captions_en %}<track kind="captions" src="{% static b.captions_en %}" srclang="en" label="{% translate 'English' %}">{% endif %}
+      {% if b.captions_hi %}<track kind="captions" src="{% static b.captions_hi %}" srclang="hi" label="{% translate 'Hindi' %}">{% endif %}
+    </video>
   {% else %}
     <div class="film__stage">{% if b.poster_url %}<img src="{{ b.poster_url }}" alt="" width="1280" height="720">{% endif %}<div class="film__shade"></div></div>
     <p class="notice notice--mustard">{% icon "clock" %}<span>{% translate "The film is being uploaded. Read the transcript below in the meantime." %}</span></p>

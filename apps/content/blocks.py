@@ -189,6 +189,8 @@ class Video(B):
     youtube_id: str = Field(default="", pattern=r"^([A-Za-z0-9_-]{11})?$")
     mp4: int | None = None  # MediaAsset id
     poster: int | None = None  # MediaAsset id
+    captions_en: str = Field(default="", pattern=r"^(captions/module-[1-9]\.en\.vtt)?$")
+    captions_hi: str = Field(default="", pattern=r"^(captions/module-[1-9]\.hi\.vtt)?$")
     duration: float = Field(default=0, ge=0)
     transcript: list[TranscriptLine] = Field(default_factory=list, max_length=400)
 

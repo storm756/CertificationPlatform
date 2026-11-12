@@ -6,7 +6,7 @@ import json
 from django.db import transaction
 
 from . import schemas
-from .models import Question, QuestionStatus, QuestionVersion
+from .models import Pool, Question, QuestionStatus, QuestionVersion
 
 
 class PublishError(Exception):
@@ -68,8 +68,12 @@ def publish(question: Question) -> Question:
         errors += schemas.publish_errors(question.format, version.body)
     if question.format == "mcq" and not question.tags.get("pc"):
         errors.append("tags: a PC tag is required")
-    if question.format == "crossword" and question.pool != "practice":
-        errors.append("pool: crosswords are practice only (D26)")
+    if (
+        question.format == "crossword"
+        and question.pool != Pool.PRACTICE
+        and (question.pool != Pool.MODULE_QUIZ or question.module.number != 8)
+    ):
+        errors.append("pool: crosswords are practice only outside Module 8's graded quiz")
     if not question.pool:
         errors.append("pool: a pool is required")
     if errors:

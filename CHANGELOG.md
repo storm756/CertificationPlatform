@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-12: Stage 0–4 course content follow-up
+
+- Restored the flagged reading tables from the original booklet and added nine learner handouts drawn from its reading pages. Trainer keys and the master booklet stay private.
+- Added a repeatable course publication command that applies the supplied hints, publishes the two 50-mark assessments for each module, and attaches the handouts, films and practice checks. Module 8 uses its six existing crosswords for graded Part B (D26).
+- Added English and Hindi caption tracks for the module films. The pre-test, final exam and capstone show Coming soon.
+
 ## 2026-11-08: Stage 0, foundation and server
 - Django 5.2 project skeleton, settings split (dev/staging/prod) read from env vars. Why: architecture §4, §17.
 - Custom email `User` (with `email_normalized`, role, status) in the first migration. Why: can't be swapped later.
