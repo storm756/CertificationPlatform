@@ -216,7 +216,7 @@ def test_catalogue_module_and_unit_pages_render_for_a_guest(client, make_unit):
     cap = client.get(
         reverse("learn_module", args=[10])
     )  # the capstone has a page with a clear pending state
-    assert cap.status_code == 200 and b"Not available yet" in cap.content
+    assert cap.status_code == 200 and b"Coming soon" in cap.content
     assert client.get(reverse("learn_module", args=[11])).status_code == 404
 
 

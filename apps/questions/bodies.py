@@ -371,7 +371,7 @@ class ChatBody(Base):
     _clean2 = _texts("who")
 
 
-# --- crossword (practice only) -------------------------------------------------------------
+# --- crossword ---------------------------------------------------------------------------
 
 
 class Word(BaseModel):

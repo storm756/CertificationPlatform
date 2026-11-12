@@ -520,7 +520,7 @@ content strings → t(key, lang):  key grammar  q:<question>:<field.path>  ·  b
 * "Reviewed" is set in the app by a per-language Reviewer who **didn't upload that line**.
 * Answers are stored as tokens and IDs, so switching language mid-attempt is safe.
 * Per-language item statistics flag translations that make a question easier or harder.
-* **Crossword:** practice mode only. Module 8's graded set needs about 6 replacement challenges (teammates).
+* **Crossword:** available for practice and for Module 8's 50-mark graded Part B (D26). The six original Module 8 challenges use the existing server-side word scoring and share the part's marks. No crossword goes into the final pool.
 * **Fonts:** Baloo 2 + Hind (Latin and Devanagari), Baloo Bhai 2 + Hind Vadodara (Gujarati), self-hosted from Google Fonts (OFL, licences next to the files). Added in Stage 1.5.
 * **Certificate:** English only.
 
@@ -609,7 +609,7 @@ Rules that follow:
 1. ~~Domain name~~ (done)
 2. **CyberPeace legal:** the guardian-consent method (§7.3), a grievance officer name, and the privacy notice text.
 3. **Teammates' content work:**
-   * Module 8 replacement challenges
+   * Module 8's graded Part B uses its six existing crosswords (D26).
    * interactive variants
    * a larger final pool (target ~3× by batch 2)
    * hints for all 405 MCQs (most already have explanations)
@@ -683,7 +683,7 @@ Where the build made a choice the design left open. Each is a one-line change if
 
 ## 24. Stage 3 implementation notes (interactive engine)
 
-**Formats.** `apps/questions/bodies.py` holds a pydantic body per format (mc, cards, spot, hotspot, sort, match, order, pick, build, settings, dial, chat, crossword); `apps/questions/formats.py` holds one class per format (MCQ included) with `make_map`, `project`, `clean_response`, `score` and `complete`. `schemas.publish_errors` also checks gate messages and the hotspot image. The PC tag is required only for MCQ; crosswords are practice only.
+**Formats.** `apps/questions/bodies.py` holds a pydantic body per format (mc, cards, spot, hotspot, sort, match, order, pick, build, settings, dial, chat, crossword); `apps/questions/formats.py` holds one class per format (MCQ included) with `make_map`, `project`, `clean_response`, `score` and `complete`. `schemas.publish_errors` also checks gate messages and the hotspot image. Only MCQs require a PC tag. D26 also allows crosswords in Module 8's graded part.
 
 **Tokens and projections.** `AttemptItem.option_map` for interactive formats is `{"v":2,"refs":{token:[table,index]},"lists":{table:[tokens in display order]}}`; tokens are `secrets.token_urlsafe(9)`. MCQ keeps `{order, tokens}`. `project()` is an allow-list: text and tokens only, never a key, risky flag, hint, `why`, gate or canonical order, and the echoed response has its `flag` key removed. Tests prove this for every format, on pages, partials, the JSON endpoint and the save response (journey 10).
 

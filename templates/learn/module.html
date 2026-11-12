@@ -50,7 +50,6 @@
         {% for g in groups %}<div class="unit-group"><h3><span>{{ forloop.counter }}</span>{{ g.title }}</h3><div class="unit-list">
           {% for r in g.rows %}<a class="unit-row" href="{% url 'learn_unit' module.number r.unit.slug %}"><span class="unit-row__icon">{% icon r.icon %}</span><span><h4>{% if r.unit.type == "reading" %}{% translate "Topic" %} {{ r.index }} · {% endif %}{{ r.version.title }}</h4><small>{{ r.unit.nominal_minutes }} {% translate "min" %}</small></span><span class="status status--{% if r.done %}done{% else %}todo{% endif %}">{% if r.done %}{% icon "check-circle" %}<span class="sr-only">{% translate "Completed" %}</span>{% else %}{% icon "circle" %}<span class="sr-only">{% translate "Not started" %}</span>{% endif %}</span></a>{% endfor %}
         </div></div>{% endfor %}
-        <div class="notice notice--mustard">{% icon "clock" %}<p>{% translate "Still to come from the content team: the film is shown as a poster and transcript until its video is uploaded, and the handout is read here until its PDF arrives." %}</p></div>
       </section>
 
       <section role="tabpanel" id="panel-assess" aria-labelledby="tab-assess" hidden class="stack-lg">

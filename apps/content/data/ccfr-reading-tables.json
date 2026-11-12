@@ -1,0 +1,1640 @@
+[
+  {
+    "module": 1,
+    "unit": "t2",
+    "booklet_page": 32,
+    "original_flagged_blocks": 1,
+    "match_legacy_blocks": [
+      {
+        "type": "paragraph",
+        "spans": [
+          {
+            "text": "Tool or setting    What it does                                       Where to set it Password manager Creates and remembers a unique password for        Built into Google and Apple accounts, Passkey            every account; you remember one strong master      or a reputable manager app passphrase WhatsApp two-step verification       Signs you in with fingerprint or face; nothing to  Google, Apple and many banking and Google 2-Step      phish                                              shopping sites Verification Recovery details   Asks for your own 6-digit PIN when the number is   WhatsApp → Settings → Account → registered on a new phone                          Two-step verification"
+          }
+        ]
+      },
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Adds a prompt or code at sign-in",
+            "myaccount.google.com → Security"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "pairs",
+        "rows": [
+          [
+            "Lets you regain the account if locked out",
+            "Keep recovery phone and email current; store backup codes offline"
+          ]
+        ]
+      }
+    ],
+    "replace_with": [
+      {
+        "type": "table",
+        "head": [
+          "Tool or setting",
+          "What it does",
+          "Where to set it"
+        ],
+        "rows": [
+          [
+            "Password manager",
+            "Creates and remembers a unique password for every account; you remember one strong master passphrase",
+            "Built into Google and Apple accounts, or a reputable manager app"
+          ],
+          [
+            "Passkey",
+            "Signs you in with fingerprint or face; nothing to phish",
+            "Google, Apple and many banking and shopping sites"
+          ],
+          [
+            "WhatsApp two-step verification",
+            "Asks for your own 6-digit PIN when the number is registered on a new phone",
+            "WhatsApp → Settings → Account → Two-step verification"
+          ],
+          [
+            "Google 2-Step Verification",
+            "Adds a prompt or code at sign-in",
+            "myaccount.google.com → Security"
+          ],
+          [
+            "Recovery details",
+            "Lets you regain the account if locked out",
+            "Keep recovery phone and email current; store backup codes offline"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "module": 1,
+    "unit": "t5",
+    "booklet_page": 38,
+    "original_flagged_blocks": 1,
+    "match_legacy_blocks": [
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Situation                   Safer choice",
+            "Why"
+          ],
+          [
+            "Use your own mobile data",
+            "You control the connection"
+          ],
+          [
+            "travelling                  Browse only; no banking or passwords",
+            "Others may watch the traffic or run a fake"
+          ],
+          [
+            "Free Wi-Fi at a station or",
+            "hotspot"
+          ],
+          [
+            "Cybercafé or shared         Private window; never tick “remember me”;",
+            "The next user can open your accounts"
+          ],
+          [
+            "Official store or the organisation's own",
+            "Links in messages often carry malware"
+          ],
+          [
+            "Phone lost or stolen        Automatic cloud backup plus an offline",
+            "Backups defeat ransomware and phone"
+          ],
+          [
+            "copy",
+            "loss"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "pairs",
+        "rows": [
+          [
+            "Block it through CEIR on Sanchar Saathi",
+            "Stops misuse of the handset and number"
+          ]
+        ]
+      }
+    ],
+    "replace_with": [
+      {
+        "type": "table",
+        "head": [
+          "Situation",
+          "Safer choice",
+          "Why"
+        ],
+        "rows": [
+          [
+            "Banking or UPI while travelling",
+            "Use your own mobile data",
+            "You control the connection"
+          ],
+          [
+            "Free Wi-Fi at a station or mall",
+            "Browse only; no banking or passwords",
+            "Others may watch the traffic or run a fake hotspot"
+          ],
+          [
+            "Cybercafé or shared computer",
+            "Private window; never tick “remember me”; log out and close the browser",
+            "The next user can open your accounts"
+          ],
+          [
+            "Downloading an app or file",
+            "Official store or the organisation's own website only",
+            "Links in messages often carry malware"
+          ],
+          [
+            "Important photos and documents",
+            "Automatic cloud backup plus an offline copy",
+            "Backups defeat ransomware and phone loss"
+          ],
+          [
+            "Phone lost or stolen",
+            "Block it through CEIR on Sanchar Saathi and lock the SIM",
+            "Stops misuse of the handset and number"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "module": 1,
+    "unit": "t6",
+    "booklet_page": 40,
+    "original_flagged_blocks": 3,
+    "match_legacy_blocks": [
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Login alert or OTP you did not",
+            "Someone has your password  Check login activity in the official app; change"
+          ],
+          [
+            "request",
+            "password; MFA on"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Friends receive messages you did not Account taken over",
+            "Recover via the app; warn contacts; report to"
+          ],
+          [
+            "send",
+            "the platform"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Unknown app, fast battery drain,  Malware or remote access",
+            "Airplane mode; remove the app; change"
+          ],
+          [
+            "screen activity",
+            "passwords from a clean device"
+          ]
+        ],
+        "being_fixed": true
+      }
+    ],
+    "replace_with": [
+      {
+        "type": "table",
+        "head": [
+          "Sign of compromise",
+          "What it may mean",
+          "First action"
+        ],
+        "rows": [
+          [
+            "Login alert or OTP you did not request",
+            "Someone has your password",
+            "Check login activity in the official app; change password; MFA on"
+          ],
+          [
+            "Friends receive messages you did not send",
+            "Account taken over",
+            "Recover via the app; warn contacts; report to the platform"
+          ],
+          [
+            "Phone shows “No service” unexpectedly",
+            "Possible SIM swap",
+            "Call the telecom provider from another phone; alert the bank"
+          ],
+          [
+            "Unknown app, fast battery drain, screen activity",
+            "Malware or remote access",
+            "Airplane mode; remove the app; change passwords from a clean device"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "module": 2,
+    "unit": "t3",
+    "booklet_page": 59,
+    "original_flagged_blocks": 2,
+    "match_legacy_blocks": [
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Trick            How it works",
+            "Safe response"
+          ],
+          [
+            "Fake screenshot  A request titled “refund” or “cashback” appears;",
+            "Decline unknown requests; read the"
+          ],
+          [
+            "OTP request      approving it sends money",
+            "screen before entering the PIN"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "“Buyer” sends a fake payment screenshot, then",
+            "Check your own bank app or statement,"
+          ],
+          [
+            "asks you to return an “excess” amount",
+            "never the screenshot"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "paragraph",
+        "spans": [
+          {
+            "text": "Caller asks for an OTP “to verify” or “to cancel” a  An OTP is a key; share it with no one transaction"
+          }
+        ]
+      }
+    ],
+    "replace_with": [
+      {
+        "type": "table",
+        "head": [
+          "Trick",
+          "How it works",
+          "Safe response"
+        ],
+        "rows": [
+          [
+            "Collect request",
+            "A request titled “refund” or “cashback” appears; approving it sends money",
+            "Decline unknown requests; read the screen before entering the PIN"
+          ],
+          [
+            "Fake screenshot",
+            "“Buyer” sends a fake payment screenshot, then asks you to return an “excess” amount",
+            "Check your own bank app or statement, never the screenshot"
+          ],
+          [
+            "OTP request",
+            "Caller asks for an OTP “to verify” or “to cancel” a transaction",
+            "An OTP is a key; share it with no one"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "module": 2,
+    "unit": "t6",
+    "booklet_page": 65,
+    "original_flagged_blocks": 1,
+    "match_legacy_blocks": [
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Situation",
+            "Verify before you pay Call the person's old number or a family member; ask a family code"
+          ],
+          [
+            "“Mum, I lost my phone, send money to this new",
+            "question"
+          ],
+          [
+            "number”",
+            "Call the friend by voice; the account may be hijacked Same QR rule: you never scan or enter a PIN to receive"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "paragraph",
+        "spans": [
+          {
+            "text": "“Army officer” wants to buy or rent and pays by QR"
+          }
+        ]
+      }
+    ],
+    "replace_with": [
+      {
+        "type": "table",
+        "head": [
+          "Situation",
+          "Verify before you pay"
+        ],
+        "rows": [
+          [
+            "“Mum, I lost my phone, send money to this new number”",
+            "Call the person's old number or a family member; ask a family code question"
+          ],
+          [
+            "Friend on WhatsApp urgently asks for ₹5,000",
+            "Call the friend by voice; the account may be hijacked"
+          ],
+          [
+            "“Army officer” wants to buy or rent and pays by QR",
+            "Same QR rule: you never scan or enter a PIN to receive"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "module": 2,
+    "unit": "t7",
+    "booklet_page": 68,
+    "original_flagged_blocks": 1,
+    "match_legacy_blocks": [
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Takeaway",
+            "KEY TAKEAWAYS FROM MODULE 2"
+          ],
+          [
+            "PIN = Pay",
+            "In one line"
+          ],
+          [
+            "Numbers from the source",
+            "Hook, hurry, ask, cash-out: urgency + money + secrecy = fraud"
+          ],
+          [
+            "Verify money offers",
+            "Receiving money never needs a PIN, scan or OTP"
+          ],
+          [
+            "The golden hour",
+            "Card, passbook, official app — never a search result or message SEBI, RBI and FIU-IND lists; no genuine job charges a fee Stop, 1930, bank, evidence, NCRP — and record every reference"
+          ]
+        ],
+        "being_fixed": true
+      }
+    ],
+    "replace_with": [
+      {
+        "type": "table",
+        "head": [
+          "Takeaway",
+          "In one line"
+        ],
+        "rows": [
+          [
+            "One pattern",
+            "Hook, hurry, ask, cash-out: urgency + money + secrecy = fraud"
+          ],
+          [
+            "PIN = Pay",
+            "Receiving money never needs a PIN, scan or OTP"
+          ],
+          [
+            "Numbers from the source",
+            "Card, passbook, official app — never a search result or message"
+          ],
+          [
+            "Verify money offers",
+            "SEBI, RBI and FIU-IND lists; no genuine job charges a fee"
+          ],
+          [
+            "The golden hour",
+            "Stop, 1930, bank, evidence, NCRP — and record every reference"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "module": 3,
+    "unit": "t1",
+    "booklet_page": 84,
+    "original_flagged_blocks": 2,
+    "match_legacy_blocks": [
+      {
+        "type": "pairs",
+        "rows": [
+          [
+            "Genuine or AI-generated? Genuine content usually…",
+            "AI-generated or manipulated content often…"
+          ]
+        ]
+      },
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Origin",
+            "Can be traced to a known camera, author or  Has no clear original; first appears in outlet                                      forwards or a new account"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Details  Has natural imperfections; consistent",
+            "Looks too smooth, or shows odd hands, teeth,"
+          ],
+          [
+            "shadows and text",
+            "ears or text"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "paragraph",
+        "spans": [
+          {
+            "text": "Context  Fits the date, place and other reliable reports Cannot be matched with any real event or reliable report"
+          }
+        ]
+      },
+      {
+        "type": "pairs",
+        "rows": [
+          [
+            "Purpose  Informs, entertains or reports",
+            "Pushes you to act fast: pay, click, forward or keep a secret"
+          ]
+        ]
+      }
+    ],
+    "replace_with": [
+      {
+        "type": "table",
+        "head": [
+          "Genuine or AI-generated?",
+          "Genuine content usually…",
+          "AI-generated or manipulated content often…"
+        ],
+        "rows": [
+          [
+            "Origin",
+            "Can be traced to a known camera, author or outlet",
+            "Has no clear original; first appears in forwards or a new account"
+          ],
+          [
+            "Details",
+            "Has natural imperfections; consistent shadows and text",
+            "Looks too smooth, or shows odd hands, teeth, ears or text"
+          ],
+          [
+            "Context",
+            "Fits the date, place and other reliable reports",
+            "Cannot be matched with any real event or reliable report"
+          ],
+          [
+            "Purpose",
+            "Informs, entertains or reports",
+            "Pushes you to act fast: pay, click, forward or keep a secret"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "module": 3,
+    "unit": "t2",
+    "booklet_page": 86,
+    "original_flagged_blocks": 1,
+    "match_legacy_blocks": [
+      {
+        "type": "paragraph",
+        "spans": [
+          {
+            "text": "Type             How it is made                                What to check first AI photo Face swap video  Generated from a text prompt or edited by AI  Hands, text, jewellery, background objects; Lip-sync video   (“remove”, “add”, “change face”)              reverse image search for the original Voice clone A face from photos is mapped onto another     Face edges, skin tone at the neck, blinking, person's body                                 head turns"
+          }
+        ]
+      },
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Real video of the person; only the mouth is",
+            "Lips against sounds such as “p”, “b”, “m”; teeth;"
+          ],
+          [
+            "changed to new audio",
+            "voice quality"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "paragraph",
+        "spans": [
+          {
+            "text": "AI copies voice from reels, videos or voice notes Emotion, breathing, background noise; above all, call back on a known number"
+          }
+        ]
+      }
+    ],
+    "replace_with": [
+      {
+        "type": "table",
+        "head": [
+          "Type",
+          "How it is made",
+          "What to check first"
+        ],
+        "rows": [
+          [
+            "AI photo",
+            "Generated from a text prompt or edited by AI (“remove”, “add”, “change face”)",
+            "Hands, text, jewellery, background objects; reverse image search for the original"
+          ],
+          [
+            "Face swap video",
+            "A face from photos is mapped onto another person's body",
+            "Face edges, skin tone at the neck, blinking, head turns"
+          ],
+          [
+            "Lip-sync video",
+            "Real video of the person; only the mouth is changed to new audio",
+            "Lips against sounds such as “p”, “b”, “m”; teeth; voice quality"
+          ],
+          [
+            "Voice clone",
+            "AI copies voice from reels, videos or voice notes",
+            "Emotion, breathing, background noise; above all, call back on a known number"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "module": 3,
+    "unit": "t6",
+    "booklet_page": 95,
+    "original_flagged_blocks": 2,
+    "match_legacy_blocks": [
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Google Lens / Bing Visual Search /",
+            "Finding earlier copies of a photo or video  May not find very new or private"
+          ],
+          [
+            "TinEye",
+            "frame                                       images"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "pairs",
+        "rows": [
+          [
+            "Video keyframe tools (e.g. InVID-",
+            "Splitting a video into frames to search them Needs a browser on a computer"
+          ]
+        ]
+      },
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Official websites and PIB Fact Check  Claims about government schemes and",
+            "Covers government-related"
+          ],
+          [
+            "notices",
+            "claims only"
+          ]
+        ],
+        "being_fixed": true
+      }
+    ],
+    "replace_with": [
+      {
+        "type": "table",
+        "head": [
+          "Tool",
+          "Use it for",
+          "Limit"
+        ],
+        "rows": [
+          [
+            "Google Lens / Bing Visual Search / TinEye",
+            "Finding earlier copies of a photo or video frame",
+            "May not find very new or private images"
+          ],
+          [
+            "Video keyframe tools (e.g. InVID- WeVerify)",
+            "Splitting a video into frames to search them",
+            "Needs a browser on a computer"
+          ],
+          [
+            "Official websites and PIB Fact Check",
+            "Claims about government schemes and notices",
+            "Covers government-related claims only"
+          ],
+          [
+            "Independent fact-checkers",
+            "Viral claims, edited clips, rumours",
+            "May take time for a brand-new claim"
+          ],
+          [
+            "Metadata viewers",
+            "Date and camera of an original file",
+            "Social media usually strips metadata"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "module": 4,
+    "unit": "t1",
+    "booklet_page": 109,
+    "original_flagged_blocks": 1,
+    "match_legacy_blocks": [
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "The First Responder does",
+            "The First Responder does not Investigate who the criminal is"
+          ],
+          [
+            "Listen, ask the six questions, write things down",
+            "Scan, trace or hack devices or accounts Take, unlock, reset or wipe the citizen's device"
+          ],
+          [
+            "Grade urgency and explain the reason",
+            "Contact, bait or threaten the suspect"
+          ],
+          [
+            "Help the citizen stop active loss (bank, 1930, airplane",
+            "Promise a freeze, refund or arrest"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "paragraph",
+        "spans": [
+          {
+            "text": "Preserve identifiers and records (Module 5)"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "spans": [
+          {
+            "text": "Route to police, bank, telecom, platform or IT lead (Module 6)"
+          }
+        ]
+      }
+    ],
+    "replace_with": [
+      {
+        "type": "table",
+        "head": [
+          "The First Responder does",
+          "The First Responder does not"
+        ],
+        "rows": [
+          [
+            "Listen, ask the six questions, write things down",
+            "Investigate who the criminal is"
+          ],
+          [
+            "Grade urgency and explain the reason",
+            "Scan, trace or hack devices or accounts"
+          ],
+          [
+            "Help the citizen stop active loss (bank, 1930, airplane mode)",
+            "Take, unlock, reset or wipe the citizen's device"
+          ],
+          [
+            "Preserve identifiers and records (Module 5)",
+            "Contact, bait or threaten the suspect"
+          ],
+          [
+            "Route to police, bank, telecom, platform or IT lead (Module 6)",
+            "Promise a freeze, refund or arrest"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "module": 4,
+    "unit": "t2",
+    "booklet_page": 111,
+    "original_flagged_blocks": 1,
+    "match_legacy_blocks": [
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Time            Meaning",
+            "Why it matters"
+          ],
+          [
+            "09:48)",
+            "Banks and 1930 work from transaction"
+          ],
+          [
+            "Discovery time  When the citizen noticed it (e.g. 10:05)",
+            "times"
+          ],
+          [
+            "Report time     When it was first reported to anyone (e.g. 10:10)",
+            "Shows how quickly the loss was found"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "paragraph",
+        "spans": [
+          {
+            "text": "Matters for bank liability and the golden hour"
+          }
+        ]
+      }
+    ],
+    "replace_with": [
+      {
+        "type": "table",
+        "head": [
+          "Time",
+          "Meaning",
+          "Why it matters"
+        ],
+        "rows": [
+          [
+            "Event time",
+            "When the incident actually happened (e.g. debit at 09:48)",
+            "Banks and 1930 work from transaction times"
+          ],
+          [
+            "Discovery time",
+            "When the citizen noticed it (e.g. 10:05)",
+            "Shows how quickly the loss was found"
+          ],
+          [
+            "Report time",
+            "When it was first reported to anyone (e.g. 10:10)",
+            "Matters for bank liability and the golden hour"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "module": 4,
+    "unit": "t3",
+    "booklet_page": 112,
+    "original_flagged_blocks": 2,
+    "match_legacy_blocks": [
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Incident as described",
+            "Primary                   Secondary Financial fraud"
+          ],
+          [
+            "“My phone lost signal and money is going from my",
+            "Child safety              Account, SIM or device"
+          ],
+          [
+            "account”",
+            "Harassment and extortion  takeover"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "“Someone made a fake profile of my daughter (15) and",
+            "Impersonation and false"
+          ],
+          [
+            "is messaging boys”",
+            "content"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "table",
+        "head": [
+          "“A loan app is sending my photos to my contacts” “The school computer shows a ransom message”",
+          "Malware and ransomware",
+          "Financial fraud (if money was taken) Child safety (children's"
+        ],
+        "rows": [
+          [
+            "“A voice that sounds like my son asked for money; I paid”",
+            "Financial fraud",
+            "records) Impersonation (voice clone)"
+          ]
+        ],
+        "being_fixed": false
+      }
+    ],
+    "replace_with": [
+      {
+        "type": "table",
+        "head": [
+          "Incident as described",
+          "Primary",
+          "Secondary"
+        ],
+        "rows": [
+          [
+            "“My phone lost signal and money is going from my account”",
+            "Financial fraud",
+            "Account, SIM or device takeover"
+          ],
+          [
+            "“Someone made a fake profile of my daughter (15) and is messaging boys”",
+            "Child safety",
+            "Impersonation and false content"
+          ],
+          [
+            "“A loan app is sending my photos to my contacts”",
+            "Harassment and extortion",
+            "Financial fraud (if money was taken)"
+          ],
+          [
+            "“The school computer shows a ransom message”",
+            "Malware and ransomware",
+            "Child safety (children's records)"
+          ],
+          [
+            "“A voice that sounds like my son asked for money; I paid”",
+            "Financial fraud",
+            "Impersonation (voice clone)"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "module": 4,
+    "unit": "t5",
+    "booklet_page": 115,
+    "original_flagged_blocks": 2,
+    "match_legacy_blocks": [
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Situation              Stabilising action",
+            "Never"
+          ],
+          [
+            "Remote-access app      End the call; no more payments",
+            "Stay on the line “to find out more”"
+          ],
+          [
+            "Active debits          Airplane mode; Wi-Fi and Bluetooth off; use",
+            "Uninstall the app or factory-reset"
+          ],
+          [
+            "SIM suddenly dead      another phone for the bank",
+            "first"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "paragraph",
+        "spans": [
+          {
+            "text": "Call the telecom provider from another phone; alert Buy a new SIM later and ignore it the bank"
+          }
+        ]
+      },
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Unplug the network cable; inform the IT lead;",
+            "Pay, decrypt or power off"
+          ],
+          [
+            "photograph the screen",
+            "repeatedly"
+          ]
+        ],
+        "being_fixed": true
+      }
+    ],
+    "replace_with": [
+      {
+        "type": "table",
+        "head": [
+          "Situation",
+          "Stabilising action",
+          "Never"
+        ],
+        "rows": [
+          [
+            "Scam call in progress",
+            "End the call; no more payments",
+            "Stay on the line “to find out more”"
+          ],
+          [
+            "Remote-access app suspected",
+            "Airplane mode; Wi-Fi and Bluetooth off; use another phone for the bank",
+            "Uninstall the app or factory-reset first"
+          ],
+          [
+            "Active debits",
+            "Bank helpline from the card number; 1930",
+            "Wait for the bank to call back"
+          ],
+          [
+            "SIM suddenly dead",
+            "Call the telecom provider from another phone; alert the bank",
+            "Buy a new SIM later and ignore it"
+          ],
+          [
+            "Ransom note on a PC",
+            "Unplug the network cable; inform the IT lead; photograph the screen",
+            "Pay, decrypt or power off repeatedly"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "module": 5,
+    "unit": "t2",
+    "booklet_page": 134,
+    "original_flagged_blocks": 3,
+    "match_legacy_blocks": [
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Good capture        How",
+            "Poor capture"
+          ],
+          [
+            "Scrolling sequence  Shows the sender's number or profile, the date and the full",
+            "Cropped image of one"
+          ],
+          [
+            "Chat export         message thread, with the phone's status bar",
+            "message"
+          ],
+          [
+            "Web page            Several screenshots in order, numbered E-01a, E-01b…",
+            "Random screenshots with gaps"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Chat → More → Export chat (with media if needed); keeps the",
+            "Forwarding messages to"
+          ],
+          [
+            "original in the app",
+            "yourself"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "paragraph",
+        "spans": [
+          {
+            "text": "Official PDF statement or transaction detail from the bank app Photo of the bank SMS only"
+          }
+        ]
+      },
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Screenshot showing the full address bar plus the URL copied",
+            "Screenshot without the"
+          ],
+          [
+            "as text",
+            "address"
+          ]
+        ],
+        "being_fixed": true
+      }
+    ],
+    "replace_with": [
+      {
+        "type": "table",
+        "head": [
+          "Good capture",
+          "How",
+          "Poor capture"
+        ],
+        "rows": [
+          [
+            "Full screenshot",
+            "Shows the sender's number or profile, the date and the full message thread, with the phone's status bar",
+            "Cropped image of one message"
+          ],
+          [
+            "Scrolling sequence",
+            "Several screenshots in order, numbered E-01a, E-01b…",
+            "Random screenshots with gaps"
+          ],
+          [
+            "Chat export",
+            "Chat → More → Export chat (with media if needed); keeps the original in the app",
+            "Forwarding messages to yourself"
+          ],
+          [
+            "Bank statement",
+            "Official PDF statement or transaction detail from the bank app",
+            "Photo of the bank SMS only"
+          ],
+          [
+            "Web page",
+            "Screenshot showing the full address bar plus the URL copied as text",
+            "Screenshot without the address"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "module": 5,
+    "unit": "t4",
+    "booklet_page": 136,
+    "original_flagged_blocks": 1,
+    "match_legacy_blocks": [
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "E-01  WhatsApp chat with +91 9XXXX      30 Oct 18:20  31 Oct 10:32",
+            "Chat export + 4  Folder M5-008 · SHA-"
+          ],
+          [
+            "XX201 (suspect), citizen's phone  IST           IST",
+            "screenshots      256 9f2c…03f5"
+          ]
+        ],
+        "being_fixed": true
+      }
+    ],
+    "replace_with": [
+      {
+        "type": "table",
+        "head": [
+          "Item",
+          "Description and source",
+          "Event time",
+          "Capture time",
+          "Method",
+          "Storage / hash"
+        ],
+        "rows": [
+          [
+            "E-01",
+            "WhatsApp chat with +91 9XXXX XX201 (suspect), citizen's phone",
+            "30 Oct 18:20 IST",
+            "31 Oct 10:32 IST",
+            "Chat export + 4 screenshots",
+            "Folder M5-008 · SHA- 256 9f2c…03f5"
+          ],
+          [
+            "E-02",
+            "Bank SMS: debit ₹18,400, UTR 4301XXXX7781",
+            "31 Oct 09:48 IST",
+            "31 Oct 10:35 IST",
+            "Screenshot",
+            "Folder M5-008 · SHA- 256 1a7d…88c2"
+          ],
+          [
+            "E-03",
+            "Bank statement PDF, 30–31 Oct",
+            "—",
+            "31 Oct 11:02 IST",
+            "Download from bank app",
+            "Folder M5-008 · SHA- 256 c3e9…5b10"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "module": 6,
+    "unit": "t2",
+    "booklet_page": 156,
+    "original_flagged_blocks": 1,
+    "match_legacy_blocks": [
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "WhatsApp or social account taken  In-app recovery; warn contacts",
+            "Platform report; NCRP; contacts who paid call"
+          ],
+          [
+            "over",
+            "1930"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "pairs",
+        "rows": [
+          [
+            "Sextortion or morphed images",
+            "Safety; platform report; StopNCII / Take  NCRP (women/child); police; 181 or 1098 It Down"
+          ]
+        ]
+      },
+      {
+        "type": "pairs",
+        "rows": [
+          [
+            "Personal data misused by a company Company's grievance officer",
+            "Data Protection Board under the DPDP Act after the grievance"
+          ]
+        ]
+      }
+    ],
+    "replace_with": [
+      {
+        "type": "table",
+        "head": [
+          "Situation",
+          "Primary route",
+          "Parallel routes"
+        ],
+        "rows": [
+          [
+            "UPI / card / net-banking fraud",
+            "1930 and the bank, at once",
+            "NCRP complaint; written complaint to bank within 3 working days"
+          ],
+          [
+            "SIM suddenly dead, then debits",
+            "Bank and 1930",
+            "Telecom provider; NCRP; email and app recovery"
+          ],
+          [
+            "WhatsApp or social account taken over",
+            "In-app recovery; warn contacts",
+            "Platform report; NCRP; contacts who paid call 1930"
+          ],
+          [
+            "Sextortion or morphed images",
+            "Safety; platform report; StopNCII / Take It Down",
+            "NCRP (women/child); police; 181 or 1098"
+          ],
+          [
+            "Child in danger or sexual exploitation",
+            "112 / police; 1098",
+            "NCRP child section; POCSO reporting"
+          ],
+          [
+            "Fake profile or impersonation",
+            "Platform impersonation report",
+            "NCRP; police if threats or fraud"
+          ],
+          [
+            "Loan-app harassment",
+            "NCRP; police",
+            "Report the app to the store; RBI Sachet if unregistered lending"
+          ],
+          [
+            "Investment or trading scam",
+            "1930 if money recently paid; NCRP",
+            "SEBI SCORES for registered intermediaries; RBI Sachet; police"
+          ],
+          [
+            "Ransomware at a school, shop or office",
+            "IT lead or owner; isolate",
+            "CERT-In (organisation reports); NCRP; police"
+          ],
+          [
+            "Lost or stolen phone",
+            "Telecom (block SIM); CEIR",
+            "Police report; change passwords from another device"
+          ],
+          [
+            "Fraud call or SMS, no loss",
+            "Chakshu",
+            "Warn family; block number"
+          ],
+          [
+            "Personal data misused by a company",
+            "Company's grievance officer",
+            "Data Protection Board under the DPDP Act after the grievance"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "module": 6,
+    "unit": "t6",
+    "booklet_page": 163,
+    "original_flagged_blocks": 1,
+    "match_legacy_blocks": [
+      {
+        "type": "pairs",
+        "rows": [
+          [
+            "The citizen asks…",
+            "What a First Responder can say"
+          ]
+        ]
+      },
+      {
+        "type": "pairs",
+        "rows": [
+          [
+            "“Will I get my money back?”",
+            "“Reporting fast gives the best chance that the bank can hold money still in the accounts. I cannot promise a refund or a date; the bank and police decide.”"
+          ]
+        ]
+      },
+      {
+        "type": "paragraph",
+        "spans": [
+          {
+            "text": "“The station says it is not their area.” “You can ask for a Zero FIR; it will be transferred to the right station.”"
+          }
+        ]
+      },
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "“Can the company keep using my",
+            "“Under the DPDP Act you can ask the company what data it holds, ask for"
+          ],
+          [
+            "data?”",
+            "correction or erasure, and complain to it; if unresolved, to the Data Protection Board.”"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "paragraph",
+        "spans": [
+          {
+            "text": "“Is it a crime if he shares my photo?”  “Sharing private or morphed images without consent is an offence under the IT Act and the BNS. Let us report it and stop the spread.”"
+          }
+        ]
+      }
+    ],
+    "replace_with": [
+      {
+        "type": "table",
+        "head": [
+          "The citizen asks…",
+          "What a First Responder can say"
+        ],
+        "rows": [
+          [
+            "“Will I get my money back?”",
+            "“Reporting fast gives the best chance that the bank can hold money still in the accounts. I cannot promise a refund or a date; the bank and police decide.”"
+          ],
+          [
+            "“The station says it is not their area.”",
+            "“You can ask for a Zero FIR; it will be transferred to the right station.”"
+          ],
+          [
+            "“Can the company keep using my data?”",
+            "“Under the DPDP Act you can ask the company what data it holds, ask for correction or erasure, and complain to it; if unresolved, to the Data Protection Board.”"
+          ],
+          [
+            "“Is it a crime if he shares my photo?”",
+            "“Sharing private or morphed images without consent is an offence under the IT Act and the BNS. Let us report it and stop the spread.”"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "module": 8,
+    "unit": "t3",
+    "booklet_page": 203,
+    "original_flagged_blocks": 1,
+    "match_legacy_blocks": [
+      {
+        "type": "paragraph",
+        "spans": [
+          {
+            "text": "Windows or Mac computer Unplug the network cable; turn Wi-Fi off; Do not shut down repeatedly; photograph the"
+          }
+        ]
+      },
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "unplug USB drives",
+            "screen; note time and user"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "paragraph",
+        "spans": [
+          {
+            "text": "Shared office network  IT lead disconnects affected machines or  Note which machines are affected and when segment"
+          }
+        ]
+      }
+    ],
+    "replace_with": [
+      {
+        "type": "table",
+        "head": [
+          "Device",
+          "Isolate",
+          "Preserve"
+        ],
+        "rows": [
+          [
+            "Android or iPhone",
+            "Airplane mode; check Wi-Fi and Bluetooth are off",
+            "Do not uninstall or reset; photograph the app list and suspicious screens; keep it charged"
+          ],
+          [
+            "Windows or Mac computer",
+            "Unplug the network cable; turn Wi-Fi off; unplug USB drives",
+            "Do not shut down repeatedly; photograph the screen; note time and user"
+          ],
+          [
+            "Shared office network",
+            "IT lead disconnects affected machines or segment",
+            "Note which machines are affected and when"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "module": 8,
+    "unit": "t4",
+    "booklet_page": 205,
+    "original_flagged_blocks": 2,
+    "match_legacy_blocks": [
+      {
+        "type": "paragraph",
+        "spans": [
+          {
+            "text": "Account               Official recovery route                            Lockdown checks Google / Gmail WhatsApp              g.co/recover; then myaccount.google.com →          Your devices → sign out unknown; 2-Step Security                                           Verification; recovery phone and email; Gmail Instagram / Facebook                                                     forwarding and filters UPI and banking apps Re-register the number on the phone and enter the  Turn on two-step verification; check Linked SMS code. If the attacker set a two-step PIN,      devices; warn contacts; email WhatsApp WhatsApp may require a waiting period before it    support to deactivate if the phone is lost can be reset"
+          }
+        ]
+      },
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "instagram.com/hacked · facebook.com/hacked",
+            "Log out of all sessions; two-factor authentication; check email and phone on the account; remove unknown linked apps"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "paragraph",
+        "spans": [
+          {
+            "text": "Bank helpline from the card number; block UPI and Reset UPI PIN only after the bank confirms the"
+          }
+        ]
+      },
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "cards",
+            "phone is safe; review linked accounts"
+          ]
+        ],
+        "being_fixed": true
+      }
+    ],
+    "replace_with": [
+      {
+        "type": "table",
+        "head": [
+          "Account",
+          "Official recovery route",
+          "Lockdown checks"
+        ],
+        "rows": [
+          [
+            "Google / Gmail",
+            "g.co/recover; then myaccount.google.com → Security",
+            "Your devices → sign out unknown; 2-Step Verification; recovery phone and email; Gmail forwarding and filters"
+          ],
+          [
+            "WhatsApp",
+            "Re-register the number on the phone and enter the SMS code. If the attacker set a two-step PIN, WhatsApp may require a waiting period before it can be reset",
+            "Turn on two-step verification; check Linked devices; warn contacts; email WhatsApp support to deactivate if the phone is lost"
+          ],
+          [
+            "Instagram / Facebook",
+            "instagram.com/hacked · facebook.com/hacked",
+            "Log out of all sessions; two-factor authentication; check email and phone on the account; remove unknown linked apps"
+          ],
+          [
+            "UPI and banking apps",
+            "Bank helpline from the card number; block UPI and cards",
+            "Reset UPI PIN only after the bank confirms the phone is safe; review linked accounts"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "module": 9,
+    "unit": "t3",
+    "booklet_page": 225,
+    "original_flagged_blocks": 2,
+    "match_legacy_blocks": [
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Setting",
+            "Where to find it (names vary by brand)            Good value"
+          ],
+          [
+            "Admin password",
+            "Router page (often 192.168.0.1 or 192.168.1.1) → System / Administration                           Unique passphrase, different from"
+          ],
+          [
+            "Wi-Fi security",
+            "Wireless → Security                               Wi-Fi password"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "table",
+        "head": [],
+        "rows": [
+          [
+            "Firmware           System → Firmware upgrade",
+            "WPA3 or WPA2-AES (never WEP or “open”)"
+          ],
+          [
+            "WPS / remote       Wireless → WPS; System → Remote management;",
+            "Latest version; automatic updates"
+          ],
+          [
+            "management / UPnP  Advanced → UPnP",
+            "if offered"
+          ]
+        ],
+        "being_fixed": true
+      },
+      {
+        "type": "paragraph",
+        "spans": [
+          {
+            "text": "On, for smart devices and visitors"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "spans": [
+          {
+            "text": "Off unless specifically needed"
+          }
+        ]
+      }
+    ],
+    "replace_with": [
+      {
+        "type": "table",
+        "head": [
+          "Setting",
+          "Where to find it (names vary by brand)",
+          "Good value"
+        ],
+        "rows": [
+          [
+            "Admin password",
+            "Router page (often 192.168.0.1 or 192.168.1.1) → System / Administration",
+            "Unique passphrase, different from Wi-Fi password"
+          ],
+          [
+            "Wi-Fi security",
+            "Wireless → Security",
+            "WPA3 or WPA2-AES (never WEP or “open”)"
+          ],
+          [
+            "Firmware",
+            "System → Firmware upgrade",
+            "Latest version; automatic updates if offered"
+          ],
+          [
+            "Guest network",
+            "Wireless → Guest network",
+            "On, for smart devices and visitors"
+          ],
+          [
+            "WPS / remote management / UPnP",
+            "Wireless → WPS; System → Remote management; Advanced → UPnP",
+            "Off unless specifically needed"
+          ]
+        ]
+      }
+    ]
+  }
+]

@@ -205,7 +205,7 @@ stops each stage from restyling by hand.
 ## Stage 3: Interactive engine (13 formats)
 
 **Build** (§9.2, §9.6, `docs/legacy-sources.md`)
-- A pydantic schema per format: mc, cards, spot, hotspot, sort, match, order, pick, build, settings, dial, chat, crossword (practice only).
+- A pydantic schema per format: mc, cards, spot, hotspot, sort, match, order, pick, build, settings, dial, chat, crossword (practice and Module 8 graded Part B, D26).
   The schema includes `hint`, `why` (the practice explanation) and gate flags with `gateReason`.
 - `client_projection()` per format (§9.2 table). **A parameterised test over every legacy fixture** asserts that no key, marker, risky-segment flag, hotspot
   answer or canonical order is present.

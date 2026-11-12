@@ -1,6 +1,6 @@
 # Project status: read this first
 
-**Updated:** 10 Nov 2026. Every Claude session starts here, then reads `CLAUDE.md`, `docs/decisions.md` and the current stage in `docs/build-stages.md`.
+**Updated:** 12 Nov 2026. Every Claude session starts here, then reads `CLAUDE.md`, `docs/decisions.md` and the current stage in `docs/build-stages.md`.
 At the end of every stage, Claude updates this file in the same PR.
 
 ## Order of authority (when two documents disagree)
@@ -17,18 +17,31 @@ If two of these still disagree, or something is missing, **stop and ask in chat*
 
 ## Where things stand
 
+### Stage 0–4 local course follow-up
+
+The historical review notes dated 11 Nov describe the earlier draft state. The original 303-page booklet and the completed hint workbook are now available. The follow-up restores all 31 flagged blocks from 20 source tables. The nine learner handouts under `static/handouts/` contain only the booklet's lesson reading pages. All 509 approved hints are matched by stable ID. The six existing Module 8 crosswords now form its graded Part B (D26). The pre-test, final exam and capstone stay Coming soon. Staging deployment and verification follow the local review.
+
+**Local verification.** The development course has 55 published readings with zero flagged blocks, 509 live questions with hints, and 18 published graded parts totaling 100 marks for each of Modules 1–9. Both real Module 8 parts passed a start, save and submit check with a temporary learner. All nine handout links, films and both caption tracks per film loaded in the browser. Playback was checked on Modules 2 and 8. Six pages passed the accessibility and overflow checks at the supported review sizes. Screenshots are in the local `screenshots/stage4-content/` directory.
+
+**Final branch checks (12 Nov 2026, `stage-4-content-follow-up` on `origin/main` c55f95f).** Full PostgreSQL suite: 505 passed. `ruff check`, `ruff format --check`, `makemigrations --check` and `check --deploy` with production settings: clean. `publish_ccfr_course` preview (no `--apply`) on the local database: 20 corrected tables, 509 questions, 18 graded parts, nine practice checks, nine handouts and nine films verified without saving. axe: no serious or critical issues on the catalogue, Module 8 overview, film and handout, a corrected Module 4 table topic and the Module 10 capstone at 390px and 1366px (screenshots in `screenshots/stage4-content/`, not committed). Staging is not verified: merging does not copy the local database, MP4s or private inputs.
+
+**Load the course.** On a fresh database, import the original lesson, MCQ and interactive banks first with the existing `import_legacy_lessons`, `import_legacy_mcq` and `import_legacy_interactive` commands. Provide the nine original module MP4 files and the prepared `approved-hints.json` and `question-edits.json` through private storage. The application image includes the learner handouts, corrected tables and English/Hindi caption tracks. Use `python manage.py publish_ccfr_course --hints <path-to-approved-hints.json> --films <film-directory>` for a rollback-only preview. Add `--apply` after verification. Mount or copy the private inputs into the application container through the team's deployment procedure.
+
+**Translation review.** The legacy booklet has 635 draft entries each in Hindi, Marathi and Gujarati. They pass a structural check for nonblank wording, expected script and preserved placeholders. Only 55 of 324 distinct text values in the corrected tables have exact matches in those drafts. The nine module translation CSVs have blank language columns. Export the current wording with Stage 8 stable keys for further language review and approval. Assessment wording stays English until approved, and Marathi/Gujarati film captions remain pending.
+
 | Stage | State | Notes |
 | --- | --- | --- |
 | 0. Foundation and server | ✅ **Done, merged (PR #1)** | Django 5.2 + Postgres 17 + Caddy on the VPS. `staging.cyberfirstresponse.io` serves HTTPS. Key-only SSH. Encrypted off-site backups. Staff 2FA. The CSP is set by Caddy. |
 | 1. Accounts, batches, registration | ✅ **Merged into `main`** (6b95bdc) · 🟡 **staging check still open** | Finish items 1 and 2 are done and were checked before the merge (results below). On the last check `https://staging.cyberfirstresponse.io/register/` still returned **404**: a person must deploy `main` to staging and confirm `/register/` loads before Stage 1 counts as verified on staging. |
 | 1.5. UI shell and components | ✅ **Merged into `main`** (040c25a) · 🟡 **staging check still open** | Design tokens, self-hosted fonts incl. Gujarati, shared base template and components, `/styleguide`, language wiring, `tools/screenshots.mjs`, every Stage 0–1 page restyled, and the prototype's sign-in and registration design (navy panel, numbered sections, certificate-name preview, password meter). Staging stays unverified until a person deploys `main` and confirms the pages there. |
-| 2. Questions and MCQ assessments | ✅ **Merged into `main`** (8c37cd5, PR #5; `stage-2` kept as a backup) | `Question` and immutable `QuestionVersion`, MCQ schema, XLSX import with dry run, private legacy importer (drafts only), `AssessmentPart` + `validate_part()`, attempts with random option tokens, server-side scoring, the HTMX attempt, review and result pages, auto-submit job. **The 405 legacy MCQs were only dry-run checked, not imported; none can go live until approved hints arrive.** See "Stage 2: what to know". |
-| 3. Interactive engine (13 formats) | ✅ **Merged into `main`** (9d7f7f0, PR #6; `stage-3` kept as a backup) · 🟡 **staging check still open** | The 13 formats (mc, cards, spot, hotspot, sort, match, order, pick, build, settings, dial, chat, crossword) plus colour triage, with pydantic bodies, allow-list projections, random per-attempt tokens, Decimal scorers and safety gates ported from the legacy `engine.js` (parity proved on 128 frozen cases), a private legacy importer, safe hotspot images, and a TypeScript/esbuild renderer (`engine/`, bundle `static/js/engine.js`). Journeys 8 and 10 pass. **The 104 real legacy challenges validate but are not imported, and none can go live: they have no hints.** See "Stage 3: what to know" below. |
-| 4. Learning content | 🟡 **Ready for a PR** (`stage-4-review`, from `origin/main` + cf79bb7 and 24b566d; `stage-4` kept as a backup) | `/learn/` shows all 9 modules: overview, the 55 imported reading topics (each with an inline interaction), a film page per module (poster + English/Hindi transcript), a handout web page and a myth-or-fact check. Versioned blocks, publish/restore, DOCX and image upload, unit progress, `/learn/check` (practice only) and the adult-only time heartbeat. See "Stage 4: what to know". |
-| 5 to 10 | ⬜ | In order. One stage = one branch = one PR. |
+| 2. Questions and MCQ assessments | ✅ **Merged into `main`** (8c37cd5, PR #5) · content follow-up local | **405 live MCQs with approved hints** in the development database. Nine graded Part A quizzes and a practice pool. |
+| 3. Interactive engine (13 formats) | ✅ **Merged into `main`** (9d7f7f0, PR #6) · content follow-up local | **104 live challenges with approved hints** in the development database. Nine graded Part B assessments, including the six Module 8 crosswords. The standalone practice mock page is pending. |
+| 4. Learning content | ✅ **Merged into `main`** (c55f95f, PR #7) · content follow-up local | On localhost, `/learn/` shows 55 real readings, nine films and handouts, and nine module practice checks. All flagged tables are corrected. Module 10 shows Coming soon. |
+| 5–6 | 🟡 **Saved on local branches** (`stage-5`, `stage-6`) | The pre-test and final remain Coming soon while the team writes the exam bank. |
+| 7–10 | ⬜ | In order. One stage = one branch = one PR. |
 
 **Live addresses:**
-* Staging: `https://staging.cyberfirstresponse.io`. It runs Stage 0 code; Stage 1 isn't deployed yet, so `/register` returns 404.
+* Staging: `https://staging.cyberfirstresponse.io`. On 11 Nov, `/register/` and `/learn/` returned 404. A person with server access needs to deploy and verify the merged build, then load the private lesson files for the staging course.
 * Production: `https://cyberfirstresponse.io` **returns 502 on purpose**. It isn't started until launch.
 
 ## Stage 1: what was approved, and what's left
@@ -101,9 +114,9 @@ left out of the copy. The review fixes are listed in `build-stages.md` under Sta
 | Certificate qualification title, wording, signatories and certificate-number prefix (D28) | Lead + HOD (before Stage 7) | Stage 7 asks the lead before building the PDF template |
 | Consent from the three people whose photos are on the landing page | Lead (being arranged) | Their photos stay out of git, in `content-data/people/` only |
 | Privacy notice, terms, grievance officer, guardian-consent method (DPDP) | CyberPeace legal | Placeholder pages, marked "draft" |
-| YouTube video IDs, and Marathi/Gujarati captions | Teammate B | Poster plus transcript |
-| **Approved hints for all 405 legacy MCQs** (the legacy bank has none; a question can't go live without one, §13.2), the content team's sheet deciding `module_quiz` vs `practice` (today: 30 quiz / 15 practice per module), new final-pool questions, fixed tables (m1.t0, m1.t4, m2.t3, m4.t0, m4.t3), Module 8 replacement challenges | Teammate A | The 405 legacy MCQs were only dry-run checked; they are **not imported** and stay in the private source file (`content-data/`, never in Git). Until hints arrive, no module quiz part can be published, so learners can't take real assessments. Tests use invented questions. |
-| **Approved hints for the 104 legacy interactive challenges** (they have a `why`, the practice explanation, but no hint), the `module_quiz` vs `practice` split, and a decision on the mixed set (below) | Teammate A | Run `import_legacy_interactive` only when the hints are ready. Tests and screenshots use invented questions (`tests/fixtures/legacy_invented.json`). |
+| Marathi and Gujarati film captions | Teammate B | The local course uses supplied MP4s with English and Hindi captions. |
+| Separate final exam bank and shared pre-test questions | Teammate A | Both exams show Coming soon. The 509 existing questions and hints are published locally for module assessment and practice. |
+| Module 10 capstone materials | Programme team | Module 10 shows Coming soon. |
 | Reviewed translations | Teammate B + reviewers | Lessons show draft translations with a "draft translation" tag. Assessments show English until a translation is reviewed (architecture §14, D24). |
 | Branch protection on `main` (require a PR and a passing CI, 0 approvals, no force pushes) | Lead (GitHub settings) | Never push to `main` directly |
 
@@ -155,7 +168,7 @@ left out of the copy. The review fixes are listed in `build-stages.md` under Sta
 | **Fixed in review:** a session that expires while the quiz is open. The answer endpoint is redirected to sign-in and the page used to treat the sign-in page (HTTP 200) as a saved answer and drop its form into the save indicator. "Saved" now needs the server's explicit confirmation (`X-Answer-Saved`); on a redirect to sign-in the quiz and indicator stay, the answer stays in memory, the pill says "Sign in again to save" with a notice and a Sign in link, and the answer is saved to its own question after the learner signs in again (the CSRF token is re-read from the cookie, since signing in changes it) | ✅ `tools/e2e_save_retry.mjs` scenario 7 at 390px and 1366px (fails on the old code), plus a test that only a real save carries the confirmation |
 
 
-* **Content is the blocker, not code.** Run `python manage.py import_legacy_mcq --source <path> --dry-run` to check the legacy bank (it prints counts only). On 10 Nov 2026 it reported 405 valid questions, 30 quiz + 15 practice per module, at least 5 per PC tag in every quiz, and **405 questions with no hint**. **They were not imported**: nothing real is in any database, and real questions and answer keys stay out of Git. When the team sends approved hints, load them with the XLSX sheet (the hint column is required) or the legacy importer, then publish.
+* **Local draft import (11 Nov 2026).** The original bank was copied to the ignored `content-data/legacy/bank_booklet.json` file. After validation, all 405 MCQs were loaded as drafts in the local Docker database. The source contains no hints. The draft assignment is 30 quiz and 15 practice per module. Apply approved hints and pool assignments with the XLSX question sheet matched by ID, then validate and publish.
 * **Design calls made in Stage 2** (tell the lead if one is wrong):
   * `validate_part()` blocks a part whose counted marks would **exceed** 100. "The module totals exactly 100" can't be checked until the interactive part exists (Stage 3), so `module_marks_total()` reports it instead of blocking.
   * `AssessmentPart.is_published` (not in §6) is set only by `publish_part()`, which runs `validate_part()`. Learners can only start published parts.
@@ -180,11 +193,11 @@ left out of the copy. The review fixes are listed in `build-stages.md` under Sta
 | Answer data stays on the server (allow-list projections, random per-attempt tokens, private hotspot images) | ✅ projection and flow tests |
 | Browser autosave checks for multiple-choice **and** interactive questions (`tools/e2e_save_retry.mjs`, production CSP, 390px and 1366px): failed save then Next, refused save, quick Next, Review while refused, tab close, chat, and the expired session (Not saved, kept in memory, saved to the right question after signing in again) | ✅ 85 checks |
 | axe on the interactive quiz questions (mc, colour triage, tick list, chat) and the review page at 390px and 1366px | ✅ no serious or critical issues; screenshots in `screenshots/stage3-review/` (not committed) |
-| Private content | ✅ nothing from `content-data/` is in Git. **The 104 legacy interactive challenges were dry-run checked only (0 invalid; 80 quiz, 24 practice) and are not imported; approved hints for them (and for the 405 MCQs) are still pending.** |
+| Private content at Stage 3 review | The dry run validated 104 legacy challenges (80 quiz, 24 practice). See the local draft import update below. |
 
 
-* **The Stage 2 legacy MCQ bank was only dry-run checked, not loaded.** The 405 questions stay in the private source file (`content-data/legacy/`). Nothing real is in any database. Hints will be added by the team and imported later. The working MCQ quiz is unchanged.
-* **The legacy interactive set was also dry-run checked only**, with `check_legacy_parity` and the importer's validation (counts only, no content printed): 104 challenges, 0 invalid (build 12, cards 1, chat 12, crossword 6, dial 1, hotspot 1, match 1, mc 32, order 2, pick 11, settings 12, sort 2, spot 11), 80 for module quizzes and 24 for practice. The Python scorers agree with the real legacy engine on 624 of 624 private cases. All 104 lack hints, so they would import as drafts.
+* **Local draft import (11 Nov 2026).** All 104 legacy interactive challenges were loaded as drafts in the local Docker database. The importer prepared the 18 IDs for the mixed practice mock. The Python scorers agreed with the real legacy engine on 624 of 624 private cases. All 104 still need approved hints.
+* **Local learner preview.** The two demo assessment parts were unpublished and their nine demo questions retired. Existing demo records and attempts were kept. The learner catalogue now shows the real readings and myth-or-fact checks while the question drafts await approval.
 * **Content calls made by the importer** (tell the lead if one is wrong):
   * Legacy markup is flattened to plain text (content is never HTML). Sort-bin descriptions (`d`) are dropped.
   * Hotspot art is rasterised from the legacy SVG (rect, text, group only) to a PNG by the importer. Learners get the picture plus numeric regions.

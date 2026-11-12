@@ -112,7 +112,9 @@ def _part_cards(user, module):
     from apps.assessments.models import Attempt
 
     out = []
-    for part in AssessmentPart.objects.filter(module=module, is_published=True).order_by("pk"):
+    for part in AssessmentPart.objects.filter(module=module, is_published=True).order_by(
+        "-family", "pk"
+    ):
         tries = list(Attempt.objects.filter(user=user, part=part).order_by("number")) if _is_learner(user) else []  # fmt: skip
         best = max((a.score for a in tries if a.counted and a.score is not None), default=None)
         out.append({"part": part, "attempts": len(tries), "best": best})

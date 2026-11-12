@@ -16,6 +16,7 @@ from PIL import Image
 from apps.assessments import rules, services
 from apps.assessments.models import AssessmentPart, Attempt
 from apps.audit.models import AuditEvent
+from apps.content.models import Module
 from apps.questions import images, legacy_interactive, schemas
 from apps.questions import services as qservices
 from apps.questions.models import Question, QuestionImage
@@ -118,6 +119,14 @@ def spec_for(case, item):
                 next(j for j, r in enumerate(s["replies"]) if r["s"] == 2) for s in q["steps"]
             ]
         }
+    if t == "crossword":
+        letters = {}
+        for word in q["words"]:
+            for offset, letter in enumerate(word["a"]):
+                row = word["r"] + (offset if word["dir"] == "D" else 0)
+                col = word["c"] + (offset if word["dir"] == "A" else 0)
+                letters[f"{row},{col}"] = letter
+        return {"letters": letters}
     raise AssertionError(t)
 
 
@@ -519,13 +528,33 @@ def test_interactive_questions_publish_without_a_pc_tag(module1):
     assert qservices.publish(question).status == "live"
 
 
-def test_crosswords_can_only_go_live_in_the_practice_pool(module1):
+def test_crosswords_outside_module_eight_are_practice_only(module1):
     question = make_draft(module1, "inv-crossword")
     with pytest.raises(qservices.PublishError, match="practice only"):
         qservices.publish(question)
     question.pool = "practice"
     question.save()
     assert qservices.publish(question).status == "live"
+
+
+def test_module_eight_crossword_scores_in_its_graded_part(learner_client):
+    module = Module.objects.get(number=8)
+    question = make_draft(module, "inv-crossword", stable_id="M8-C01")
+    qservices.publish(question)
+    part = AssessmentPart.objects.create(
+        module=module, name="Part B: interactive", family="interactive", marks=50, selection="all"
+    )
+    rules.publish_part(part)
+    attempt = start(learner_client, part)
+    item = attempt.items.get()
+    result = post_response(
+        learner_client, attempt, 1, logical(item, spec_for("inv-crossword", item))
+    )
+    assert result.status_code == 200
+    completed = services.submit(attempt.pk, attempt.user_id)
+    assert completed.score == Decimal("100.0")
+    assert completed.counted and completed.all_answered
+    assert part.marks == 50
 
 
 def test_a_hotspot_needs_its_picture_before_it_goes_live(module1):
