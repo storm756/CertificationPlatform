@@ -113,6 +113,7 @@ def intro(request, part_id):
             "attempts": attempts,
             "open_attempt": open_attempt,
             "best": best,
+            "allowance": services.attempt_allowance(part.max_attempts, len(attempts)),
             "pass_mark": PASS_MARK,
             "question_count": part.draw_n if part.selection == "draw" else None,
         },
@@ -292,6 +293,10 @@ def result(request, pk):
             "passed": attempt.counted and attempt.score is not None and attempt.score >= PASS_MARK,
             "pass_mark": PASS_MARK,
             "auto": attempt.status == AttemptStatus.AUTO_SUBMITTED,
+            "allowance": services.attempt_allowance(
+                attempt.part.max_attempts,
+                Attempt.objects.filter(user=request.user, part=attempt.part).count(),
+            ),
         },
     )
 
@@ -339,6 +344,12 @@ def _programme_result(request, attempt):
         "pass_mark": PASS_MARK,
         "auto": attempt.status == AttemptStatus.AUTO_SUBMITTED,
         "bands": insights.final_bands(attempt) if kind == "final" else [],
+        "allowance": services.attempt_allowance(
+            attempt.programme_assessment.max_attempts,
+            Attempt.objects.filter(
+                user=request.user, programme_assessment=attempt.programme_assessment
+            ).count(),
+        ),
     }
     return render(request, "assessments/programme_result.html", context)
 
@@ -364,6 +375,7 @@ def programme_intro(request, kind):
             "available": programme.pretest_available(request.user),
             "cooldown_until": programme.cooldown_until(request.user) if kind == "final" else None,
             "unavailable_reason": examsets.unavailable_reason(request.user),
+            "allowance": services.attempt_allowance(assessment.max_attempts if kind == "final" else None, len(attempts)),
             "pass_mark": PASS_MARK,
         },
     )  # fmt: skip

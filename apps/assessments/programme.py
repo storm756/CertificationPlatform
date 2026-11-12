@@ -26,7 +26,7 @@ from .models import (
     ProgrammeAssessment,
     ProgrammeAssessmentKind,
 )
-from .services import PartNotAvailable
+from .services import PartNotAvailable, check_attempt_limit
 
 # Today's blueprint (architecture §11): 6/6/5/6/6/6/5/5/5 = 50 questions, anchors included.
 DEFAULT_PER_MODULE = {1: 6, 2: 6, 3: 5, 4: 6, 5: 6, 6: 6, 7: 5, 8: 5, 9: 5}
@@ -185,6 +185,10 @@ def start_programme(user, kind: str, rng=None, now=None) -> tuple[Attempt, bool]
             reasons.append(cooldown)
         if reasons:
             raise Locked(reasons)
+        check_attempt_limit(
+            assessment.max_attempts,
+            Attempt.objects.filter(user=user, programme_assessment=assessment).count(),
+        )
     else:
         raise PartNotAvailable("That assessment is not available.")
     from . import examsets

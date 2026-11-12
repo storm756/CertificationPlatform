@@ -1,7 +1,13 @@
-"""Learning pages (architecture §8). Reading is open to everyone; progress is for learners."""
+"""Learning pages (architecture §8). Every page and endpoint needs a signed-in user (D34);
+progress and time are recorded for learners only."""
 
+from functools import wraps
+from urllib.parse import quote
+
+from django.conf import settings
+from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
-from django.http import FileResponse, Http404, JsonResponse
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from django_ratelimit.decorators import ratelimit
@@ -27,6 +33,22 @@ def _posted_unit(request):
 
 def _is_learner(user):
     return user.is_authenticated and user.role == Role.LEARNER
+
+
+def signin_required(view):
+    """D34: every /learn/ page and endpoint needs a signed-in user. A page (GET) sends a
+    signed-out visitor to sign-in and back again; an endpoint (POST) answers 403, because a
+    redirect would bring the visitor back to a URL that only accepts POST."""
+
+    @wraps(view)
+    def wrapper(request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return view(request, *args, **kwargs)
+        if request.method in ("GET", "HEAD"):
+            return redirect_to_login(request.get_full_path())
+        return JsonResponse({"error": "Please sign in again."}, status=403)
+
+    return wrapper
 
 
 def _module(number):
@@ -85,6 +107,7 @@ def _module_card(user, module):
     }  # fmt: skip
 
 
+@signin_required
 def catalogue(request):
     from apps.assessments import programme
 
@@ -115,6 +138,7 @@ def catalogue(request):
 def _part_cards(user, module):
     """The module's published assessment parts, each with the learner's attempts and best score."""
     from apps.assessments.models import Attempt
+    from apps.assessments.services import attempt_allowance
 
     out = []
     for part in AssessmentPart.objects.filter(module=module, is_published=True).order_by(
@@ -122,10 +146,13 @@ def _part_cards(user, module):
     ):
         tries = list(Attempt.objects.filter(user=user, part=part).order_by("number")) if _is_learner(user) else []  # fmt: skip
         best = max((a.score for a in tries if a.counted and a.score is not None), default=None)
-        out.append({"part": part, "attempts": len(tries), "best": best})
+        allowance = attempt_allowance(part.max_attempts, len(tries))
+        allowance["reached"] = allowance["reached"] and not any(a.is_open for a in tries)
+        out.append({"part": part, "attempts": len(tries), "best": best, "allowance": allowance})
     return out
 
 
+@signin_required
 def module_page(request, number):
     module = get_object_or_404(Module, number=number)
     if module.kind == "capstone":
@@ -163,6 +190,7 @@ def _prepare(request, unit, blocks):
     return out
 
 
+@signin_required
 def unit_page(request, number, slug):
     module = _module(number)
     unit = get_object_or_404(Unit, module=module, slug=slug)
@@ -206,6 +234,7 @@ def unit_page(request, number, slug):
     )
 
 
+@signin_required
 @require_POST
 def complete(request, number, slug):
     unit = get_object_or_404(Unit, module__number=number, slug=slug)
@@ -221,6 +250,7 @@ def complete(request, number, slug):
     return JsonResponse({"ok": True, "first": created})
 
 
+@signin_required
 @require_POST
 @ratelimit(key="ip", rate="120/h", method="POST", block=True)
 def block_action(request, number, slug, index):
@@ -243,6 +273,7 @@ def block_action(request, number, slug, index):
     raise Http404
 
 
+@signin_required
 @require_POST
 @ratelimit(key="ip", rate="120/h", method="POST", block=True)
 def check(request):
@@ -258,6 +289,7 @@ def check(request):
     return JsonResponse(result)
 
 
+@signin_required
 @require_POST
 def heartbeat(request):
     if not _is_learner(request.user):
@@ -268,8 +300,15 @@ def heartbeat(request):
     return JsonResponse({"counted": services.heartbeat(request.user, unit, request.session)})
 
 
+@signin_required
 def media_file(request, pk):
-    """A published unit's media only (never a draft's), served with its own checked type."""
+    """A published unit's media only (never a draft's), to signed-in users only (D34).
+
+    Behind Caddy (`MEDIA_ACCEL_REDIRECT`), Django only decides and Caddy sends the file from the
+    read-only media volume, with range requests, ETag and Last-Modified, so a phone can seek in a
+    film without downloading all of it and no web worker is held for the download (D35). Caddy
+    serves that path only in answer to this header; it is never reachable from outside.
+    """
     asset = get_object_or_404(MediaAsset, pk=pk)
     used = any(
         _uses(v.blocks, pk)
@@ -279,8 +318,13 @@ def media_file(request, pk):
     )
     if not used:
         raise Http404
-    response = FileResponse(asset.file.open("rb"), content_type=asset.content_type)
-    response["Cache-Control"] = "public, max-age=3600"
+    if settings.MEDIA_ACCEL_REDIRECT:
+        response = HttpResponse(content_type=asset.content_type)
+        response["X-Accel-Redirect"] = "/" + quote(asset.file.name)
+    else:
+        response = FileResponse(asset.file.open("rb"), content_type=asset.content_type)
+    # private: a shared cache must never hand a signed-in learner's file to anyone else
+    response["Cache-Control"] = "private, max-age=3600"
     response["X-Content-Type-Options"] = "nosniff"
     if asset.kind == "pdf":
         response["Content-Disposition"] = f'inline; filename="module-{asset.module.number}-handout.pdf"'  # fmt: skip
@@ -291,5 +335,6 @@ def _uses(blocks, pk) -> bool:
     return any(pk in (b.get("asset"), b.get("mp4"), b.get("poster")) for b in blocks)
 
 
+@signin_required
 def home_redirect(request):
     return redirect("learn_catalogue")

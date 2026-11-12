@@ -38,9 +38,9 @@ cd "$SRC/deploy"
 COMPOSE=(docker compose -f compose.yml)
 [ "$ENV_NAME" = "staging" ] && COMPOSE+=(--profile mailpit)
 
-echo "==> shared network and static volumes"
+echo "==> shared network, static and media volumes"
 docker network inspect csfr-edge >/dev/null 2>&1 || docker network create csfr-edge >/dev/null
-for v in csfr-staging_static csfr-prod_static; do
+for v in csfr-staging_static csfr-prod_static csfr-staging_media csfr-prod_media; do
   docker volume inspect "$v" >/dev/null 2>&1 || docker volume create "$v" >/dev/null
 done
 

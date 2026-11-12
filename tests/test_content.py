@@ -134,9 +134,9 @@ def test_a_youtube_id_must_look_like_one():
         blk.validate_blocks([{"type": "video", "youtube_id": "x'><script>"}])
 
 
-def test_markup_in_a_page_is_escaped(client, make_unit):
+def test_markup_in_a_page_is_escaped(learner_client, make_unit):
     make_unit(blocks=[para("<script>alert(1)</script>")])
-    html = client.get(reverse("learn_unit", args=[1, "t1"])).content.decode()
+    html = learner_client.get(reverse("learn_unit", args=[1, "t1"])).content.decode()
     assert (
         "<script>alert(1)</script>" not in html and "&lt;script&gt;alert(1)&lt;/script&gt;" in html
     )
@@ -205,50 +205,59 @@ def test_an_invalid_draft_is_never_stored(make_unit):
 # --- pages -------------------------------------------------------------------------------------------
 
 
-def test_catalogue_module_and_unit_pages_render_for_a_guest(client, make_unit):
+def test_catalogue_module_and_unit_pages_render_for_a_signed_in_user(learner_client, make_unit):
     make_unit("t1")
     make_unit("handout", UnitType.HANDOUT)
-    assert client.get(reverse("learn_catalogue")).status_code == 200
-    page = client.get(reverse("learn_module", args=[1])).content.decode()
+    assert learner_client.get(reverse("learn_catalogue")).status_code == 200
+    page = learner_client.get(reverse("learn_module", args=[1])).content.decode()
     assert "Invented module" in page and "Title t1" in page
-    assert client.get(reverse("learn_unit", args=[1, "t1"])).status_code == 200
-    assert client.get(reverse("learn_unit", args=[1, "nope"])).status_code == 404
-    cap = client.get(
+    assert learner_client.get(reverse("learn_unit", args=[1, "t1"])).status_code == 200
+    assert learner_client.get(reverse("learn_unit", args=[1, "nope"])).status_code == 404
+    cap = learner_client.get(
         reverse("learn_module", args=[10])
     )  # the capstone has a page with a clear pending state
     assert cap.status_code == 200 and b"Coming soon" in cap.content
-    assert client.get(reverse("learn_module", args=[11])).status_code == 404
+    assert learner_client.get(reverse("learn_module", args=[11])).status_code == 404
 
 
-def test_a_draft_is_not_visible_to_learners(client, make_unit):
+def test_a_draft_is_not_visible_to_learners(learner_client, make_unit):
     make_unit("t1", publish=False)
-    assert client.get(reverse("learn_unit", args=[1, "t1"])).status_code == 404
+    assert learner_client.get(reverse("learn_unit", args=[1, "t1"])).status_code == 404
 
 
-def test_reveal_and_myth_answers_are_not_in_the_page_until_asked(client, make_unit):
+def test_reveal_and_myth_answers_are_not_in_the_page_until_asked(learner_client, make_unit):
     unit = make_unit(blocks=[
         {"type": "reveal", "prompt": "Predict this.", "answer": "ANSWER-ONE-TEXT"},
         {"type": "mythfact", "statement": "A claim.", "is_fact": True, "why": "WHY-TEXT"},
     ])  # fmt: skip
-    html = client.get(reverse("learn_unit", args=[1, "t1"])).content.decode()
+    html = learner_client.get(reverse("learn_unit", args=[1, "t1"])).content.decode()
     for secret in ("ANSWER-ONE-TEXT", "WHY-TEXT", "is_fact"):
         assert secret not in html
-    got = client.post(reverse("learn_block", args=[1, unit.slug, 0])).json()
+    got = learner_client.post(reverse("learn_block", args=[1, unit.slug, 0])).json()
     assert got == {"answer": "ANSWER-ONE-TEXT"}
-    verdict = client.post(reverse("learn_block", args=[1, unit.slug, 1]), {"pick": "myth"}).json()
+    verdict = learner_client.post(
+        reverse("learn_block", args=[1, unit.slug, 1]), {"pick": "myth"}
+    ).json()
     assert verdict["right"] is False and verdict["is_fact"] is True and verdict["why"] == "WHY-TEXT"
     assert (
-        client.post(reverse("learn_block", args=[1, unit.slug, 1]), {"pick": "x"}).status_code
+        learner_client.post(
+            reverse("learn_block", args=[1, unit.slug, 1]), {"pick": "x"}
+        ).status_code
         == 400
     )
-    assert client.post(reverse("learn_block", args=[1, unit.slug, 0 + 9])).status_code == 404
+    assert (
+        learner_client.post(reverse("learn_block", args=[1, unit.slug, 0 + 9])).status_code == 404
+    )
 
 
-def test_a_jumbled_table_is_shown_with_a_being_fixed_notice(client, make_unit):
+def test_a_jumbled_table_is_shown_with_a_being_fixed_notice(learner_client, make_unit):
     make_unit(
         blocks=[{"type": "table", "head": ["A", "B"], "rows": [["1", "2"]], "being_fixed": True}]
     )
-    assert "Table being fixed" in client.get(reverse("learn_unit", args=[1, "t1"])).content.decode()
+    assert (
+        "Table being fixed"
+        in learner_client.get(reverse("learn_unit", args=[1, "t1"])).content.decode()
+    )
 
 
 # --- completion rules (8.3) --------------------------------------------------------------------------
@@ -497,15 +506,15 @@ def test_pdf_and_mp4_are_sniffed_not_trusted_by_name(module):
     assert mp4.content_type == "video/mp4"
 
 
-def test_only_media_used_by_a_published_unit_is_served(client, module, make_unit):
+def test_only_media_used_by_a_published_unit_is_served(learner_client, module, make_unit):
     asset = media.store(SimpleUploadedFile("h.pdf", b"%PDF-1.4 invented"), module, MediaKind.PDF)
-    assert client.get(reverse("learn_media", args=[asset.pk])).status_code == 404
+    assert learner_client.get(reverse("learn_media", args=[asset.pk])).status_code == 404
     make_unit(
         "handout",
         UnitType.HANDOUT,
         blocks=[{"type": "attachment", "asset": asset.pk, "label": "Handout"}],
     )
-    r = client.get(reverse("learn_media", args=[asset.pk]))
+    r = learner_client.get(reverse("learn_media", args=[asset.pk]))
     assert (
         r.status_code == 200
         and r["Content-Type"] == "application/pdf"
@@ -513,7 +522,7 @@ def test_only_media_used_by_a_published_unit_is_served(client, module, make_unit
     )
 
 
-def test_video_unit_uses_the_nocookie_embed_or_the_poster_with_a_notice(client, make_unit):
+def test_video_unit_uses_the_nocookie_embed_or_the_poster_with_a_notice(learner_client, make_unit):
     make_unit(
         "film",
         UnitType.VIDEO,
@@ -525,10 +534,13 @@ def test_video_unit_uses_the_nocookie_embed_or_the_poster_with_a_notice(client, 
             }
         ],
     )
-    html = client.get(reverse("learn_unit", args=[1, "film"])).content.decode()
+    html = learner_client.get(reverse("learn_unit", args=[1, "film"])).content.decode()
     assert "youtube-nocookie.com/embed/dQw4w9WgXcQ" in html and "Hello" in html and "नमस्ते" in html
     make_unit("film2", UnitType.VIDEO, blocks=[{"type": "video"}])
-    assert "being uploaded" in client.get(reverse("learn_unit", args=[1, "film2"])).content.decode()
+    assert (
+        "being uploaded"
+        in learner_client.get(reverse("learn_unit", args=[1, "film2"])).content.decode()
+    )
 
 
 # --- the legacy importer ---------------------------------------------------------------------------------
@@ -574,7 +586,7 @@ def test_the_real_legacy_lessons_import_55_topics_each_with_an_interaction():
 @pytest.mark.skipif(
     not (PRIVATE / "booklet_text.json").exists(), reason="private legacy files not present"
 )
-def test_the_importer_creates_published_units_and_will_not_run_twice(client):
+def test_the_importer_creates_published_units_and_will_not_run_twice(learner_client):
     result = legacy.run(PRIVATE)
     assert result["created"] == 9 * 3 + 55 and result["already_imported"] is False
     assert Unit.objects.filter(type="reading").count() == 55
@@ -584,14 +596,16 @@ def test_the_importer_creates_published_units_and_will_not_run_twice(client):
         and Unit.objects.count() == result["created"]
     )
     for number in range(1, 10):
-        assert client.get(reverse("learn_module", args=[number])).status_code == 200
+        assert learner_client.get(reverse("learn_module", args=[number])).status_code == 200
     for unit in Unit.objects.all():
         assert (
-            client.get(reverse("learn_unit", args=[unit.module.number, unit.slug])).status_code
+            learner_client.get(
+                reverse("learn_unit", args=[unit.module.number, unit.slug])
+            ).status_code
             == 200
         )
     assert Module.objects.get(number=1).title and Module.objects.get(number=9).hours
-    film = client.get(reverse("learn_unit", args=[1, "film"])).content.decode()
+    film = learner_client.get(reverse("learn_unit", args=[1, "film"])).content.decode()
     assert "being uploaded" in film  # no YouTube ID yet: poster and transcript
 
 
@@ -660,9 +674,10 @@ def test_a_malformed_module_number_is_a_404_not_a_server_error(learner_client):
         assert r.status_code == 404
 
 
-def test_a_signed_out_visitor_can_answer_a_practice_check_and_leaves_no_record(client, make_unit):
+def test_signed_in_staff_can_answer_a_practice_check_and_leave_no_record(mentor_client, make_unit):
     import re
 
+    client = mentor_client  # signed in, but not a learner (D34)
     practice_mcq("M1-P09")
     make_unit("check", UnitType.CHECK, blocks=[{"type": "check", "question": "M1-P09"}])
     html = client.get(reverse("learn_unit", args=[1, "check"])).content.decode()
@@ -682,7 +697,8 @@ def test_a_signed_out_visitor_can_answer_a_practice_check_and_leaves_no_record(c
     assert LearnCheck.objects.count() == 0 and UnitProgress.objects.count() == 0
 
 
-def test_a_signed_out_visitor_still_cannot_check_quiz_or_final_questions(client, make_unit):
+def test_quiz_and_final_questions_cannot_be_checked(learner_client, make_unit):
+    client = learner_client
     for pool in ("module_quiz", "final"):
         practice_mcq(f"M1-{pool[:1].upper()}9", pool=pool)
         make_unit(
