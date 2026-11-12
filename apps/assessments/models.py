@@ -180,3 +180,72 @@ class AttemptItem(models.Model):
         return formats.complete(
             self.format, self.question_version.body, self.option_map, self.response
         )
+
+
+# --- final exam sets (Stage 5): one set per batch supplies both the pre-test and the final ------
+
+
+class ExamSetStatus(models.TextChoices):
+    DRAFT = "draft", "Draft (not available to learners)"
+    RELEASED = "released", "Released"
+
+
+class ExamSet(models.Model):
+    """A fixed final-exam paper, e.g. Set B. Its pre-test questions are a subset of its final."""
+
+    code = models.CharField(max_length=8, unique=True)  # "B", "D"
+    name = models.CharField(max_length=80)
+    status = models.CharField(
+        max_length=10, choices=ExamSetStatus.choices, default=ExamSetStatus.DRAFT
+    )
+    released_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["code"]
+
+    def __str__(self):
+        return f"Set {self.code}" + ("" if self.is_released else " (draft)")
+
+    @property
+    def is_released(self):
+        return self.status == ExamSetStatus.RELEASED
+
+
+class ExamSetItem(models.Model):
+    exam_set = models.ForeignKey(ExamSet, on_delete=models.CASCADE, related_name="items")
+    question = models.ForeignKey(
+        "questions.Question", on_delete=models.PROTECT, related_name="exam_set_items"
+    )
+    in_pretest = models.BooleanField(default=False)  # one of the set's shared baseline questions
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["exam_set", "question"], name="uniq_set_question")
+        ]
+
+    def __str__(self):
+        return f"{self.exam_set} · {self.question_id}"
+
+
+class LearnerExamSet(models.Model):
+    """The set and question versions a learner sits, frozen when their first programme exam
+    starts. A later batch move or reassignment never changes it, so the pre-test and the final
+    always come from the same paper and the shared questions can be compared."""
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="exam_set_choice"
+    )
+    exam_set = models.ForeignKey(ExamSet, on_delete=models.PROTECT, related_name="learners")
+    # {question_id: question_version_id} for every item of the set, frozen with it
+    versions = models.JSONField()
+    pretest_question_ids = models.JSONField()
+    frozen_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"user {self.user_id} sits {self.exam_set}"

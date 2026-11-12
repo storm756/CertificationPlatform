@@ -1,9 +1,10 @@
-"""The final exam and the pre-test (architecture §11).
+"""The final exam and the pre-test (architecture §11), served from the learner's exam set.
 
-Both are drawn from the `final` pool. The pre-test is the blueprint's anchor questions only, once
-(resumable). The final takes `per_module` questions from each module's final pool, always
-including the anchors, and unlocks by the §10.2 rules. Questions are drawn the same way for every
-learner so scores compare, and the anchors are never given feedback anywhere.
+Each batch is assigned one released exam set (apps/assessments/examsets.py). The pre-test is that
+set's shared baseline questions (two per module), once and resumable; the final is all of the
+set's questions, including those same shared ones, and unlocks by the §10.2 rules. The set and the
+question versions are frozen when the learner's first programme exam starts, and questions are
+shuffled within the set, never mixed with another set. The shared questions get no feedback.
 """
 
 import random
@@ -16,7 +17,6 @@ from django.utils import timezone
 from apps.accounts.models import User
 from apps.audit.services import audit
 from apps.questions import formats
-from apps.questions.models import Pool, Question, QuestionStatus
 from apps.results.policy import compute_results
 
 from .models import (
@@ -26,7 +26,7 @@ from .models import (
     ProgrammeAssessment,
     ProgrammeAssessmentKind,
 )
-from .services import PartNotAvailable, _latest_versions
+from .services import PartNotAvailable
 
 # Today's blueprint (architecture §11): 6/6/5/6/6/6/5/5/5 = 50 questions, anchors included.
 DEFAULT_PER_MODULE = {1: 6, 2: 6, 3: 5, 4: 6, 5: 6, 6: 6, 7: 5, 8: 5, 9: 5}
@@ -61,20 +61,18 @@ def get_assessment(kind: str) -> ProgrammeAssessment:
     return assessment
 
 
-def anchor_ids(blueprint: dict | None = None) -> list[int]:
-    """The anchor question ids: the blueprint's list, or every live final-pool anchor."""
-    listed = (blueprint or {}).get("anchors")
-    if listed:
-        return list(listed)
-    return list(
-        Question.objects.filter(is_anchor=True, pool=Pool.FINAL, status=QuestionStatus.LIVE)
-        .order_by("stable_id")
-        .values_list("pk", flat=True)
-    )
+def final_blueprint() -> dict[int, int]:
+    """Questions per module in the final (the handoff blueprint, editable on the final's
+    ProgrammeAssessment row by an admin)."""
+    per_module = (get_assessment(ProgrammeAssessmentKind.FINAL).blueprint or {}).get("per_module")
+    return {int(k): int(v) for k, v in (per_module or DEFAULT_PER_MODULE).items()}
 
 
-def pretest_available() -> bool:
-    return bool(anchor_ids(get_assessment(ProgrammeAssessmentKind.PRETEST).blueprint))
+def pretest_available(user) -> bool:
+    """The learner's batch (or their frozen choice) has a released exam set."""
+    from . import examsets
+
+    return examsets.assigned_set(user) is not None
 
 
 def final_locked_reasons(user) -> list[str]:
@@ -87,10 +85,14 @@ def final_locked_reasons(user) -> list[str]:
             + " ".join(result.setup_gaps)
         )
     if not result.pretest_done:
+        from . import examsets
+
         reasons.append(
             "Do the pre-test first."
-            if pretest_available()
-            else "The pre-test is not available yet."
+            if pretest_available(user)
+            else " ".join(
+                ["The pre-test is not available yet.", examsets.unavailable_reason(user) or ""]
+            ).strip()
         )
     for module in result.modules:
         for part in module.parts:
@@ -118,35 +120,22 @@ def _cooldown_reason(user, assessment, now):
     return None
 
 
-def draw_programme(assessment, rng=None):
+def draw_programme(choice, kind, rng=None):
+    """The frozen question versions for this exam, shuffled within the learner's set."""
+    from apps.questions.models import QuestionVersion
+
     rng = rng or random.SystemRandom()
-    blueprint = assessment.blueprint or {}
-    anchors = set(anchor_ids(blueprint))
-    live = {v.question_id: v for v in _latest_versions(_final_pool())}
-    if assessment.kind == ProgrammeAssessmentKind.PRETEST:
-        chosen = [live[a] for a in sorted(anchors) if a in live]
-        rng.shuffle(chosen)
-        return chosen
-    chosen = []
-    for module_key, wanted in sorted(
-        (blueprint.get("per_module") or {}).items(), key=lambda kv: int(kv[0])
-    ):
-        pool = [v for v in live.values() if v.question.module.number == int(module_key)]
-        fixed = [v for v in pool if v.question_id in anchors]
-        rest = [v for v in pool if v.question_id not in anchors]
-        rng.shuffle(rest)
-        need = wanted - len(fixed)
-        if need < 0 or len(rest) < need:
-            raise PartNotAvailable("The final exam is not ready yet.")
-        chosen += fixed + rest[:need]
+    wanted = (
+        set(choice.pretest_question_ids)
+        if kind == ProgrammeAssessmentKind.PRETEST
+        else {int(q) for q in choice.versions}
+    )
+    ids = [v for q, v in choice.versions.items() if int(q) in wanted]
+    chosen = list(QuestionVersion.objects.filter(pk__in=ids).select_related("question__module"))
+    if len(chosen) != len(wanted):
+        raise PartNotAvailable("This exam is not ready yet.")
     rng.shuffle(chosen)
     return chosen
-
-
-def _final_pool():
-    return Question.objects.filter(pool=Pool.FINAL, status=QuestionStatus.LIVE).select_related(
-        "module"
-    )
 
 
 @transaction.atomic
@@ -174,7 +163,13 @@ def start_programme(user, kind: str, rng=None, now=None) -> tuple[Attempt, bool]
             raise Locked(reasons)
     else:
         raise PartNotAvailable("That assessment is not available.")
-    versions = draw_programme(assessment, rng)
+    from . import examsets
+
+    try:
+        choice = examsets.freeze(user)
+    except LookupError as exc:
+        raise PartNotAvailable(str(exc)) from None
+    versions = draw_programme(choice, kind, rng)
     if not versions:
         raise PartNotAvailable("This assessment has no questions yet.")
     number = (
@@ -192,5 +187,5 @@ def start_programme(user, kind: str, rng=None, now=None) -> tuple[Attempt, bool]
         )
         for position, version in enumerate(versions, start=1)
     )  # fmt: skip
-    audit("attempt.started", actor=user, target=attempt, assessment=assessment.pk, kind=kind, number=number, questions=len(versions))  # fmt: skip
+    audit("attempt.started", actor=user, target=attempt, assessment=assessment.pk, kind=kind, number=number, questions=len(versions), exam_set=choice.exam_set.code)  # fmt: skip
     return attempt, True

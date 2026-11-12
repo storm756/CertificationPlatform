@@ -8,13 +8,15 @@ import pytest
 from django.urls import reverse
 from django.utils import timezone
 
-from apps.accounts.models import UserStatus
-from apps.assessments import programme, rules, services
+from apps.accounts.models import Role, UserStatus
+from apps.assessments import examsets, programme, rules, services
 from apps.assessments.models import (
     AssessmentPart,
     Attempt,
     AttemptItem,
     AttemptStatus,
+    ExamSet,
+    ExamSetItem,
     ProgrammeAssessmentKind,
 )
 from apps.content.models import Module
@@ -296,38 +298,67 @@ def test_compute_results_handles_many_users_and_isolates_them(learner, make_user
     ].shown == D("0.0")
 
 
-# --- drawing the pre-test and the final, journey 11 ---------------------------------------------------------
+# --- drawing the pre-test and the final from the batch's exam set, journey 11 ---------------------------
 
 
-def final_questions(make_question, module, count, anchors=0, start=1):
-    out = []
-    for i in range(count):
-        q = make_question(start + i, module=module, pool="final", pc=f"PC{1 + i % 3}")
-        if i < anchors:
-            Question.objects.filter(pk=q.pk).update(is_anchor=True)
-        out.append(q)
-    return out
+def final_questions(make_question, module, count, start=1):
+    return [
+        make_question(start + i, module=module, pool="final", pc=f"PC{1 + i % 3}")
+        for i in range(count)
+    ]
+
+
+def make_exam_set(code, by_module, admin, release=True):
+    """An invented set: the first two questions of each module are the shared pre-test ones."""
+    exam_set = ExamSet.objects.create(code=code, name=f"Invented set {code}")
+    for questions in by_module:
+        for i, q in enumerate(questions):
+            ExamSetItem.objects.create(exam_set=exam_set, question=q, in_pretest=i < 2)
+    if release:
+        assert examsets.release(exam_set, admin) == []
+    return exam_set
 
 
 @pytest.fixture
-def exam(make_question):
-    """Two modules, 6 final-pool questions each (2 anchors each), blueprint 3 per module."""
+def admin_user(make_user):
+    return make_user(role=Role.ADMIN)
+
+
+@pytest.fixture
+def exam(make_question, learner, admin_user):
+    """Two modules, blueprint 3 per module, and the learner's batch given released Set B
+    (3 final-pool questions per module, 2 of them shared with the pre-test)."""
     parts = make_parts([1, 2])
-    final_questions(make_question, parts[1][0].module, 6, anchors=2, start=1)
-    final_questions(make_question, parts[2][0].module, 6, anchors=2, start=101)
     final = programme.get_assessment(ProgrammeAssessmentKind.FINAL)
     final.blueprint = {"per_module": {"1": 3, "2": 3}, "anchors": []}
     final.save()
+    set_b = make_exam_set(
+        "B",
+        [
+            final_questions(make_question, parts[1][0].module, 3, start=1),
+            final_questions(make_question, parts[2][0].module, 3, start=101),
+        ],
+        admin_user,
+    )
+    examsets.assign(learner.enrolment.batch, set_b, admin_user)
     return parts
 
 
-def test_the_pretest_is_the_anchors_only_once_and_resumable(learner, exam):
+def set_ids(code, pretest=None):
+    items = ExamSetItem.objects.filter(exam_set__code=code)
+    if pretest is not None:
+        items = items.filter(in_pretest=pretest)
+    return set(items.values_list("question_id", flat=True))
+
+
+def attempt_ids(a):
+    return {i.question_version.question_id for i in a.items.select_related("question_version")}
+
+
+def test_the_pretest_is_the_sets_shared_questions_only_once_and_resumable(learner, exam):
     attempt1, created = programme.start_programme(learner, "pretest")
     assert created and attempt1.items.count() == 4
-    assert all(
-        i.question_version.question.is_anchor
-        for i in attempt1.items.select_related("question_version__question")
-    )
+    assert attempt_ids(attempt1) == set_ids("B", pretest=True)
     again, created = programme.start_programme(learner, "pretest")
     assert again.pk == attempt1.pk and not created  # resumable
     services.submit(attempt1.pk, learner.pk)
@@ -335,31 +366,23 @@ def test_the_pretest_is_the_anchors_only_once_and_resumable(learner, exam):
         programme.start_programme(learner, "pretest")
 
 
-def test_the_final_draws_per_module_counts_and_always_includes_the_anchors(learner, exam):
+def test_the_final_is_the_whole_set_shuffled_and_includes_every_shared_question(learner, exam):
     answer_all_parts(learner, exam)
     attempt(learner, kind=ProgrammeAssessmentKind.PRETEST)
-    for _ in range(5):
+    orders = set()
+    for _ in range(6):
         a, _ = programme.start_programme(learner, "final")
         items = list(a.items.select_related("question_version__question__module"))
-        assert len(items) == 6
         per = {}
         for i in items:
-            per[i.question_version.question.module.number] = (
-                per.get(i.question_version.question.module.number, 0) + 1
-            )
+            n = i.question_version.question.module.number
+            per[n] = per.get(n, 0) + 1
         assert per == {1: 3, 2: 3}
-        assert sum(1 for i in items if i.question_version.question.is_anchor) == 4  # every anchor
+        assert attempt_ids(a) == set_ids("B")  # never a question from another set
+        assert set_ids("B", pretest=True) <= attempt_ids(a)
+        orders.add(tuple(i.question_version.question_id for i in items))
         services.submit(a.pk, learner.pk)
-
-
-def test_the_final_refuses_when_the_pool_is_too_small(learner, exam):
-    Question.objects.filter(pool="final", module__number=2, is_anchor=False).update(
-        status="retired"
-    )
-    answer_all_parts(learner, exam)
-    attempt(learner, kind=ProgrammeAssessmentKind.PRETEST)
-    with pytest.raises(services.PartNotAvailable):
-        programme.start_programme(learner, "final")
+    assert len(orders) > 1  # shuffled within the set
 
 
 def test_the_final_cooldown_setting_is_honoured(learner, exam):
@@ -414,9 +437,7 @@ def test_bands_follow_the_items_of_each_module(learner, exam):
     ]
 
 
-def test_the_pretest_result_shows_the_score_only_never_feedback_on_anchors(
-    learner_client, learner, exam
-):
+def test_the_pretest_result_shows_the_score_only_never_feedback(learner_client, learner, exam):
     a, _ = programme.start_programme(learner, "pretest")
     for item in a.items.all():
         services.save_answer(a.pk, learner, item.position, choice=right_token(item))
@@ -424,13 +445,18 @@ def test_the_pretest_result_shows_the_score_only_never_feedback_on_anchors(
     html = learner_client.get(reverse("attempt_result", args=[a.pk])).content.decode()
     assert "100.0%" in html and "Pre-test done" in html
     assert "HINT-" not in html and "RIGHT-" not in html and "Invented question number" not in html
+    assert "Strong" not in html and "Needs work" not in html  # no module bands either
 
 
-def test_an_anchor_attempt_page_has_no_key_in_it(learner_client, learner, exam):
-    a, _ = programme.start_programme(learner, "pretest")
+@pytest.mark.parametrize("kind", ["pretest", "final"])
+def test_a_programme_exam_page_has_no_key_in_it(learner_client, learner, exam, kind):
+    if kind == "final":
+        answer_all_parts(learner, exam)
+        attempt(learner, kind=ProgrammeAssessmentKind.PRETEST)
+    a, _ = programme.start_programme(learner, kind)
     html = learner_client.get(reverse("attempt_page", args=[a.pk])).content.decode()
     assert "HINT-" not in html and '"correct"' not in html
-    assert reverse("attempt_review", args=[a.pk]) in html or "Review" in html
+    assert 'value="o2"' not in html and 'data-choice="o2"' not in html  # never the raw ids
 
 
 # --- the pool rule (§11) ------------------------------------------------------------------------------------------
@@ -454,39 +480,38 @@ def test_a_question_shown_in_a_non_final_attempt_cannot_move_into_the_final_pool
     assert Question.objects.get(pk=fresh.pk).pool == "final"
 
 
-def test_a_question_shown_only_in_a_final_attempt_may_stay_in_the_final_pool(learner, exam):
+def test_a_question_shown_only_in_programme_exams_stays_in_the_final_pool(learner, exam):
     answer_all_parts(learner, exam)
     attempt(learner, kind=ProgrammeAssessmentKind.PRETEST)
     a, _ = programme.start_programme(learner, "final")
     q = Question.objects.get(pk=a.items.first().question_version.question_id)
     q.save()  # unchanged pool: fine
-    assert (
-        not q.shown_in_non_final_attempt() or q.is_anchor
-    )  # anchors were also shown in the pre-test
+    assert Question.objects.get(pk=q.pk).pool == "final"
 
 
 # --- knowledge gain ------------------------------------------------------------------------------------------------
 
 
-def test_knowledge_gain_is_first_final_anchor_score_minus_pretest_anchor_score(learner, exam):
+def test_knowledge_gain_compares_the_same_shared_questions(learner, exam):
     pre, _ = programme.start_programme(learner, "pretest")
     for n, item in enumerate(pre.items.all()):
         services.save_answer(
             pre.pk, learner, item.position, choice=right_token(item) if n < 1 else wrong_token(item)
         )
-    services.submit(pre.pk, learner.pk)  # 1 of 4 anchors right = 25.0
+    services.submit(pre.pk, learner.pk)  # 1 of 4 shared questions right = 25.0
     assert insights.knowledge_gain(learner) is None  # needs a final too
     answer_all_parts(learner, exam)
+    shared = set_ids("B", pretest=True)
     first, _ = programme.start_programme(learner, "final")
-    for item in first.items.select_related("question_version__question"):
-        anchor = item.question_version.question.is_anchor
+    for item in first.items.select_related("question_version"):
+        right = item.question_version.question_id in shared
         services.save_answer(
             first.pk,
             learner,
             item.position,
-            choice=right_token(item) if anchor else wrong_token(item),
+            choice=right_token(item) if right else wrong_token(item),
         )
-    services.submit(first.pk, learner.pk)  # all anchors right = 100.0
+    services.submit(first.pk, learner.pk)  # all shared right (the others wrong) = 100.0
     assert insights.knowledge_gain(learner) == D("75.0")
     second, _ = programme.start_programme(learner, "final")  # a later attempt never changes it
     for item in second.items.all():

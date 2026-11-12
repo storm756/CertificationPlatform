@@ -15,6 +15,9 @@ ignore = ["S101"]
 "apps/results/*.py" = ["E501"]
 "apps/assessments/programme.py" = ["E501"]
 "apps/assessments/views.py" = ["E501"]
+"apps/assessments/admin.py" = ["E501"]
+"apps/assessments/examsets.py" = ["E501"]
+"apps/assessments/management/commands/import_final_sets.py" = ["E501"]  # one report line per row
 "tests/**" = ["S105", "S106", "E501"]  # long lines in test data and docstrings are fine
 
 [tool.pytest.ini_options]

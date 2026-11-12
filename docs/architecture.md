@@ -325,7 +325,8 @@ POST /assess/<part>/start
    part.selection = all / all_shuffled → its questions
    part.selection = draw → random draw_n from part.pool with ≥ min_per_tag per tag,
                            excluding questions in this learner's previous attempt where possible
-   final → blueprint per_module counts from the final pool + all anchors, random order
+   pretest / final → the learner's frozen exam set (D31): the pretest is its shared questions,
+                     the final all of them; shuffled within the set
  for each question: freeze version + points; shuffle options/items; issue one-off tokens
  create Attempt + AttemptItems; audit
 ```
@@ -438,13 +439,14 @@ Every displayed number and every comparison uses round1(x) = Decimal(x).quantize
 | | Final | Pre-test |
 | --- | --- | --- |
 | When | Unlocked per §10.2 | Prompted once after first login. It can be postponed, but the final stays locked until it is done. |
-| Questions | `per_module` counts from the **final** pool. Today: 6/6/5/6/6/6/5/5/5 = 50, which already includes the anchors (e.g. 2 per module = 18). | The anchors only |
+| Questions | All 50 questions of the batch's released **exam set** (D31), matching the `per_module` blueprint 6/6/5/6/6/6/5/5/5, including its 18 shared questions. | The set's shared questions only (2 per module = 18) |
 | Pool rules | A question shown in any non-final attempt **can't be moved** into the final pool (enforced on save). The blueprint must be updated when the counted modules change. | — |
 | Timer | Shows "about 60 min", not enforced | Shows a count-up |
-| Feedback | Overall % + bands (§9.5) | Score only. **Anchors are never given feedback anywhere.** |
+| Exam set | An admin assigns one released set per batch (audited). The learner's set and question versions freeze when their first programme exam starts. No set, or an unreleased one: "not available yet". | Same set |
+| Feedback | Overall % + bands (§9.5) | Score only. **Shared questions are never given feedback anywhere.** |
 | Attempts | Unlimited, cooldown setting (0) | One attempt (resumable) |
 
-**Knowledge gain (CSR ≥25%)** = anchor score in the learner's **first** final attempt − anchor score in the pre-test. It is reported per batch.
+**Knowledge gain (CSR ≥25%)** = score on the shared questions in the learner's **first** final attempt − score on the same questions in the pre-test (both from the learner's frozen set). It is reported per batch.
 
 ---
 
@@ -719,8 +721,10 @@ Where the build made a choice the design left open. Each is a one-line change if
 
 ## 26. Stage 5 implementation notes (results, final exam, dashboard)
 
-**`results/policy.py`.** Constants, `round1`, `grade`, `band`, and `compute_results(user_ids)`, which returns a `Result` per user from their attempts (module % per counted part, best counted attempt, `answered` from any submitted attempt with every question answered, the final's best, the pre-test flag, verified email, status). `final_unlocked`, `eligible` and the plain-language `blockers` are derived from it, so the dashboard, mentor pages and the impact preview cannot disagree. `results/insights.py` has `final_bands`, `anchor_percent`, `knowledge_gain` (anchor score of the first final attempt minus the pre-test's) and `weakest_pcs`.
+**`results/policy.py`.** Constants, `round1`, `grade`, `band`, and `compute_results(user_ids)`, which returns a `Result` per user from their attempts (module % per counted part, best counted attempt, `answered` from any submitted attempt with every question answered, the final's best, the pre-test flag, verified email, status). `final_unlocked`, `eligible` and the plain-language `blockers` are derived from it, so the dashboard, mentor pages and the impact preview cannot disagree. `results/insights.py` has `final_bands`, `shared_percent`, `knowledge_gain` (the shared questions' score in the first final attempt minus the pre-test's) and `weakest_pcs`.
 
-**`assessments/programme.py`.** `start_programme(user, kind)` locks the learner, resumes an open attempt, and otherwise: the pre-test is the anchors, once; the final checks `final_locked_reasons` (pre-test done, every counted part answered) and the cooldown, then draws `per_module` questions from each module's final pool, always including the anchors, refusing if the pool is too small. Items freeze their version, points and option tokens exactly like Stage 2 attempts; `submit()`, autosave and auto-submit are shared.
+**`assessments/programme.py`.** `start_programme(user, kind)` locks the learner, resumes an open attempt, and otherwise: the pre-test is once; the final checks `final_locked_reasons` (pre-test done, every counted part answered) and the cooldown. Both then use `examsets.freeze(user)` (the learner's `LearnerExamSet`: set, question versions and shared ids, created at the first programme exam) and shuffle within it.
+
+**`assessments/examsets.py` (D31).** `ExamSet` (code, draft/released), `ExamSetItem` (question, `in_pretest`), `Batch.exam_set`. `release_errors` lists every blocker (blueprint counts, 2 pre-test questions per module, final pool, `mc`/`mcq` only, 1 mark, publish-clean, never shown in a module or practice attempt, no text copy of a module or practice question); `release` and `assign` are admin-only and audited (`exam_set.released`, `batch.exam_set_changed`); `freeze` audits `exam_set.frozen`. The Batch admin lets only admins pick a set, and only released ones. Sets come from the private workbook via `manage.py import_final_sets --source <xlsx>` (a preview that prints IDs and counts only; `--apply` stores accepted rows as draft `mc` questions in a draft set). Items freeze their version, points and option tokens exactly like Stage 2 attempts; `submit()`, autosave and auto-submit are shared.
 
 **Pages.** `/exam/<final|pretest>/` and `/exam/<kind>/start/`; the attempt pages work for programme attempts (`Attempt.title`). `/start/` is the learner's My progress dashboard (`results/views.py`, `templates/progress/dashboard.html`): journey strip, what's left (to do first, finished collapsed), module cards, final state with bands, blockers, weakest PCs, hours, certificate placeholder.

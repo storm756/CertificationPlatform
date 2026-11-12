@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-12: Stage 5, final exam sets per batch (D31)
+
+- Final exam sets (`ExamSet`, `ExamSetItem`) with release checks; an admin assigns one released set per batch (audited). The set supplies both the pre-test (its 18 shared questions) and the final (all 50). Why: the owner asked for fixed Sets B and D instead of a random draw.
+- A learner's set and question versions freeze at their first programme exam (`LearnerExamSet`), so reassignment or a batch move cannot pair a Set B pre-test with a Set D final. Knowledge gain compares the same shared questions.
+- `manage.py import_final_sets`: a private preview of the content workbook (IDs and counts only) and a draft-only `--apply`. Reused module rows are rejected. Neither set can be released yet; the blockers are in STATUS.md.
+
 ## 2026-11-12: Stage 0–4 course content follow-up
 
 - Restored the flagged reading tables from the original booklet and added nine learner handouts drawn from its reading pages. Trainer keys and the master booklet stay private.

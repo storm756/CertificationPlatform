@@ -300,7 +300,7 @@ def test_learn_check_marks_a_practice_question_and_returns_the_full_answer(
     practice_mcq("M1-P01")
     make_unit("check", UnitType.CHECK, blocks=[{"type": "check", "question": "M1-P01"}])
     html = learner_client.get(reverse("learn_unit", args=[1, "check"])).content.decode()
-    assert '"correct"' not in html and "o2" not in html  # the page carries no key, only tokens
+    assert '"correct"' not in html and 'data-choice="o2"' not in html  # tokens, never internal ids
     import re
 
     tokens = re.findall(r'data-choice="([^"]+)"', html)

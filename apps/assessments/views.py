@@ -22,7 +22,7 @@ from apps.questions.projections import client_projection
 from apps.results import insights
 from apps.results.policy import PASS_MARK
 
-from . import programme, services
+from . import examsets, programme, services
 from .models import AssessmentPart, Attempt, AttemptStatus
 
 
@@ -361,7 +361,8 @@ def programme_intro(request, kind):
         {
             "kind": kind, "assessment": assessment, "attempts": attempts, "reasons": reasons,
             "open_attempt": next((a for a in attempts if a.is_open), None), "done": done,
-            "available": kind == "final" or programme.pretest_available(),
+            "available": programme.pretest_available(request.user),
+            "unavailable_reason": examsets.unavailable_reason(request.user),
             "pass_mark": PASS_MARK,
         },
     )  # fmt: skip

@@ -87,7 +87,7 @@ def start(request):
     profile = user.profile
     if (
         profile.pretest_prompted_at is None
-        and programme.pretest_available()
+        and programme.pretest_available(user)
         and not compute_results([user.pk])[user.pk].pretest_done
     ):
         # The pre-test is offered once, right after the first sign-in. "Later" returns here.

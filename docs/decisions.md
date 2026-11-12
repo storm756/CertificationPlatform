@@ -32,6 +32,7 @@ These are product decisions. **Build to them.** If one seems impossible or harmf
 | D28 | **The certificate-number prefix comes from settings** (`CERTIFICATE_PREFIX`, today `CCIFR-<year>-<centre>-<serial>` as in architecture §12). The lead confirms the final prefix, qualification title, wording and signatories before Stage 7. |
 | D29 | **Only a person merges, deploys, or pushes to `main`.** Claude prepares branches and PRs; the builder reviews and merges them. `.claude/settings.json` blocks `deploy/deploy.sh`, `ssh` and `gh pr merge` for Claude, and branch protection on `main` requires a PR and a green CI (0 approvals, so the builder can merge her own PRs). |
 | D30 | **The CCFR rename covers user-facing text only** (pages, emails, PDFs, page titles). Internal names such as the `csfr_owner` / `csfr_app` DB roles, container names and cookie or storage keys stay as they are. |
+| D31 | **Final exams come from fixed exam sets, one per batch** (requested by the repo owner, 12 Nov 2026). Sets B and D are written fresh by the content team (D19). An **admin** assigns one released set to a batch (audited); mentors and learners cannot. The set supplies both exams: the **pre-test is its shared questions (2 per module, 18)** and the **final is all 50 of its questions**, including those 18, shuffled within the set and never mixed with another set. A learner's set and question versions are **frozen when their first programme exam starts**, so a batch move or reassignment cannot pair a Set B pre-test with a Set D final. A set is released only when its release checks pass (blueprint counts, 2 pre-test questions per module, single-choice, 1 mark, no reused or copied module/practice question). Until then learners see a clear "not available yet" state. This replaces the per-learner random draw and `is_anchor` tagging of §11 / D14's "random draw"; D14's shuffling, bands and no-answers rules stay. |
 
 D5 and D12 aren't used. Numbers are never reused.
 
@@ -47,4 +48,5 @@ Until these are folded into architecture.md, **the decision wins.** The Stage 1.
 | §4 code layout | Apps live in `apps/` (`apps/accounts`, `apps/batches` …), and the docs live in `docs/`, not `docs/design/`. |
 | §12 certificate number | The prefix comes from settings (D28). |
 | §14 translations | Reviewed translations may show in assessments (D24). |
+| §9.1, §11, §26 final and pre-test | Questions come from the batch's released exam set, frozen per learner (D31), not a random draw with anchors. |
 | §17 deploys | "Deploy script over SSH" means **a person** runs `deploy/deploy.sh` (D29). |

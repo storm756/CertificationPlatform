@@ -87,7 +87,7 @@ def dashboard(request):
             "final_pass": FINAL_PASS,
             "weakest": insights.weakest_pcs(user),
             "hours": content.hours_for(user),
-            "pretest_available": programme.pretest_available(),
+            "pretest_available": programme.pretest_available(user),
             "modules": [
                 {"m": m, "href": reverse("learn_module", args=[m.number])} for m in result.modules
             ],

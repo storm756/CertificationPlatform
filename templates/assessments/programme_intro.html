@@ -12,7 +12,8 @@
     {% include "components/alert.html" with tone="mustard" icon="lock" title=_("The final is locked") text=_("Finish these first:") %}
     <ul class="ticks">{% for r in reasons %}<li>{% icon "circle" %} {{ r }}</li>{% endfor %}</ul>
   {% elif not available %}
-    {% include "components/alert.html" with tone="mustard" icon="clock" title=_("Not available yet") text=_("The pre-test questions are still being prepared. Please check back soon.") %}
+    {% translate "The exam questions are still being prepared. Please check back soon." as fallback %}
+    {% include "components/alert.html" with tone="mustard" icon="clock" title=_("Coming soon") text=unavailable_reason|default:fallback %}
   {% else %}
     <section class="card stack">
       <h2>{% translate "Before you start" %}</h2>

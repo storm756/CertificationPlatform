@@ -21,6 +21,14 @@ class Batch(models.Model):
     seat_limit = models.PositiveIntegerField(default=40)
     is_open_pool = models.BooleanField(default=False)
     auto_issue = models.BooleanField(default=False)
+    # The final exam set this batch sits (admin-only, audited). Only a released set can be assigned.
+    exam_set = models.ForeignKey(
+        "assessments.ExamSet",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="batches",
+    )
     status = models.CharField(
         max_length=10, choices=BatchStatus.choices, default=BatchStatus.ACTIVE
     )

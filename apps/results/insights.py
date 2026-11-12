@@ -22,24 +22,26 @@ def final_bands(attempt) -> list[dict]:
     return [{"module": n, "band": band(percent(earned[n], total[n]))} for n in sorted(total)]
 
 
-def anchor_percent(attempt) -> Decimal | None:
-    """The anchor-only score of an attempt, or None if it had no anchors."""
+def shared_percent(attempt, question_ids) -> Decimal | None:
+    """The score of an attempt on these questions only, or None if it had none of them."""
     earned = total = ZERO
-    for item in attempt.items.select_related("question_version__question"):
-        if item.question_version.question.is_anchor:
+    for item in attempt.items.select_related("question_version"):
+        if item.question_version.question_id in question_ids:
             earned += (item.score or ZERO) * item.points
             total += item.points
     return percent(earned, total) if total else None
 
 
 def knowledge_gain(user) -> Decimal | None:
-    """Anchor score in the learner's FIRST final attempt minus the pre-test's (CSR ≥ 25%).
+    """The shared pre-test questions: their score in the learner's FIRST final minus their score
+    in the pre-test (CSR ≥ 25%). Both come from the learner's frozen exam set, so they are the same
+    questions. None until both exist. Reported per batch by staff, never as learner feedback."""
+    from apps.assessments.models import Attempt, LearnerExamSet, ProgrammeAssessmentKind
 
-    None until both exist. Reported per batch by staff; never shown to the learner as feedback
-    on individual anchors.
-    """
-    from apps.assessments.models import Attempt, ProgrammeAssessmentKind
-
+    choice = LearnerExamSet.objects.filter(user=user).first()
+    if choice is None:
+        return None
+    shared = set(choice.pretest_question_ids)
     base = Attempt.objects.filter(user=user, status__in=SUBMITTED)
     pretest = base.filter(programme_assessment__kind=ProgrammeAssessmentKind.PRETEST).first()
     first_final = (
@@ -49,7 +51,7 @@ def knowledge_gain(user) -> Decimal | None:
     )
     if not pretest or not first_final:
         return None
-    before, after = anchor_percent(pretest), anchor_percent(first_final)
+    before, after = shared_percent(pretest, shared), shared_percent(first_final, shared)
     if before is None or after is None:
         return None
     return round1(after - before)
