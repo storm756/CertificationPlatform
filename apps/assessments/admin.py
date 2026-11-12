@@ -1,8 +1,9 @@
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from unfold.admin import ModelAdmin
 
-from . import examsets, rules
+from . import examsets, rules, services
 from .models import AssessmentPart, Attempt, AttemptItem, ExamSet, ExamSetItem, ProgrammeAssessment
 
 
@@ -16,11 +17,15 @@ class AssessmentPartAdmin(ModelAdmin):
         "selection",
         "draw_n",
         "pool",
+        "max_attempts",
         "is_published",
     )
     list_filter = ("module", "family", "is_published")
     readonly_fields = ("is_published",)  # changed only by the actions below, which validate first
     actions = ["check_parts", "publish_parts", "unpublish_parts"]
+
+    def save_model(self, request, obj, form, change):
+        _save_with_audited_limit(request, obj, change)
 
     @admin.action(description="Check the selected parts (validate_part)")
     def check_parts(self, request, queryset):
@@ -48,7 +53,18 @@ class AssessmentPartAdmin(ModelAdmin):
 
 @admin.register(ProgrammeAssessment)
 class ProgrammeAssessmentAdmin(ModelAdmin):
-    list_display = ("kind", "cooldown_hours")
+    list_display = ("kind", "cooldown_hours", "max_attempts")
+
+    def save_model(self, request, obj, form, change):
+        _save_with_audited_limit(request, obj, change)
+
+
+def _save_with_audited_limit(request, obj, change):
+    """Save, and audit a change of the attempt limit (D32) in the same transaction."""
+    with transaction.atomic():
+        old = services.stored_max_attempts(obj)
+        obj.save()
+        services.audit_limit_change(obj, old, actor=request.user, request=request)
 
 
 class ItemInline(admin.TabularInline):

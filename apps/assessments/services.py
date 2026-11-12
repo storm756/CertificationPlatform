@@ -40,6 +40,54 @@ class AttemptClosed(AttemptError):
     pass
 
 
+class AttemptLimitReached(PartNotAvailable):
+    """The learner has used every attempt the admin allowed (D32). Their best counted one counts."""
+
+
+def attempt_allowance(limit: int | None, used: int) -> dict:
+    """What the learner may still do under an optional attempt limit (D32).
+
+    Every started attempt counts as used, whatever its status. Blank (None) is unlimited.
+    """
+    return {
+        "limit": limit,
+        "used": used,
+        "left": None if limit is None else max(limit - used, 0),
+        "reached": limit is not None and used >= limit,
+    }
+
+
+def check_attempt_limit(limit: int | None, used: int) -> None:
+    """Called while the learner's row is locked, after an open attempt has been resumed, so two
+    starts at the limit create at most one attempt and an attempt in progress is never cut off."""
+    if attempt_allowance(limit, used)["reached"]:
+        raise AttemptLimitReached(
+            f"You have used all {limit} attempts allowed. Your best counted attempt still counts."
+        )
+
+
+def stored_max_attempts(obj) -> int | None:
+    """The attempt limit as saved now (None for a new row), read before a change is saved."""
+    if obj.pk is None:
+        return None
+    return type(obj).objects.filter(pk=obj.pk).values_list("max_attempts", flat=True).first()
+
+
+def audit_limit_change(obj, old: int | None, *, actor=None, request=None) -> bool:
+    """Audit a changed attempt limit on a part or the final (D32). Returns True if it changed."""
+    if old == obj.max_attempts:
+        return False
+    audit(
+        "assessment.max_attempts_changed",
+        actor=actor,
+        target=obj,
+        request=request,
+        old=old,
+        new=obj.max_attempts,
+    )
+    return True
+
+
 class InvalidAnswer(AttemptError):
     pass
 
@@ -124,6 +172,7 @@ def start(user, part, rng=None) -> tuple[Attempt, bool]:
     ).first()
     if existing:
         return existing, False
+    check_attempt_limit(part.max_attempts, Attempt.objects.filter(user=user, part=part).count())
 
     versions = draw(part, user, rng)
     if not versions:

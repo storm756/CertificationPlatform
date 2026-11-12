@@ -1,0 +1,17 @@
+# Stage 4 content follow-up history (PR #8)
+
+Moved verbatim from `docs/STATUS.md` (as of 12 Nov 2026, commit 505c33f) on 13 Nov 2026, when STATUS.md was trimmed. Historical record: the live status is in `docs/STATUS.md`, and later decisions (`docs/decisions.md`) win over anything here.
+
+## Where things stand
+
+### Stage 0–4 local course follow-up
+
+The historical review notes dated 11 Nov describe the earlier draft state. The original 303-page booklet and the completed hint workbook are now available. The follow-up restores all 31 flagged blocks from 20 source tables. The nine learner handouts under `static/handouts/` contain only the booklet's lesson reading pages. All 509 approved hints are matched by stable ID. The six existing Module 8 crosswords now form its graded Part B (D26). The pre-test, final exam and capstone stay Coming soon. Staging deployment and verification follow the local review.
+
+**Local verification.** The development course has 55 published readings with zero flagged blocks, 509 live questions with hints, and 18 published graded parts totaling 100 marks for each of Modules 1–9. Both real Module 8 parts passed a start, save and submit check with a temporary learner. All nine handout links, films and both caption tracks per film loaded in the browser. Playback was checked on Modules 2 and 8. Six pages passed the accessibility and overflow checks at the supported review sizes. Screenshots are in the local `screenshots/stage4-content/` directory.
+
+**Final branch checks (12 Nov 2026, `stage-4-content-follow-up` on `origin/main` c55f95f).** Full PostgreSQL suite: 505 passed. `ruff check`, `ruff format --check`, `makemigrations --check` and `check --deploy` with production settings: clean. `publish_ccfr_course` preview (no `--apply`) on the local database: 20 corrected tables, 509 questions, 18 graded parts, nine practice checks, nine handouts and nine films verified without saving. axe: no serious or critical issues on the catalogue, Module 8 overview, film and handout, a corrected Module 4 table topic and the Module 10 capstone at 390px and 1366px (screenshots in `screenshots/stage4-content/`, not committed). Staging is not verified: merging does not copy the local database, MP4s or private inputs.
+
+**Load the course.** On a fresh database, import the original lesson, MCQ and interactive banks first with the existing `import_legacy_lessons`, `import_legacy_mcq` and `import_legacy_interactive` commands. Provide the nine original module MP4 files and the prepared `approved-hints.json` and `question-edits.json` through private storage. The application image includes the learner handouts, corrected tables and English/Hindi caption tracks. Use `python manage.py publish_ccfr_course --hints <path-to-approved-hints.json> --films <film-directory>` for a rollback-only preview. Add `--apply` after verification. Mount or copy the private inputs into the application container through the team's deployment procedure.
+
+**Translation review.** The legacy booklet has 635 draft entries each in Hindi, Marathi and Gujarati. They pass a structural check for nonblank wording, expected script and preserved placeholders. Only 55 of 324 distinct text values in the corrected tables have exact matches in those drafts. The nine module translation CSVs have blank language columns. Export the current wording with Stage 8 stable keys for further language review and approval. Assessment wording stays English until approved, and Marathi/Gujarati film captions remain pending.

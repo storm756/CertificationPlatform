@@ -207,7 +207,7 @@ class Command(BaseCommand):
             tables = json.loads(table_file.read_text(encoding="utf-8"))
             assets = {}
             for number in range(1, 10):
-                pdf = settings.BASE_DIR / f"static/handouts/m{number}.pdf"
+                pdf = settings.BASE_DIR / f"apps/content/data/handouts/m{number}.pdf"
                 mp4s = list(films.glob(f"module-{number}-*.mp4"))
                 if not pdf.is_file() or len(mp4s) != 1:
                     raise CommandError(f"Module {number} needs one local handout and one film.")

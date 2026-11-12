@@ -24,7 +24,11 @@
         {% if kind == "final" %}
           <li>{% icon "list" %} {% translate "About 50 questions, drawn from every module." %}</li>
           <li>{% icon "clock" %} {% translate "The timer shows about 60 minutes. It is only a guide: there is no time limit." %}</li>
-          <li>{% icon "retry" %} {% translate "Attempts are unlimited. Your best counts." %}</li>
+          {% if allowance.limit %}
+            <li>{% icon "retry" %} <span><strong>{% blocktranslate count limit=allowance.limit with used=allowance.used %}{{ used }} of {{ limit }} attempt used.{% plural %}{{ used }} of {{ limit }} attempts used.{% endblocktranslate %}</strong> {% translate "Your best counted attempt counts." %}</span></li>
+          {% else %}
+            <li>{% icon "retry" %} {% translate "Attempts are unlimited. Your best counts." %}</li>
+          {% endif %}
           <li>{% icon "lightbulb" %} {% translate "Afterwards you see your overall score and how strong each module is, never the answers." %}</li>
         {% else %}
           <li>{% icon "clock" %} {% translate "A timer counts up. Take your time." %}</li>
@@ -35,6 +39,9 @@
       </ul>
       {% if done %}
         <p>{% translate "You have already done the pre-test. Thank you." %}</p>
+      {% elif allowance.reached and not open_attempt %}
+        {% blocktranslate asvar limit_text count limit=allowance.limit %}You have used your {{ limit }} attempt at the final. Your best counted attempt is the one that counts.{% plural %}You have used all {{ limit }} attempts at the final. Your best counted attempt is the one that counts.{% endblocktranslate %}
+        {% include "components/alert.html" with tone="mustard" icon="lock" title=_("No attempts left") text=limit_text %}
       {% else %}
         <form method="post" action="{% url 'programme_start' kind %}">{% csrf_token %}
           <button class="btn btn-primary btn-lg" type="submit">{% if open_attempt %}{% icon "play" %}{% translate "Resume where you left off" %}{% else %}{% icon "arrow" %}{% translate "Start" %}{% endif %}</button>
