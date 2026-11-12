@@ -56,9 +56,12 @@ class BatchAdmin(ModelAdmin):
             examsets.assign(obj, new_set, request.user, request)
             obj.refresh_from_db()
             return
-        super().save_model(request, obj, form, change)
         if not change and obj.exam_set_id:
-            examsets.assign(obj, obj.exam_set, request.user, request)
+            new_set, obj.exam_set = obj.exam_set, None  # save first, then assign (audited)
+            super().save_model(request, obj, form, change)
+            examsets.assign(obj, new_set, request.user, request)
+            return
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(Enrolment)

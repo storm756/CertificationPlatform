@@ -66,6 +66,7 @@ def release_errors(exam_set: ExamSet) -> list[str]:
         errors.append(f"The set has {len(items)} questions; the blueprint needs {total}.")
     per_module, pretest = {}, {}
     copies = non_final_texts()
+    seen_here = {}
     for item in items:
         q = item.question
         n = q.module.number
@@ -88,6 +89,10 @@ def release_errors(exam_set: ExamSet) -> list[str]:
             errors.append(f"{q.stable_id}: {problem}")
         if _shown_outside_programme_exams(q):
             errors.append(f"{q.stable_id} has been shown outside the final (§11).")
+        text = question_text(version.body)
+        if text in seen_here:
+            errors.append(f"{q.stable_id} repeats {seen_here[text]} in this set.")
+        seen_here.setdefault(text, q.stable_id)
         if (match := copies.get(question_text(version.body))) is not None:
             errors.append(f"{q.stable_id} repeats module or practice question {match}.")
     for n, need in sorted(wanted.items()):

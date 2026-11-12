@@ -92,10 +92,13 @@ class ExamSetItemInline(admin.TabularInline):
     model = ExamSetItem
     extra = 0
     fields = ("question", "in_pretest")
-    readonly_fields = ("question",)
+    readonly_fields = ("question", "in_pretest")  # membership is fixed by the import
     can_delete = False
 
     def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
         return False
 
 

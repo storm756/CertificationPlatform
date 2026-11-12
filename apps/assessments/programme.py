@@ -64,7 +64,8 @@ def get_assessment(kind: str) -> ProgrammeAssessment:
 def final_blueprint() -> dict[int, int]:
     """Questions per module in the final (the handoff blueprint, editable on the final's
     ProgrammeAssessment row by an admin)."""
-    per_module = (get_assessment(ProgrammeAssessmentKind.FINAL).blueprint or {}).get("per_module")
+    final = ProgrammeAssessment.objects.filter(kind=ProgrammeAssessmentKind.FINAL).first()
+    per_module = ((final.blueprint if final else None) or {}).get("per_module")  # read-only
     return {int(k): int(v) for k, v in (per_module or DEFAULT_PER_MODULE).items()}
 
 

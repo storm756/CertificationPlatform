@@ -438,3 +438,70 @@ def test_the_import_apply_stores_drafts_only_and_is_repeatable(tmp_path, bluepri
     assert all(q.pool == "final" and q.format == "mc" for q in questions)
     body = questions.get(stable_id="M1-FZ01").current_version.body
     assert body["options"][body["correct"]]["text"] == "INV-SECRET-KEY-M1-FZ01"
+
+
+# --- review findings ------------------------------------------------------------------------------------
+
+
+def test_import_keeps_the_right_answer_when_an_earlier_option_is_blank(tmp_path, blueprint_2x3):
+    blank_b = row("M1-FZ01", 1, correct="C")
+    blank_b[10] = ""  # Option B is blank; C is the key
+    blank_b[14] = f"INV-C-{blank_b[0]}"
+    run(workbook(tmp_path, [blank_b]), "--apply")
+    body = Question.objects.get(stable_id="M1-FZ01").current_version.body
+    assert body["options"][body["correct"]]["text"] == "INV-C-M1-FZ01"
+
+
+def test_pretest_flags_of_a_released_set_cannot_be_edited_in_the_admin(world, admin_user):
+    from apps.assessments.admin import ExamSetItemInline
+
+    inline = ExamSetItemInline(ExamSet, AdminSite())
+    request = RequestFactory().get("/")
+    request.user = admin_user
+    assert "in_pretest" in inline.readonly_fields
+    assert not inline.has_change_permission(request) and not inline.has_add_permission(request)
+
+
+def test_release_rejects_the_same_question_twice_under_different_ids(
+    make_question, blueprint_2x3, admin_user
+):
+    from apps.questions import services as qservices
+
+    m1, m2 = blueprint_2x3[1][0].module, blueprint_2x3[2][0].module
+    original = make_question(701, module=m1, pool="final")
+    twin = qservices.create_question(
+        stable_id="M1-FZ98", module=m1, body=dict(original.current_version.body),
+        tags={"pc": "PC1", "type": "R"}, pool="final",
+    )  # fmt: skip
+    qservices.publish(twin)
+    exam_set = draft_set(
+        make_question,
+        [
+            [original, twin, final_questions(make_question, m1, 1, 711)[0]],
+            final_questions(make_question, m2, 3, 721),
+        ],
+    )
+    errors = examsets.release_errors(exam_set)
+    assert any("M1-FZ98 repeats" in e and "in this set" in e for e in errors)
+    assert examsets.release(exam_set, admin_user) == errors
+
+
+def test_creating_a_batch_with_a_set_is_audited(world, admin_user, make_batch):
+    _, sets = world
+    model_admin = BatchAdmin(Batch, AdminSite())
+    request = RequestFactory().get("/")
+    request.user = admin_user
+    batch = Batch(code="NEWB", name="New batch", exam_set=sets["B"], seat_limit=10)
+    form = type("F", (), {"changed_data": ["exam_set"]})()
+    model_admin.save_model(request, batch, form, change=False)
+    assert Batch.objects.get(code="NEWB").exam_set == sets["B"]
+    event = AuditEvent.objects.get(action="batch.exam_set_changed", target_id=str(batch.pk))
+    assert event.data == {"was": None, "now": sets["B"].pk}
+
+
+def test_the_import_preview_creates_no_settings_row(tmp_path):
+    from apps.assessments.models import ProgrammeAssessment
+
+    ProgrammeAssessment.objects.all().delete()
+    run(workbook(tmp_path, [row("M1-FZ01", 1, pretest="Yes")]))
+    assert not ProgrammeAssessment.objects.exists()

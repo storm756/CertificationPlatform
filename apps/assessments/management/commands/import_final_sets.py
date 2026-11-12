@@ -74,7 +74,8 @@ def read_sets(path: Path) -> dict:
 
 
 def _body(row) -> dict:
-    options = [_text(row[k]) for k in ("a", "b", "c", "d") if _text(row[k])]
+    letters = [k for k in ("a", "b", "c", "d") if _text(row[k])]
+    options = [_text(row[k]) for k in letters]
     scenario, instruction = _text(row["scenario"]), _text(row["instruction"])
     tones = (
         [TONES.get(o.casefold()) for o in options]
@@ -91,7 +92,8 @@ def _body(row) -> dict:
             {"text": text, "tone": (tones[i] if tones else None), "gate": False}
             for i, text in enumerate(options)
         ],
-        "correct": "ABCD".index(_text(row["correct"]).upper()),
+        # the position among the options kept, not the letter (a blank B would shift C and D)
+        "correct": letters.index(_text(row["correct"]).lower()),
         "keep_order": bool(tones),
     }
 
