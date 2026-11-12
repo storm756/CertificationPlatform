@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.mfa",
     "simple_history",
+    "django_jsonform",
     "import_export",
     "apps.core",
     "apps.audit",

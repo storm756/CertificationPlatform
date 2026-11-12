@@ -4,13 +4,22 @@
 {% block page_class %} page--wide{% endblock %}
 {% block extra_head %}<link rel="stylesheet" href="{% static 'css/staff.css' %}">{% endblock %}
 {% block content %}
-  <p><a class="link" href="{% url 'mentor_home' %}">{% icon "arrow-left" "sm" %} {% translate "My batches" %}</a></p>
-  <div>
+  <section class="band"><div class="shell">
+    <p class="eyebrow eyebrow--cyan">{% translate "Mentor dashboard" %}</p>
     <h1>{{ batch.code }} · {{ batch.name }}</h1>
-    <p>
+    <p class="lede">{% translate "You can see your own batches only. Every action here is logged." %}</p>
+    <p class="band-meta">
       {% if accepting_now %}{% include "components/badge.html" with text=_("Registration open") colour="teal" icon="unlock" %}{% else %}{% include "components/badge.html" with text=_("Registration closed") colour="terracotta" icon="lock" %}{% endif %}
-      {{ seats }} / {{ batch.seat_limit }} seats used
+      <span>{{ seats }} / {{ batch.seat_limit }} seats used</span>
     </p>
+  </div></section>
+  <p><a class="link" href="{% url 'mentor_home' %}">{% icon "arrow-left" "sm" %} {% translate "My batches" %}</a></p>
+
+  <div class="stat-grid" role="list">
+    <div class="stat stat--teal" role="listitem"><strong>{{ roster|length }}</strong><span>{% translate "Learners" %}</span></div>
+    <div class="stat stat--mustard" role="listitem"><strong>{{ overview.awaiting|length }}</strong><span>{% translate "Eligible for a certificate" %}</span></div>
+    <div class="stat stat--terracotta" role="listitem"><strong>{{ overview.stuck|length }}</strong><span>{% translate "Need a nudge" %}</span></div>
+    <div class="stat stat--plum" role="listitem"><strong>{{ new_signups|length }}</strong><span>{% translate "New sign-ups this week" %}</span></div>
   </div>
 
   <section class="card stack">
@@ -55,7 +64,8 @@
   {% if overview.stuck %}
     <section class="stack" aria-labelledby="stuck">
       <h2 id="stuck">{% translate "Learners who may be stuck" %}</h2>
-      <ul class="result-list">{% for r in overview.stuck %}<li class="result-item"><a class="link" href="{% url 'mentor_learner' r.user.pk %}">{{ r.name }}</a><span class="muted">{{ r.reasons|join:"; " }}</span></li>{% endfor %}</ul>
+      <p class="muted">{% translate "Inactive 7+ days, or below 50% after 3 attempts" %}</p>
+      <div class="stuck-grid">{% for r in overview.stuck %}<article class="card stack"><h3><a class="link" href="{% url 'mentor_learner' r.user.pk %}">{{ r.name }}</a></h3><p class="muted">{{ r.reasons|join:"; " }}</p></article>{% endfor %}</div>
     </section>
   {% endif %}
 
@@ -69,15 +79,15 @@
           {% for r in overview.rows %}
             <tr>
               <th scope="row"><a class="link" href="{% url 'mentor_learner' r.user.pk %}">{{ r.name }}</a><br><small class="muted">{{ r.user.email }}</small></th>
-              {% for c in r.cells %}<td class="heat{% if c.fail %} heat--fail{% endif %}">{% if c.parts %}{{ c.value }}{% if c.fail %} <span class="sr-only">{% translate "below 50" %}</span>{% endif %}{% else %}—{% endif %}</td>{% endfor %}
+              {% for c in r.cells %}<td class="heat{% if c.fail %} heat--fail{% elif c.parts and c.value >= 75 %} heat--strong{% elif c.parts %} heat--ok{% endif %}">{% if c.parts %}{{ c.value }}{% if c.fail %} <span class="sr-only">{% translate "below 50" %}</span>{% endif %}{% else %}—{% endif %}</td>{% endfor %}
               <td>{% if r.final is not None %}{{ r.final }}{% else %}—{% endif %}</td>
               <td><strong>{{ r.overall }}</strong></td>
-              <td>{{ r.status }}</td>
+              <td><span class="chip{% if r.status == 'active' %} chip--ok{% endif %}">{{ r.status }}</span></td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-    <p class="muted">{% translate "Red cells are below 50%." %}</p>
+    <p class="muted">{% translate "Red cells are below 50%." %} {% translate "Green cells are 75% or more." %}</p>
   </section>
 {% endblock %}

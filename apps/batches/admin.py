@@ -138,3 +138,19 @@ class EnrolmentAdmin(ModelAdmin):
     list_filter = ("batch",)
     search_fields = ("user__email",)
     raw_id_fields = ("user",)
+
+    def get_readonly_fields(self, request, obj=None):
+        return ("user",) if obj else ()  # a learner is moved, never swapped for another
+
+    def save_model(self, request, obj, form, change):
+        """Moving a learner goes through batches.services.move_learner: the target must be an
+        active batch the actor may use, and the move is audited. The learner keeps the exam set
+        they were frozen on (Stage 5), so a move never mixes papers."""
+        if change and "batch" in form.changed_data:
+            from . import services
+
+            target = obj.batch
+            obj.batch = Enrolment.objects.get(pk=obj.pk).batch  # leave the row as it was
+            services.move_learner(request.user, obj, target, request)
+            return
+        super().save_model(request, obj, form, change)

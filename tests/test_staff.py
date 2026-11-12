@@ -357,11 +357,19 @@ def test_journey15_the_preview_names_who_gains_and_loses_and_saves_nothing(
     assert not AuditEvent.objects.filter(action="marks.changed").exists()
 
 
+def confirmed(client, world, a_marks, b_marks):
+    """Preview, then confirm with the digest the preview page carries (what the browser does)."""
+    import re
+
+    url = reverse("staff_marks_edit", args=[1])
+    html = client.post(url, proposal(world, a_marks, b_marks)).content.decode()
+    digest = re.search(r'name="digest" value="([0-9a-f]+)"', html).group(1)
+    return client.post(url, {**proposal(world, a_marks, b_marks, confirm=True), "digest": digest})
+
+
 def test_journey15_confirming_changes_the_results_and_is_audited(admin_client, split_world):
     w = split_world
-    response = admin_client.post(
-        reverse("staff_marks_edit", args=[1]), proposal(w, 20, 80, confirm=True)
-    )
+    response = confirmed(admin_client, w, 20, 80)
     assert response.status_code == 302
     w["a"].refresh_from_db()
     w["b"].refresh_from_db()
@@ -414,16 +422,19 @@ def test_only_admins_can_use_the_mark_split_editor(mentor_client, split_world):
     assert split_world["a"].marks == 50
 
 
-def test_the_preview_does_not_let_missing_content_hide_the_real_effect(admin_client, split_world):
-    """The impact is about marks, so a still-incomplete course set-up is reported but not counted as
-    'everyone loses eligibility'."""
+def test_the_preview_reports_real_eligibility_and_the_marks_only_effect_separately(
+    admin_client, split_world
+):
+    """With the course set-up incomplete nobody is eligible before or after (the real rule), so the
+    headline is 0 and 0; the marks alone would move one learner each way, and that is shown too."""
     Module.objects.filter(number=2).update(
         counted=True
     )  # a counted module with no assessment: a gap
     html = admin_client.post(
         reverse("staff_marks_edit", args=[1]), proposal(split_world, 20, 80)
     ).content.decode()
-    assert "<strong>1</strong> lose eligibility, <strong>1</strong> gain it" in html
+    assert "<strong>0</strong> lose eligibility, <strong>0</strong> gain it" in html
+    assert "ignoring course set-up gaps: 1 would lose and 1 would gain" in html
     assert (
         "course set-up would still be incomplete" in html
         and "Module 2 has no published assessment" in html

@@ -3,4 +3,19 @@
 .heat--fail { background: var(--danger-tint); color: var(--danger); font-weight: 700; }
 .impact { display: grid; gap: .5rem; }
 .impact strong { font-size: 1.4rem; }
-.json-editor { width: 100%; min-height: 24rem; font-family: ui-monospace, Consolas, monospace; font-size: .9rem; }
+/* django-jsonform: its hidden data textarea carries an inline style that the production CSP blocks */
+.json-editor { width: 100%; max-width: 100%; overflow-x: auto; }
+.form-stack > *, .field { min-width: 0; }
+.json-editor textarea[data-django-jsonform] { display: none; }
+.heat--strong { background: var(--teal-tint); color: var(--teal-ink); font-weight: 600; }
+.heat--ok { background: var(--mustard-tint); color: var(--mustard-ink); }
+.stuck-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); }
+.chip { display: inline-block; padding: .15rem .6rem; border-radius: 999px; background: var(--mustard-tint); color: var(--mustard-ink); font-size: .85rem; font-weight: 600; }
+.chip--ok { background: var(--teal-tint); color: var(--teal-ink); }
+.stat--teal { --c: var(--teal); }
+.stat--mustard { --c: var(--mustard); }
+.stat--terracotta { --c: var(--terracotta); }
+.stat--plum { --c: var(--plum); }
+.stat { display: grid; gap: .15rem; }
+.stat strong { font-family: var(--font-display); font-size: 1.9rem; line-height: 1.1; }
+.stat span { color: var(--ink-muted); }

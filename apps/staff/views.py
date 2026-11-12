@@ -23,10 +23,12 @@ from apps.batches.models import Batch, Enrolment
 from apps.content.models import Module
 from apps.questions import formats, schemas
 from apps.questions import services as qservices
-from apps.questions.models import Pool, PoolLocked, Question, QuestionStatus
+from apps.questions.models import Pool, PoolLocked, Question, QuestionLocked, QuestionStatus
 from apps.results import impact as impact_mod
 from apps.results import insights
 from apps.results.policy import compute_results
+
+from .forms import QuestionForm
 
 
 def _deny(request, **data):
@@ -110,26 +112,51 @@ def question_edit(request, pk):
     question = _question(request, pk)
     version = question.current_version
     is_admin = can_access_final_pool(request.user)
+    locked = question.locked_reason()  # on a released exam set, or used in an exam
     errors = []
-    posted = request.POST if request.method == "POST" else None
-    text = posted.get("body") if posted else json.dumps(version.body, indent=2, ensure_ascii=False)
-    if posted:
-        errors = _save_question(request, question, posted, is_admin)
-        if not errors:
+    form = None
+    if request.method == "POST":
+        if locked:
+            messages.error(
+                request,
+                f"{question.stable_id} {locked}, so it is fixed. Write the correction in a new "
+                "draft set instead.",
+            )
             return redirect("staff_question", pk=question.pk)
+        if request.POST.get("pool", question.pool) not in _allowed_pools(request.user):
+            _deny(request, target_type_asked="Pool", target_id_asked=request.POST.get("pool", ""))
+    if not locked:
+        data = request.POST if request.method == "POST" else None
+        initial = {
+            "pc": question.tags.get("pc", ""),
+            "type": question.tags.get("type", ""),
+            "pool": question.pool,
+        }
+        form = QuestionForm(
+            data, initial=initial, question=question, version=version,
+            pools=_allowed_pools(request.user), is_admin=is_admin,
+        )  # fmt: skip
+        if data is not None:
+            if form.is_valid():
+                errors = _save_question(request, question, form.cleaned_data, is_admin)
+                if not errors:
+                    return redirect("staff_question", pk=question.pk)
+            else:
+                errors = [
+                    f"{'The question' if f == 'body' else f}: {e}"
+                    for f, errs in form.errors.items()
+                    for e in errs
+                ]
     return render(
         request,
         "staff/question_edit.html",
         {
             "question": question,
             "version": question.current_version,
-            "body_text": text,
+            "form": form,
+            "locked": locked,
             "errors": errors,
-            "pools": _allowed_pools(request.user),
             "is_admin": is_admin,
-            "pool": (posted.get("pool") if posted else question.pool),
-            "pc": (posted.get("pc") if posted else question.tags.get("pc", "")),
-            "qtype": (posted.get("type") if posted else question.tags.get("type", "")),
             "live_errors": schemas.publish_errors(question.format, version.body)
             if version
             else ["no content"],  # fmt: skip
@@ -137,38 +164,37 @@ def question_edit(request, pk):
     )
 
 
+def _allowed_pools(user):
+    return [p for p in Pool.values if p != Pool.FINAL or can_access_final_pool(user)]
+
+
 @transaction.atomic
-def _save_question(request, question, posted, is_admin) -> list[str]:
-    """Add a version from the edited JSON and update the tags and pool. Returns error messages."""
-    try:
-        body = json.loads(posted.get("body", ""))
-    except ValueError as exc:
-        return [f"The text is not valid JSON: {exc}"]
-    if not isinstance(body, dict):
-        return ["The question must be a JSON object."]
-    pool = posted.get("pool", question.pool)
-    if pool not in _allowed_pools(request.user):
-        _deny(request, target_type_asked="Pool", target_id_asked=pool)
+def _save_question(request, question, data, is_admin) -> list[str]:
+    """Add a version from the validated form data and update the tags and pool. Returns errors."""
+    body, pool = data["body"], data["pool"]
     try:
         version, created = qservices.add_version(question, body)
     except ValidationError as exc:
         return [f"{'.'.join(str(p) for p in e['loc']) or 'body'}: {e['msg']}" for e in exc.errors()]
+    except QuestionLocked as exc:
+        transaction.set_rollback(True)
+        return [str(exc)]
     except ValueError as exc:
         return [str(exc)]
     question = Question.objects.select_for_update().get(pk=question.pk)
     old_pool, was_live = question.pool, question.status == QuestionStatus.LIVE
-    question.tags = {**question.tags, "pc": posted.get("pc", "").strip(), "type": posted.get("type", "").strip()}  # fmt: skip
+    question.tags = {**question.tags, "pc": data["pc"].strip(), "type": data["type"].strip()}
     question.pool = pool
-    keep_live = is_admin and posted.get("keep_live") == "on"
+    keep_live = is_admin and data.get("keep_live")
     if was_live and not keep_live:
         question.status = QuestionStatus.DRAFT  # a mentor's (or default) edit goes back to draft
     try:
         question.save()
-    except PoolLocked as exc:
+    except PoolLocked as exc:  # includes QuestionLocked
         transaction.set_rollback(True)
         return [str(exc)]
     if was_live and keep_live:
-        problems = schemas.publish_errors(question.format, version.body)
+        problems = qservices.publish_problems(question)
         if problems:
             transaction.set_rollback(True)
             return ["It cannot stay live yet: " + "; ".join(problems)]
@@ -250,6 +276,17 @@ def _proposed(module, posted):
         total = sum(v["marks"] for v in overrides["parts"].values() if v["counted"])
         if total > 100:
             errors.append(f"The counted marks would total {total}; they cannot exceed 100.")
+        elif overrides["modules"][module.pk]:
+            published = sum(
+                overrides["parts"][p.pk]["marks"]
+                for p in parts
+                if p.is_published and overrides["parts"][p.pk]["counted"]
+            )
+            if published != 100:
+                errors.append(
+                    f"The published counted marks would total {published}. A counted module needs "
+                    "exactly 100, or the final stays locked for every learner."
+                )
     return overrides, errors, parts
 
 
@@ -257,13 +294,20 @@ def _proposed(module, posted):
 def marks_edit(request, number):
     module = get_object_or_404(Module, number=number, kind="learning")
     posted = request.POST if request.method == "POST" else {}
-    result = None
+    result, digest = None, ""
     if request.method == "POST":
         overrides, errors, parts = _proposed(module, posted)
         if not errors:
             result = impact_mod.impact(overrides)
+            digest = impact_mod.digest(overrides, result)
             if posted.get("confirm") == "1":
-                return _apply_marks(request, module, overrides, result)
+                if posted.get("digest") == digest:
+                    return _apply_marks(request, module, overrides, result)
+                messages.warning(
+                    request,
+                    "The impact changed since you previewed it (or it was not previewed). "
+                    "Nothing was saved. Check the new preview and confirm again.",
+                )
     else:
         parts = list(AssessmentPart.objects.filter(module=module).order_by("pk"))
         errors = []
@@ -284,10 +328,24 @@ def marks_edit(request, number):
             "module_counted": ("module_counted" in posted) if posted else module.counted,
             "errors": errors,
             "impact": result,
+            "digest": digest if result else "",
             "lose_names": _names(result["lose"]) if result else [],
             "gain_names": _names(result["gain"]) if result else [],
+            "blueprint_note": _blueprint_note(module, overrides) if result else [],
         },
     )
+
+
+def _blueprint_note(module, overrides):
+    """Changing which modules count must be matched by the final's blueprint (Stage 5 release
+    checks need the two to agree). Released sets and frozen learners are unaffected."""
+    from apps.assessments import examsets
+
+    counted = set(
+        Module.objects.filter(counted=True, kind="learning").values_list("number", flat=True)
+    )
+    (counted.add if overrides["modules"][module.pk] else counted.discard)(module.number)
+    return examsets.blueprint_problems(counted)
 
 
 def _names(ids):
@@ -303,6 +361,10 @@ def _names(ids):
 @transaction.atomic
 def _apply_marks(request, module, overrides, result):
     """Apply a confirmed change. The impact shown is recomputed on this request, and audited."""
+    from apps.accounts.models import Role, User
+
+    ids = list(User.objects.filter(role=Role.LEARNER).values_list("pk", flat=True))
+    eligible_before = {u for u, r in compute_results(ids).items() if r.eligible}
     before = {
         "module_counted": module.counted,
         "parts": {p.pk: (p.marks, p.counted) for p in AssessmentPart.objects.filter(module=module)},
@@ -314,6 +376,13 @@ def _apply_marks(request, module, overrides, result):
         if change:
             part.marks, part.counted = change["marks"], change["counted"]
             part.save(update_fields=["marks", "counted", "updated_at"])
+    eligible_after = {u for u, r in compute_results(ids).items() if r.eligible}
+    if (eligible_before - eligible_after) != set(result["lose"]) or (
+        eligible_after - eligible_before
+    ) != set(result["gain"]):
+        transaction.set_rollback(True)  # the real effect differs from the preview: save nothing
+        messages.error(request, "The real effect differed from the preview, so nothing was saved. Preview again.")  # fmt: skip
+        return redirect("staff_marks_edit", number=module.number)
     audit(
         "marks.changed", actor=request.user, target=module, request=request,
         module=module.number, was_module_counted=before["module_counted"], module_counted=module.counted,
