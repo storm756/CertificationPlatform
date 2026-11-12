@@ -80,10 +80,21 @@ def start(request):
         return redirect("waiting_for_guardian")
     if user.role in (Role.MENTOR, Role.ADMIN):
         return redirect("mentor_home")
-    from apps.assessments.models import AssessmentPart
+    from apps.assessments import programme
+    from apps.results import views as results
+    from apps.results.policy import compute_results
 
-    parts = AssessmentPart.objects.filter(is_published=True).select_related("module")
-    return render(request, "accounts/welcome.html", {"parts": parts})
+    profile = user.profile
+    if (
+        profile.pretest_prompted_at is None
+        and programme.pretest_available(user)
+        and not compute_results([user.pk])[user.pk].pretest_done
+    ):
+        # The pre-test is offered once, right after the first sign-in. "Later" returns here.
+        profile.pretest_prompted_at = timezone.now()
+        profile.save(update_fields=["pretest_prompted_at"])
+        return redirect("programme_intro", kind="pretest")
+    return results.dashboard(request)
 
 
 @login_required

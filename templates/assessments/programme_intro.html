@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load i18n ccfr %}
+{% block head_title %}{% if kind == "final" %}{% translate "Final exam" %}{% else %}{% translate "Pre-test" %}{% endif %}{% endblock %}
+{% block content %}
+  <div>
+    <p class="eyebrow">{{ PROGRAMME_SHORT }}</p>
+    <h1>{% if kind == "final" %}{% translate "Final exam" %}{% else %}{% translate "Pre-test" %}{% endif %}</h1>
+    <p class="muted">{% if kind == "final" %}{% translate "Half of your overall result. You need 50% to pass." %}{% else %}{% translate "A short check of what you already know before you start. It is not marked against you." %}{% endif %}</p>
+  </div>
+
+  {% if reasons %}
+    {% include "components/alert.html" with tone="mustard" icon="lock" title=_("The final is locked") text=_("Finish these first:") %}
+    <ul class="ticks">{% for r in reasons %}<li>{% icon "circle" %} {{ r }}</li>{% endfor %}</ul>
+  {% elif cooldown_until and not open_attempt %}
+    {% blocktranslate asvar cooldown_text with when=cooldown_until|date:"j N, H:i" %}You can try the final again after {{ when }}.{% endblocktranslate %}
+    {% include "components/alert.html" with tone="mustard" icon="clock" title=_("Please wait before your next try") text=cooldown_text %}
+  {% elif not available %}
+    {% translate "The exam questions are still being prepared. Please check back soon." as fallback %}
+    {% include "components/alert.html" with tone="mustard" icon="clock" title=_("Coming soon") text=unavailable_reason|default:fallback %}
+  {% else %}
+    <section class="card stack">
+      <h2>{% translate "Before you start" %}</h2>
+      <ul class="ticks">
+        {% if kind == "final" %}
+          <li>{% icon "list" %} {% translate "About 50 questions, drawn from every module." %}</li>
+          <li>{% icon "clock" %} {% translate "The timer shows about 60 minutes. It is only a guide: there is no time limit." %}</li>
+          <li>{% icon "retry" %} {% translate "Attempts are unlimited. Your best counts." %}</li>
+          <li>{% icon "lightbulb" %} {% translate "Afterwards you see your overall score and how strong each module is, never the answers." %}</li>
+        {% else %}
+          <li>{% icon "clock" %} {% translate "A timer counts up. Take your time." %}</li>
+          <li>{% icon "retry" %} {% translate "You can do it once. If you close the page you can resume where you left off." %}</li>
+          <li>{% icon "lightbulb" %} {% translate "You will see your score afterwards, but not the answers." %}</li>
+        {% endif %}
+        <li>{% icon "save" %} {% translate "Every answer saves as you go." %}</li>
+      </ul>
+      {% if done %}
+        <p>{% translate "You have already done the pre-test. Thank you." %}</p>
+      {% else %}
+        <form method="post" action="{% url 'programme_start' kind %}">{% csrf_token %}
+          <button class="btn btn-primary btn-lg" type="submit">{% if open_attempt %}{% icon "play" %}{% translate "Resume where you left off" %}{% else %}{% icon "arrow" %}{% translate "Start" %}{% endif %}</button>
+          {% if kind == "pretest" and not open_attempt %}<a class="btn btn-outline btn-lg" href="{% url 'start' %}">{% translate "Later" %}</a>{% endif %}
+        </form>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  {% if attempts %}
+    <section class="stack">
+      <h2>{% translate "Your attempts" %}</h2>
+      <ul class="result-list">
+        {% for a in attempts %}
+          <li class="result-item"><span><strong>{% blocktranslate with n=a.number %}Attempt {{ n }}{% endblocktranslate %}</strong> · {% if a.is_open %}{% translate "in progress" %}{% else %}{{ a.score }}%{% if kind == "final" and not a.counted %} · {% translate "doesn't count" %}{% endif %}{% endif %}</span>
+            <a class="link" href="{% if a.is_open %}{% url 'attempt_page' a.pk %}{% else %}{% url 'attempt_result' a.pk %}{% endif %}">{% if a.is_open %}{% translate "Resume" %}{% else %}{% translate "View result" %}{% endif %}</a></li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+  <p><a class="link" href="{% url 'start' %}">{% icon "arrow-left" "sm" %} {% translate "Back to My progress" %}</a></p>
+{% endblock %}

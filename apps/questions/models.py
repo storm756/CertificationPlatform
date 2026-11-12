@@ -32,6 +32,15 @@ class QuestionStatus(models.TextChoices):
     RETIRED = "retired", "Retired"
 
 
+class PoolLocked(Exception):
+    pass
+
+
+class QuestionLocked(PoolLocked):
+    """The question is part of an approved exam paper or already used in an exam: a correction
+    must be a new draft or revision, never an edit of the live question."""
+
+
 class Question(models.Model):
     stable_id = models.CharField(max_length=30, unique=True)  # e.g. M4-12
     module = models.ForeignKey("content.Module", on_delete=models.PROTECT, related_name="questions")
@@ -53,9 +62,75 @@ class Question(models.Model):
     def __str__(self):
         return self.stable_id
 
+    LOCKED_FIELDS = ("pool", "module_id", "format", "points", "status")
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            before = Question.objects.filter(pk=self.pk).first()
+            if before:
+                if self.pool == Pool.FINAL and before.pool != Pool.FINAL:
+                    reasons = self.reuse_reasons()
+                    if reasons:
+                        raise PoolLocked(
+                            f"{self.stable_id} {reasons[0]}, so it cannot move into the final "
+                            "pool. Write a new question for the final."
+                        )
+                changed = [f for f in self.LOCKED_FIELDS if getattr(before, f) != getattr(self, f)]
+                reason = self.locked_reason() if changed else None
+                if reason:
+                    raise QuestionLocked(
+                        f"{self.stable_id} {reason}, so its {', '.join(changed)} cannot change. "
+                        "Start a new draft or revision instead."
+                    )
+        super().save(*args, **kwargs)
+
+    def locked_reason(self) -> str | None:
+        """Why this question's marks, format, module, pool and status are fixed, or None."""
+        from apps.assessments.models import AttemptItem, ExamSetStatus
+
+        released = (
+            self.exam_set_items.filter(state="member", exam_set__status=ExamSetStatus.RELEASED)
+            .select_related("exam_set")
+            .first()
+        )
+        if released:
+            return f"is on the released {released.exam_set}"
+        if (
+            self.pool == Pool.FINAL
+            and AttemptItem.objects.filter(question_version__question=self).exists()
+        ):
+            return "has been used in an exam attempt"
+        return None
+
+    def reuse_reasons(self) -> list[str]:
+        """Every way a learner or visitor has already met this question outside the programme exams:
+        a module or practice attempt, a recorded lesson practice check, or a lesson check block
+        (which signed-out visitors can answer without leaving a record)."""
+        from apps.assessments.models import AttemptItem
+        from apps.content.models import LearnCheck, UnitVersion
+
+        reasons = []
+        if (
+            AttemptItem.objects.filter(question_version__question=self)
+            .exclude(attempt__programme_assessment__kind__in=["final", "pretest"])
+            .exists()
+        ):
+            reasons.append("has been shown in a module or practice attempt")
+        if LearnCheck.objects.filter(question_version__question=self).exists():
+            reasons.append("has been answered in a lesson practice check")
+        if UnitVersion.objects.filter(
+            blocks__contains=[{"type": "check", "question": self.stable_id}]
+        ).exists():
+            reasons.append("is used in a lesson practice check")
+        return reasons
+
     @property
     def current_version(self):
         return self.versions.order_by("-version").first()
+
+    def shown_in_non_final_attempt(self) -> bool:
+        """True if this question was already met outside the programme exams (reuse_reasons)."""
+        return bool(self.reuse_reasons())
 
 
 class QuestionVersion(models.Model):

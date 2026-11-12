@@ -6,7 +6,7 @@ import json
 from django.db import transaction
 
 from . import schemas
-from .models import Pool, Question, QuestionStatus, QuestionVersion
+from .models import Pool, Question, QuestionLocked, QuestionStatus, QuestionVersion
 
 
 class PublishError(Exception):
@@ -36,6 +36,13 @@ def add_version(question: Question, body: dict) -> tuple[QuestionVersion, bool]:
     digest = content_hash(clean)
     Question.objects.select_for_update().get(pk=question.pk)
     latest = question.versions.order_by("-version").first()
+    reason = question.locked_reason()
+    if reason and not (latest and latest.content_hash == digest):
+        raise QuestionLocked(
+            f"{question.stable_id} {reason}, so it cannot get a new version. "
+            "Start a new draft or revision instead."
+        )
+    latest = question.versions.order_by("-version").first()
     if latest and latest.content_hash == digest:
         return latest, False
     number = (latest.version + 1) if latest else 1
@@ -60,8 +67,8 @@ def create_question(*, stable_id, module, fmt="mcq", body, tags, pool, points=1,
     return question
 
 
-def publish(question: Question) -> Question:
-    """Make a question live. Needs a valid body with a hint, a pool and tags (§13.2)."""
+def publish_problems(question: Question) -> list[str]:
+    """Everything that stops this question going live (§13.2). Empty means it can."""
     version = question.current_version
     errors = [] if version else ["no content yet"]
     if version:
@@ -76,6 +83,12 @@ def publish(question: Question) -> Question:
         errors.append("pool: crosswords are practice only outside Module 8's graded quiz")
     if not question.pool:
         errors.append("pool: a pool is required")
+    return errors
+
+
+def publish(question: Question) -> Question:
+    """Make a question live. Needs a valid body with a hint, a pool and tags (§13.2)."""
+    errors = publish_problems(question)
     if errors:
         raise PublishError(errors)
     question.status = QuestionStatus.LIVE

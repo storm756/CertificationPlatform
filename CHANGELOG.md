@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-11-12: Stage 5, exam-set review round (D31)
+
+- A released set is fixed: release stores the approved versions, marks, formats and modules; database triggers and model guards block changes to released membership, the set, its questions and new versions of them. A final question used in an exam cannot change marks, module or pool.
+- One reuse rule for import and release: any question shown in a module or practice attempt, answered in a lesson check, used in a lesson check block, or matching any version of a module or practice question is refused.
+- Draft sets reconcile with the workbook: the preview shows the changes, `--apply` is atomic, rows can be held in reserve or rejected (history kept), and import and release lock the same row. Bad module values, rows without IDs and duplicates are reported per row. Check sets and Release share one validation, including a blueprint that must cover every counted module.
+- Unrelated batch edits no longer overwrite a newer exam-set assignment. The catalogue, dashboard and exam pages use the real availability, lock and cooldown rules, and the dashboard hero is readable again.
+
+## 2026-11-12: Stage 5, final exam sets per batch (D31)
+
+- Final exam sets (`ExamSet`, `ExamSetItem`) with release checks; an admin assigns one released set per batch (audited). The set supplies both the pre-test (its 18 shared questions) and the final (all 50). Why: the owner asked for fixed Sets B and D instead of a random draw.
+- A learner's set and question versions freeze at their first programme exam (`LearnerExamSet`), so reassignment or a batch move cannot pair a Set B pre-test with a Set D final. Knowledge gain compares the same shared questions.
+- `manage.py import_final_sets`: a private preview of the content workbook (IDs and counts only) and a draft-only `--apply`. Reused module rows are rejected. Neither set can be released yet; the blockers are in STATUS.md.
+
 ## 2026-11-12: Stage 0–4 course content follow-up
 
 - Restored the flagged reading tables from the original booklet and added nine learner handouts drawn from its reading pages. Trainer keys and the master booklet stay private.
@@ -118,3 +131,17 @@
 ## 2026-11-11: Stage 4 re-applied on `origin/main` (`stage-4-review`)
 - Stage 4 (cf79bb7, 24b566d) re-applied on the merged Stage 3. Module and lesson pages now set `data-mod` so the hero and outline use the module's colour. Why: D20.
 
+## 2026-11-10: Stage 5, results, final exam, pre-test and dashboard
+- `compute_results` (Decimal, `round1` only) with the §10.3 worked example and the boundary values as tests; grades and bands. Why: §10, D1, D2.
+- Pre-test (anchors only, once, resumable) and final exam (blueprint draw with anchors, cooldown setting, unlock rules, locked reasons). Final shows overall % and bands; the pre-test shows the score only. Why: §11, D14.
+- Knowledge gain (first final's anchor score minus the pre-test's), weakest PCs, hours. Why: §11, §15.
+- A question shown in a non-final attempt cannot move into the final pool. Why: §11.
+- The learner "My progress" dashboard replaces the placeholder welcome page; the pre-test is offered once after the first sign-in (`Profile.pretest_prompted_at`). Why: §15, Stage 5.
+
+## 2026-11-10: Stage 5 review fixes
+- Combined results use unrounded marks: `compute_results` recomputes each attempt's percentage from its saved question-level marks (`Attempt.score` is only a rounded display value). 13/15 and 5/38 in equal-weight parts now give 49.9% (fail), not 50.0. Why: §10.1, D2.
+- The final stays locked, and eligibility is withheld, when a counted module has no published counted assessment or a counted assessment is unpublished; the learner sees "Course setup is incomplete" (on the dashboard, the final's page and in the blockers). Why: §10.2. This replaces the Stage 5 call that treated such modules as not counted.
+- The pre-test result and attempts list show the overall score only, even when a safety gate was triggered (no gate message, no "doesn't count"). Why: §11.
+
+## 2026-11-10: Stage 5, exactly 100 marks per counted module
+- The course-setup check now also requires the published counted marks of every counted module to total exactly 100 (D11). A module with only a 50-mark part keeps the final locked and the learner ineligible, and the message names the module and the configured marks ("Module 1 has 50 published marks configured; it needs exactly 100."). The unpublished-part check is unchanged. Why: §10.1 assumes 100.

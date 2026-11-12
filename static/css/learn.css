@@ -54,4 +54,10 @@ article .crumbs span[aria-current] { color: var(--ink-muted); }
 .unit-nav small { display: block; font-weight: 500; }
 .unit-nav .btn > span { display: grid; text-align: center; }
 .prose--reading h2 { font-size: 1.3rem; margin: 1.6rem 0 .6rem; }
+
+/* Stage 5: My progress dashboard */
+.dash-grid { display: grid; gap: 2rem; margin-top: 1.5rem; }
+@media (min-width: 64rem) { .dash-grid { grid-template-columns: 1.6fr 1fr; align-items: start; } }
+.finished summary { cursor: pointer; min-height: 48px; display: flex; align-items: center; font-weight: 600; }
+.dash-grid .grid-cards { grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); }
 .status--todo { color: var(--ink-muted); }
