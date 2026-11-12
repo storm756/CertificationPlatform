@@ -11,6 +11,9 @@
   {% if reasons %}
     {% include "components/alert.html" with tone="mustard" icon="lock" title=_("The final is locked") text=_("Finish these first:") %}
     <ul class="ticks">{% for r in reasons %}<li>{% icon "circle" %} {{ r }}</li>{% endfor %}</ul>
+  {% elif cooldown_until and not open_attempt %}
+    {% blocktranslate asvar cooldown_text with when=cooldown_until|date:"j N, H:i" %}You can try the final again after {{ when }}.{% endblocktranslate %}
+    {% include "components/alert.html" with tone="mustard" icon="clock" title=_("Please wait before your next try") text=cooldown_text %}
   {% elif not available %}
     {% translate "The exam questions are still being prepared. Please check back soon." as fallback %}
     {% include "components/alert.html" with tone="mustard" icon="clock" title=_("Coming soon") text=unavailable_reason|default:fallback %}

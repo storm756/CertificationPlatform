@@ -1,4 +1,5 @@
 from django.contrib import admin, messages
+from django.core.exceptions import PermissionDenied
 from unfold.admin import ModelAdmin
 
 from . import examsets, rules
@@ -86,20 +87,21 @@ class AttemptAdmin(ModelAdmin):
 
 
 class ExamSetItemInline(admin.TabularInline):
-    """Membership only: question ids and the pre-test flag. Question text and keys live on the
-    question, which is admin-only for the final pool."""
+    """Membership only: which questions are in the paper, held in reserve or rejected. Rows are
+    never deleted (question history stays) and a released set is read-only. Question text and keys
+    live on the question, which is admin-only for the final pool."""
 
     model = ExamSetItem
     extra = 0
-    fields = ("question", "in_pretest")
-    readonly_fields = ("question", "in_pretest")  # membership is fixed by the import
+    fields = ("question", "in_pretest", "state")
+    readonly_fields = ("question", "in_pretest")  # the pre-test selection comes from the import
     can_delete = False
 
     def has_add_permission(self, request, obj=None):
         return False
 
     def has_change_permission(self, request, obj=None):
-        return False
+        return obj is not None and not obj.is_released
 
 
 @admin.register(ExamSet)
@@ -128,9 +130,17 @@ class ExamSetAdmin(ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
-    @admin.display(description="Questions")
+    @admin.display(description="Questions in the paper")
     def item_count(self, obj):
-        return obj.items.count()
+        return obj.members().count()
+
+    def save_model(self, request, obj, form, change):
+        """Take the same row lock as import and release, and refuse a set that was released while
+        this page was open."""
+        locked = ExamSet.objects.select_for_update().get(pk=obj.pk)
+        if locked.is_released:
+            raise PermissionDenied("This set was released; it is fixed. Start a new draft set.")
+        super().save_model(request, obj, form, change)
 
     @admin.action(description="Check the selected sets (release checks)")
     def check_sets(self, request, queryset):

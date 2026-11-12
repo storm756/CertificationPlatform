@@ -61,12 +61,27 @@ def get_assessment(kind: str) -> ProgrammeAssessment:
     return assessment
 
 
+def raw_blueprint():
+    """The final's per-module counts exactly as stored (read-only: never creates the row)."""
+    final = ProgrammeAssessment.objects.filter(kind=ProgrammeAssessmentKind.FINAL).first()
+    per_module = ((final.blueprint if final else None) or {}).get("per_module")
+    return per_module or {str(k): v for k, v in DEFAULT_PER_MODULE.items()}
+
+
 def final_blueprint() -> dict[int, int]:
     """Questions per module in the final (the handoff blueprint, editable on the final's
-    ProgrammeAssessment row by an admin)."""
-    final = ProgrammeAssessment.objects.filter(kind=ProgrammeAssessmentKind.FINAL).first()
-    per_module = ((final.blueprint if final else None) or {}).get("per_module")  # read-only
-    return {int(k): int(v) for k, v in (per_module or DEFAULT_PER_MODULE).items()}
+    ProgrammeAssessment row by an admin). Unreadable entries are left out;
+    examsets.blueprint_problems() reports them."""
+    out = {}
+    raw = raw_blueprint()
+    for key, value in raw.items() if isinstance(raw, dict) else []:
+        try:
+            if isinstance(value, bool) or int(value) != value:
+                continue
+            out[int(key)] = int(value)
+        except (TypeError, ValueError):
+            continue
+    return out
 
 
 def pretest_available(user) -> bool:
@@ -104,19 +119,27 @@ def final_locked_reasons(user) -> list[str]:
     return reasons
 
 
-def _cooldown_reason(user, assessment, now):
-    if not assessment.cooldown_hours:
+def cooldown_until(user, now=None):
+    """When the learner may start the final again, if a configured cooldown is still running.
+    Read-only: it never creates the settings row."""
+    final = ProgrammeAssessment.objects.filter(kind=ProgrammeAssessmentKind.FINAL).first()
+    if not final or not final.cooldown_hours:
         return None
     last = (
-        Attempt.objects.filter(user=user, programme_assessment=assessment, status__in=SUBMITTED)
+        Attempt.objects.filter(user=user, programme_assessment=final, status__in=SUBMITTED)
         .order_by("-submitted_at")
         .first()
     )
-    if (
-        last
-        and last.submitted_at
-        and now < last.submitted_at + timedelta(hours=assessment.cooldown_hours)
-    ):
+    if not last or not last.submitted_at:
+        return None
+    until = last.submitted_at + timedelta(hours=final.cooldown_hours)
+    return until if (now or timezone.now()) < until else None
+
+
+def _cooldown_reason(user, assessment, now):
+    if not assessment.cooldown_hours:
+        return None
+    if cooldown_until(user, now):
         return f"Please wait {assessment.cooldown_hours} hours between final attempts."
     return None
 

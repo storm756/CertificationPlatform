@@ -362,6 +362,7 @@ def programme_intro(request, kind):
             "kind": kind, "assessment": assessment, "attempts": attempts, "reasons": reasons,
             "open_attempt": next((a for a in attempts if a.is_open), None), "done": done,
             "available": programme.pretest_available(request.user),
+            "cooldown_until": programme.cooldown_until(request.user) if kind == "final" else None,
             "unavailable_reason": examsets.unavailable_reason(request.user),
             "pass_mark": PASS_MARK,
         },

@@ -4,15 +4,15 @@
 {% block page_class %} page--wide{% endblock %}
 {% block extra_head %}<link rel="stylesheet" href="{% static 'css/learn.css' %}">{% endblock %}
 {% block content %}
-  <section class="band band--mod"><div class="dash-hero">
+  <section class="band"><div class="shell"><div class="dash-hero">
     <div class="stack">
       <p class="eyebrow eyebrow--cyan">{{ PROGRAMME_SHORT }}</p>
       <h1>{% blocktranslate with name=user.profile.certificate_name %}Hello, {{ name }}{% endblocktranslate %}</h1>
-      <p class="lede">{% if state == "eligible" %}{% translate "You have met every requirement. Your certificate is next." %}{% elif state == "new" %}{% translate "Welcome. Start with the pre-test, then work through the modules at your own pace." %}{% else %}{% translate "Here is where you are, and what is left before your final." %}{% endif %}</p>
+      <p class="lede">{% if state == "eligible" %}{% translate "You have met every requirement. Your certificate is next." %}{% elif state == "new" and pretest_available %}{% translate "Welcome. Start with the pre-test, then work through the modules at your own pace." %}{% elif state == "new" %}{% translate "Welcome. Work through the modules at your own pace. Your pre-test opens once your batch has its exam set." %}{% else %}{% translate "Here is where you are, and what is left before your final." %}{% endif %}</p>
       {% if result.eligible %}<p>{% include "components/badge.html" with text=result.grade colour="mustard" icon="award" %}</p>{% endif %}
     </div>
     {% include "components/progress_ring.html" with value=result.overall_shown caption=_("overall") %}
-  </div></section>
+  </div></div></section>
 
   <ol class="journey-map" aria-label="{% translate 'Your journey' %}">
     {% for step in journey %}<li class="journey-step {% if step.state == 'done' %}is-done{% elif step.state == 'next' %}is-current{% else %}is-locked{% endif %}"{% if step.state == "next" %} aria-current="step"{% endif %}>{% if step.state == "done" %}{% icon "check-circle" %}{% else %}{% icon "circle" %}{% endif %}<strong>{{ step.label }}</strong><small>{% if step.state == "done" %}{% translate "Done" %}{% elif step.state == "next" %}{% translate "Next" %}{% elif step.state == "optional" %}{% translate "Optional practice" %}{% else %}{% translate "Later" %}{% endif %}</small></li>{% endfor %}
@@ -26,13 +26,19 @@
     </section>
   {% endif %}
 
+  {% if not result.pretest_done and not pretest_available %}
+    {% translate "The pre-test is not available yet." as pretest_fallback %}
+    {% include "components/alert.html" with tone="mustard" icon="clock" title=_("Pre-test not available yet") text=unavailable_reason|default:pretest_fallback %}
+  {% endif %}
+
   <div class="dash-grid">
     <div class="stack-lg">
       <section class="stack" aria-labelledby="left">
         <h2 id="left">{% translate "What's left before your final" %}</h2>
         {% if left.todo %}
-          <ul class="result-list">{% for i in left.todo %}<li class="result-item"><span class="status status--todo">{% icon "circle" %}</span><span><strong>{{ i.text }}</strong>{% if i.detail %} <small class="muted">· {{ i.detail }}</small>{% endif %}</span><a class="btn btn-sm btn-outline" href="{{ i.href }}">{% translate "Open" %}</a></li>{% endfor %}</ul>
-        {% else %}<p class="muted">{% translate "Nothing left: the final is unlocked." %}</p>{% endif %}
+          <ul class="result-list">{% for i in left.todo %}<li class="result-item"><span class="status status--todo">{% icon "circle" %}</span><span><strong>{{ i.text }}</strong>{% if i.detail %} <small class="muted">· {{ i.detail }}</small>{% endif %}</span>{% if i.href %}<a class="btn btn-sm btn-outline" href="{{ i.href }}">{% translate "Open" %}</a>{% else %}<small class="muted">{% translate "Not yet" %}</small>{% endif %}</li>{% endfor %}</ul>
+        {% elif final_open %}<p class="muted">{% translate "Nothing left: the final is unlocked." %}</p>
+        {% else %}<p class="muted">{% translate "Nothing left for you to do right now. The final card explains what is still blocking it." %}</p>{% endif %}
         {% if left.done %}<details class="finished"><summary>{% blocktranslate count n=left.done|length %}{{ n }} finished{% plural %}{{ n }} finished{% endblocktranslate %}</summary>
           <ul class="result-list">{% for i in left.done %}<li class="result-item"><span class="status status--done">{% icon "check-circle" %}</span><span>{{ i.text }}{% if i.detail %} <small class="muted">· {{ i.detail }}</small>{% endif %}</span><a class="link" href="{{ i.href }}">{% translate "Open" %}</a></li>{% endfor %}</ul></details>{% endif %}
       </section>
@@ -56,10 +62,14 @@
     <aside class="stack-lg">
       <section class="card stack" aria-labelledby="final">
         <h2 id="final">{% translate "Final exam" %}</h2>
-        {% if result.final_unlocked %}
+        {% if final_open %}
           <p>{% if result.final_attempts %}{% blocktranslate with best=result.final_shown pass=final_pass %}Your best: <strong>{{ best }}%</strong>. You need {{ pass }}%.{% endblocktranslate %}{% else %}{% translate "The final is unlocked." %}{% endif %}</p>
           {% if final_bands %}<ul class="result-list">{% for b in final_bands %}<li class="result-item"><span>{% translate "Module" %} {{ b.module }}</span><span class="status">{% if b.band == "strong" %}{% translate "Strong" %}{% elif b.band == "ok" %}{% translate "OK" %}{% else %}{% translate "Needs work" %}{% endif %}</span></li>{% endfor %}</ul>{% endif %}
-          <a class="btn btn-primary" href="{% url 'programme_intro' 'final' %}">{% if result.final_attempts %}{% translate "Try the final again" %}{% else %}{% translate "Start the final" %}{% endif %}</a>
+          {% if cooldown_until %}
+            <p>{% icon "clock" %} {% blocktranslate with when=cooldown_until|date:"j N, H:i" %}You can try again after {{ when }}.{% endblocktranslate %}</p>
+          {% else %}
+            <a class="btn btn-primary" href="{% url 'programme_intro' 'final' %}">{% if result.final_attempts %}{% translate "Try the final again" %}{% else %}{% translate "Start the final" %}{% endif %}</a>
+          {% endif %}
         {% else %}
           <p>{% icon "lock" %} {% translate "Locked." %}</p>
           <ul class="ticks">{% for r in final_reasons %}<li>{{ r }}</li>{% endfor %}</ul>

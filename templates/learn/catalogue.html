@@ -23,11 +23,11 @@
 
   <section class="shell section">
     <ol class="journey-map journey-map--catalogue" aria-label="{% translate 'Programme structure' %}">
-      <li class="journey-step">{% icon "target" %}<strong>{% translate "Pre-test" %}</strong><small>{% translate "Coming soon. See what you know before you start." %}</small></li>
+      <li class="journey-step">{% icon "target" %}<strong>{% translate "Pre-test" %}</strong><small>{% if exams_ready %}<a href="{% url 'programme_intro' 'pretest' %}">{% translate "See what you know before you start." %}</a>{% else %}{% translate "Coming soon. See what you know before you start." %}{% endif %}</small></li>
       <li class="journey-step">{% icon "layers" %}<strong>{% translate "Modules 1–9" %}</strong><small>{% translate "Learn, practise, then pass each part with 50%" %}</small></li>
       <li class="journey-step">{% icon "flag" %}<strong>{% translate "Capstone" %}</strong><small>{% translate "Coming soon. An ungraded case simulation." %}</small></li>
       <li class="journey-step">{% icon "retry" %}<strong>{% translate "Practice mock" %}</strong><small>{% translate "18 mixed challenges before the final" %}</small></li>
-      <li class="journey-step">{% icon "award" %}<strong>{% translate "Final exam" %}</strong><small>{% translate "Coming soon. The final counts for half of your overall grade." %}</small></li>
+      <li class="journey-step">{% icon "award" %}<strong>{% translate "Final exam" %}</strong><small>{% if exams_ready %}<a href="{% url 'programme_intro' 'final' %}">{% translate "Unlocks after the pre-test and every module part. It counts for half of your overall grade." %}</a>{% else %}{% translate "Coming soon. The final counts for half of your overall grade." %}{% endif %}</small></li>
     </ol>
 
     <div class="catalog-tools">

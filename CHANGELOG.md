@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-12: Stage 5, exam-set review round (D31)
+
+- A released set is fixed: release stores the approved versions, marks, formats and modules; database triggers and model guards block changes to released membership, the set, its questions and new versions of them. A final question used in an exam cannot change marks, module or pool.
+- One reuse rule for import and release: any question shown in a module or practice attempt, answered in a lesson check, used in a lesson check block, or matching any version of a module or practice question is refused.
+- Draft sets reconcile with the workbook: the preview shows the changes, `--apply` is atomic, rows can be held in reserve or rejected (history kept), and import and release lock the same row. Bad module values, rows without IDs and duplicates are reported per row. Check sets and Release share one validation, including a blueprint that must cover every counted module.
+- Unrelated batch edits no longer overwrite a newer exam-set assignment. The catalogue, dashboard and exam pages use the real availability, lock and cooldown rules, and the dashboard hero is readable again.
+
 ## 2026-11-12: Stage 5, final exam sets per batch (D31)
 
 - Final exam sets (`ExamSet`, `ExamSetItem`) with release checks; an admin assigns one released set per batch (audited). The set supplies both the pre-test (its 18 shared questions) and the final (all 50). Why: the owner asked for fixed Sets B and D instead of a random draw.

@@ -222,20 +222,23 @@ def test_moving_batch_after_the_pretest_keeps_the_set_too(world, make_user, make
     assert drawn(final) == ids_of(sets["B"])
 
 
-def test_the_freeze_keeps_question_versions_even_if_a_question_gets_a_new_version(
+def test_the_freeze_uses_the_approved_versions_and_a_released_question_takes_no_new_one(
     world, make_user, make_batch, admin_user
 ):
+    from apps.assessments.models import ExamSetItem
     from apps.questions import services as qservices
+    from apps.questions.models import QuestionLocked
 
     parts, sets = world
     learner = learner_in(make_user, make_batch, sets["B"], admin_user)
     pre, _ = programme.start_programme(learner, "pretest")
     services.submit(pre.pk, learner.pk)
     frozen = LearnerExamSet.objects.get(user=learner).versions
+    approved = {str(i.question_id): i.version_id for i in ExamSetItem.objects.filter(exam_set=sets["B"])}  # fmt: skip
+    assert frozen == approved
     q = Question.objects.get(pk=next(iter(ids_of(sets["B"]))))
-    body = dict(q.current_version.body, hint="A changed invented hint.")
-    qservices.add_version(q, body)
-    assert Question.objects.get(pk=q.pk).current_version.pk != frozen[str(q.pk)]
+    with pytest.raises(QuestionLocked):
+        qservices.add_version(q, dict(q.current_version.body, hint="A changed invented hint."))
     answer_all_parts(learner, parts)
     final, _ = programme.start_programme(learner, "final")
     used = {i.question_version.question_id: i.question_version_id for i in final.items.all()}
@@ -321,7 +324,9 @@ def test_release_rejects_reused_module_questions_and_copies_with_a_new_id(
     Question.objects.filter(pk=seen.pk).update(pool="final")  # bypassing the pool lock on purpose
     ExamSetItem.objects.filter(exam_set=exam_set, question=copy).update(question=seen)
     errors = examsets.release_errors(exam_set)
-    assert any(f"{seen.stable_id} has been shown outside the final" in e for e in errors)
+    assert any(
+        f"{seen.stable_id} has been shown in a module or practice attempt" in e for e in errors
+    )
 
 
 def test_release_rejects_wrong_marks(make_question, blueprint_2x3):
@@ -413,7 +418,10 @@ def test_the_import_preview_reports_ids_and_counts_only_and_saves_nothing(
     ]
     path = workbook(tmp_path, rows)
     out = run(path)
-    assert "Set Z: 8 rows · accepted 2 · reused 1 · copies 1 · human review 1 · invalid 3" in out
+    assert (
+        "Set Z: 8 rows · accepted 2 · reserve 0 · reused 1 · copies 1 · human review 1 · invalid 3"
+        in out
+    )
     assert "M1-FZ03" in out and "M1-FZ04" in out and f"question {module_q.stable_id}" in out
     assert "Module 1: 2 accepted of 3 needed" in out and "Module 2: 0 accepted of 3 needed" in out
     assert "Preview only: nothing was saved" in out

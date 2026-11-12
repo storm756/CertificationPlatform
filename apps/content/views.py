@@ -86,6 +86,10 @@ def _module_card(user, module):
 
 
 def catalogue(request):
+    from apps.assessments import programme
+
+    # the pre-test and final are open to a learner whose batch has a released exam set
+    exams_ready = _is_learner(request.user) and programme.pretest_available(request.user)
     cards = [_module_card(request.user, m) for m in Module.objects.all()]
     learning = [c for c in cards if not c["capstone"]]
     return render(
@@ -93,6 +97,7 @@ def catalogue(request):
         "learn/catalogue.html",
         {
             "cards": cards,
+            "exams_ready": exams_ready,
             "stats": {
                 "modules": len(learning),
                 "topics": sum(c["topics"] for c in learning),

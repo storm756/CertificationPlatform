@@ -190,6 +190,10 @@ class ExamSetStatus(models.TextChoices):
     RELEASED = "released", "Released"
 
 
+class ExamSetLocked(Exception):
+    """A released exam paper is fixed. Corrections go through a new draft set."""
+
+
 class ExamSet(models.Model):
     """A fixed final-exam paper, e.g. Set B. Its pre-test questions are a subset of its final."""
 
@@ -212,6 +216,27 @@ class ExamSet(models.Model):
     def is_released(self):
         return self.status == ExamSetStatus.RELEASED
 
+    def save(self, *args, **kwargs):  # noqa: DJ012
+        if self.pk:
+            before = ExamSet.objects.filter(pk=self.pk).values("status", "code").first()
+            if (
+                before
+                and before["status"] == ExamSetStatus.RELEASED
+                and (self.status != ExamSetStatus.RELEASED or self.code != before["code"])
+            ):
+                raise ExamSetLocked(f"{self} is released and cannot be changed or withdrawn.")
+        super().save(*args, **kwargs)
+
+    def members(self):
+        """The items that make up the paper (not those held in reserve or rejected)."""
+        return self.items.filter(state=ItemState.MEMBER)
+
+
+class ItemState(models.TextChoices):
+    MEMBER = "member", "In the paper"
+    RESERVE = "reserve", "Held in reserve"
+    REJECTED = "rejected", "Rejected"
+
 
 class ExamSetItem(models.Model):
     exam_set = models.ForeignKey(ExamSet, on_delete=models.CASCADE, related_name="items")
@@ -219,6 +244,20 @@ class ExamSetItem(models.Model):
         "questions.Question", on_delete=models.PROTECT, related_name="exam_set_items"
     )
     in_pretest = models.BooleanField(default=False)  # one of the set's shared baseline questions
+    state = models.CharField(max_length=10, choices=ItemState.choices, default=ItemState.MEMBER)
+    # What release approved: the exact version, marks, format and module. Set once, at release.
+    version = models.ForeignKey(
+        "questions.QuestionVersion",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="+",
+    )
+    approved_points = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    approved_format = models.CharField(max_length=12, blank=True)
+    approved_module = models.ForeignKey(
+        "content.Module", null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -229,6 +268,22 @@ class ExamSetItem(models.Model):
 
     def __str__(self):
         return f"{self.exam_set} · {self.question_id}"
+
+    def _check_open(self, set_id):
+        if ExamSet.objects.filter(pk=set_id, status=ExamSetStatus.RELEASED).exists():
+            raise ExamSetLocked("A released exam set is fixed. Start a new draft set instead.")
+
+    def save(self, *args, **kwargs):  # noqa: DJ012
+        self._check_open(self.exam_set_id)
+        if self.pk:
+            self._check_open(
+                ExamSetItem.objects.filter(pk=self.pk).values_list("exam_set_id", flat=True).first()
+            )
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        self._check_open(self.exam_set_id)
+        return super().delete(*args, **kwargs)
 
 
 class LearnerExamSet(models.Model):

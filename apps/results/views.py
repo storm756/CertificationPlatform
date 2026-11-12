@@ -6,7 +6,7 @@ Everything shown is computed by `compute_results`, so it always agrees with elig
 from django.shortcuts import render
 from django.urls import reverse
 
-from apps.assessments import programme
+from apps.assessments import examsets, programme
 from apps.assessments.models import Attempt, AttemptStatus, ProgrammeAssessmentKind
 from apps.content import services as content
 from apps.results import insights
@@ -41,12 +41,13 @@ def journey(result, final_state) -> list[dict]:
     return out
 
 
-def whats_left(result, user) -> dict:
+def whats_left(result, user, pretest_ready=True) -> dict:
     """Things still to do first, finished ones after (collapsed in the page)."""
     todo, done = [], []
     pre = {
         "text": "Take the short pre-test",
-        "href": reverse("programme_intro", args=["pretest"]),
+        "href": reverse("programme_intro", args=["pretest"]) if pretest_ready else None,
+        "detail": None if pretest_ready else "not available yet",
         "done": result.pretest_done,
     }
     (done if pre["done"] else todo).append(pre)
@@ -65,7 +66,11 @@ def whats_left(result, user) -> dict:
 def dashboard(request):
     user = request.user
     result = compute_results([user.pk])[user.pk]
-    final_reasons = [] if result.final_unlocked else programme.final_locked_reasons(user)
+    pretest_ready = programme.pretest_available(user)
+    # the same rules start_programme applies: course setup, pre-test, every part answered
+    final_reasons = programme.final_locked_reasons(user)
+    final_open = not final_reasons
+    cooldown = programme.cooldown_until(user) if final_open else None
     has_final = result.final_attempts > 0
     bands = _final_bands(user) if has_final else []
     state = (
@@ -81,13 +86,16 @@ def dashboard(request):
             "result": result,
             "state": state,
             "journey": journey(result, state),
-            "left": whats_left(result, user),
+            "left": whats_left(result, user, pretest_ready),
             "final_reasons": final_reasons,
+            "final_open": final_open,
+            "cooldown_until": cooldown,
+            "unavailable_reason": examsets.unavailable_reason(user),
             "final_bands": bands,
             "final_pass": FINAL_PASS,
             "weakest": insights.weakest_pcs(user),
             "hours": content.hours_for(user),
-            "pretest_available": programme.pretest_available(user),
+            "pretest_available": pretest_ready,
             "modules": [
                 {"m": m, "href": reverse("learn_module", args=[m.number])} for m in result.modules
             ],
