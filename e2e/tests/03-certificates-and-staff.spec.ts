@@ -148,6 +148,8 @@ test.describe.serial("certificates", () => {
     const before = await tokens(page);
     expect(before.length).toBe(4);
 
+    const menu = page.locator(".nav-toggle");
+    if (await menu.isVisible()) await menu.click(); // on a phone the language box is in the menu
     await page.locator("select[data-lang-select]").selectOption("en");
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await page.goto(`${attempt}q/3/`);

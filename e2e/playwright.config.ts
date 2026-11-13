@@ -11,7 +11,7 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   globalSetup: "./global-setup.ts",
-  timeout: 90_000,
+  timeout: 180_000, // a whole final (50 questions) is answered in one journey
   expect: { timeout: 10_000 },
   reporter: [["list"], ["html", { open: "never", outputFolder: "report" }]],
   use: {

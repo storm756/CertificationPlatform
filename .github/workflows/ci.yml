@@ -60,6 +60,75 @@ jobs:
           DJANGO_ALLOWED_HOSTS: cyberfirstresponse.io
       - run: pytest
 
+  e2e:
+    # Journeys 1-16 (architecture §18) against a throwaway dev server on an empty database. The seed
+    # builds an invented course, so no private content is needed. Pull requests only.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: csfr
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s
+          --health-timeout 3s --health-retries 20
+      mailpit:
+        image: axllent/mailpit:v1.21
+        ports: ["1025:1025", "8025:8025"]
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      DJANGO_SECRET_KEY: ci-only-not-a-secret
+      DB_HOST: localhost
+      DB_USER: postgres
+      DB_PASSWORD: ci
+      EMAIL_HOST: localhost
+      EMAIL_PORT: "1025"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: WeasyPrint system libraries (certificate PDFs)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0
+      - run: pip install -r requirements-dev.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+      - name: Playwright and Chromium
+        working-directory: e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Database, invented data, dev server
+        run: |
+          python manage.py migrate
+          python manage.py e2e_seed > e2e/manifest.json
+          nohup python manage.py runserver 0.0.0.0:8000 --noreload > runserver.log 2>&1 &
+          for i in $(seq 1 30); do curl -fs http://localhost:8000/healthz/ && break; sleep 1; done
+      - name: Journeys 1-16
+        working-directory: e2e
+        env:
+          BASE_URL: http://localhost:8000
+          MAILPIT_URL: http://127.0.0.1:8025
+        run: npx playwright test
+      - name: Keep the report and the server log when it fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-report
+          path: |
+            e2e/report
+            e2e/test-results
+            runserver.log
+          retention-days: 7
+
   deploy-files:
     runs-on: ubuntu-24.04
     steps:

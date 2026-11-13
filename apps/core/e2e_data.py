@@ -388,7 +388,14 @@ def clean_marked(domains, batch_prefixes):
     for domain in domains:
         users = users | User.objects.filter(email__iendswith="@" + domain)
     user_ids = list(users.values_list("pk", flat=True))
-    done["certificates"] = Certificate.objects.filter(user_id__in=user_ids).delete()[0]
+    from apps.certificates.services import pdf_file
+
+    certificates = Certificate.objects.filter(user_id__in=user_ids)
+    for certificate in certificates:  # the stored PDFs go too, or a reused number finds its file
+        path = pdf_file(certificate)
+        if path is not None:
+            path.unlink(missing_ok=True)
+    done["certificates"] = certificates.delete()[0]
     done["attempts"] = Attempt.objects.filter(user_id__in=user_ids).delete()[0]
     done["users"] = User.objects.filter(pk__in=user_ids).delete()[0]
     batches = Batch.objects.none()

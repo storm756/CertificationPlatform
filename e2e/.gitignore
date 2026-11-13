@@ -3,3 +3,4 @@ report/
 test-results/
 manifest.json
 .auth/
+manifest*.json
