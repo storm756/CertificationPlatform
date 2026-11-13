@@ -531,6 +531,8 @@ fieldset.form-section { margin: 0; }
 .help-cards h2 { font-size: 1.3rem; }
 .help-cards .muted { margin: .4rem 0 1rem; }
 .row--center { justify-content: center; }
-.error-page h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); }
+.error-page { grid-template-columns: minmax(0, 1fr); }
+.error-page h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); overflow-wrap: anywhere; }
+.error-page .row { max-width: 100%; }
 .error-page .muted { max-width: 32rem; }
 .prose .notice { margin-bottom: 1.5rem; }

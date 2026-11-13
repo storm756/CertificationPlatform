@@ -23,13 +23,18 @@ Brief from the lead: port the landing page; privacy, terms, grievance, help/FAQ 
 | 1 | Branch, this file | done |
 | 2 | `apps/core/faq.py` (shared FAQ), public views, URLs (`/terms/`, `/grievance/`, `/help/`, `/people/<slug>/`), 404/500, middleware allow-list, footer links | done |
 | 3 | `templates/landing.html`, `static/css/landing.css`, `static/js/landing.js` | done; 847 tests pass |
-| 4 | Favicon PNGs, apple-touch-icon, social preview image | todo |
-| 5 | UI translation drafts (hi/mr/gu) for the new strings | todo |
-| 6 | New tests (`tests/test_public_pages.py`) | todo |
-| 7 | Lighthouse accessibility (>= 90) and screenshots (390/1366 in 4 languages, 360 in hi/mr/gu) | todo |
-| 8 | Docs: architecture §31, CHANGELOG, STATUS; push; PR | todo |
+| 4 | Favicon PNGs, apple-touch-icon, social preview image | done |
+| 5 | UI translation drafts (hi/mr/gu) for the new strings | done |
+| 6 | New tests (`tests/test_public_pages.py`) | done |
+| 7 | Lighthouse accessibility (>= 90) and screenshots (390/1366 in 4 languages, 360 in hi/mr/gu) | done |
+| 8 | Docs: architecture §31, CHANGELOG, STATUS; push; PR | done |
 
 ## Notes
 
 - Docker dev image had to be rebuilt (`docker compose -f deploy/compose.dev.yml build web`) because `django_jsonform` was missing from an older image.
 - `templates/home.html` is gone; `templates/landing.html` replaces it (signed-in visitors see "Continue" instead of "Start certification").
+
+## Checks (final)
+
+ruff clean; `makemigrations --check` clean; full suite 884 passed; Lighthouse accessibility 100 on `/`, `/privacy/`, `/terms/`, `/grievance/`, `/help/` (the 404 and 500 pages checked with axe, since Lighthouse refuses non-200 pages); axe 0 serious at 360/390/1366 in en, hi, mr, gu. Screenshots (ignored) in `screenshots/stage-9/`; the 404/500 ones are `_404-*`/`_500-*` (rendered with DEBUG off by `tools/shot_files.mjs`).
+Known: module titles show English in hi/mr/gu until the team's module-title translations are reviewed (open item in STATUS).

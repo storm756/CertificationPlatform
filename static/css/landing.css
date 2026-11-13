@@ -391,3 +391,4 @@
 @media (min-width: 64rem) { .format-grid { grid-template-columns: repeat(3, 1fr); } }
 .people-grid--single { grid-template-columns: 1fr; max-width: 32rem; }
 .person--placeholder { border-style: dashed; grid-template-rows: 1fr; }
+.route-card--capstone h3 { color: var(--white); }

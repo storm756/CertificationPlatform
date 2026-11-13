@@ -1,6 +1,6 @@
 # Project status: read this first
 
-**Updated:** 13 Nov 2026 (Stage 8 PR). Every Claude session starts here, then reads `CLAUDE.md`, `docs/decisions.md` and the current stage in `docs/build-stages.md`.
+**Updated:** 13 Nov 2026 (Stage 9 PR). Every Claude session starts here, then reads `CLAUDE.md`, `docs/decisions.md` and the current stage in `docs/build-stages.md`.
 At the end of every stage, Claude updates this file in the same PR. Dated review results live in [`docs/history/`](history/) (one file per stage), not here.
 
 ## Order of authority (when two documents disagree)
@@ -31,8 +31,9 @@ If two of these still disagree, or something is missing, **stop and ask in chat*
 | 6. Staff tools | ✅ Merged (PR #13, `5a25aac`) | [stage-6.md](history/stage-6.md) |
 | 7. Certificates | ✅ Merged (PR #14, `ccb7ec6`). Built to D36 with the **placeholder** design; no real certificate may be approved until the signature images, final design and emblem are in (see below). | [stage-7.md](history/stage-7.md) |
 | Fix: per-client rate limits | ✅ Merged (PR #15, `057c67b`). `/learn/check` and the block endpoint are limited per signed-in user, the mentor reset link per client IP (X-Forwarded-For). Before this, Caddy's address made each limit one site-wide bucket. Caddy 2.11 was checked: it replaces a client-sent X-Forwarded-For, so the left-most entry is the real client. This holds only while nothing else (a CDN, another proxy) sits in front of the edge Caddy; if that changes, set `trusted_proxies` and revisit `client_ip`. | — |
-| 8. Multilingual | 🟡 PR #16 from `stage-8` (one PR, 8a and 8b merged at the lead's request). Not merged. UI catalogues and course translations are **drafts** until the team reviews them; assessments show reviewed lines only (D24). | [stage-8-progress.md](history/stage-8-progress.md) |
-| 9–10 | ⬜ In order. One stage = one branch = one PR. | — |
+| 8. Multilingual | ✅ Merged (PR #16, `a7d0b93`). UI catalogues and course translations are **drafts** until the team reviews them; assessments show reviewed lines only (D24). | [stage-8-progress.md](history/stage-8-progress.md) |
+| 9. Landing page and public pages | 🟡 PR from `stage-9`. Landing, privacy, terms, grievance, help, 404/500, favicon and social image; draft legal text; people section is a placeholder until consent. Not merged. | [stage-9-progress.md](history/stage-9-progress.md) |
+| 10 | ⬜ Next. One stage = one branch = one PR. | — |
 
 Earlier table and open items: [status-2026-11-12.md](history/status-2026-11-12.md).
 
@@ -50,7 +51,7 @@ Earlier table and open items: [status-2026-11-12.md](history/status-2026-11-12.m
 | **Sets B and D in the teammate's local database were released on 12 Nov with fillers from Sets A and C** (50 questions each, 18 pre-test). Has Teammate A approved those fillers? A released paper is fixed, so swapping in the fresh questions means a **new draft set** (D31). | Lead + Teammate A | Not recorded as approved. Staging and production have no sets yet. |
 | **Set D's surplus Module 8 question** (6 fresh for 5 places): hold one in reserve, or the owner approves a blueprint change. Blueprint is 6/6/5/6/6/6/5/5/5 = 50; changing it needs the owner. | Repo owner / content team | One row held in `reserve`. |
 | Module 8 page note "the crosswords stay in English" (D33): reviewed Hindi, Marathi and Gujarati wording | Teammate B + reviewers | Built in Stage 8 as `note:m8-crosswords-english`. Shows in English until a reviewer approves each language (Admin → Translations). |
-| Help, terms and grievance pages (D34 lists them as public) and the grievance officer, guardian-consent method (DPDP) | CyberPeace legal | Only `/privacy/` exists, as a draft. |
+| Final wording for privacy, terms and grievance (the officer, address, reply times) and the guardian-consent method (DPDP). The help page and FAQ text should be read by the team too. | CyberPeace legal | Built in Stage 9 as placeholders marked "Draft" on `/privacy/`, `/terms/`, `/grievance/`. |
 | **Do not approve any real learner's certificate until the signature images, the final design and the emblem are in.** Each PDF is fixed at issue (D36). | Lead + every mentor | Mentors and admins see a warning while signatures are missing or `CERTIFICATE_DESIGN_FINAL` is off. Keep auto-issue off. |
 | The 3 signature images (transparent PNG): Dr. Nilakshi Jain, Dr. Bhavesh Patel, Maj. Vineet Kumar. **Never in git** (public repo). | Lead | A person copies them to `media/private/signatures/signature-1.png` … `-3.png` on the server (architecture §29). Until then names print over a blank line. |
 | The final certificate design | Lead | A placeholder in the look of `cert-front.jpg`. The swap is a template-only PR (`templates/certificates/pdf/certificate.html`), then set `CERTIFICATE_DESIGN_FINAL = True`. |
@@ -58,10 +59,10 @@ Earlier table and open items: [status-2026-11-12.md](history/status-2026-11-12.m
 | Check the printed college / department name and the signatory order on the sample PDF | Lead + HOD | Printed as agreed in D36: "Department of Cyber Security, Shah & Anchor Kutchhi Engineering College (SAKEC), in collaboration with CyberPeace Foundation"; Jain · Patel · Kumar. |
 | Optional: an official programme hours figure, if hours should be printed | Lead | No hours are printed (D36); the snapshot keeps each learner's hours. |
 | NSQF level and credits, once approved by the competent authority | Lead | The certificate says they are shown after approval. An admin turns `nsqf_approved` on in Admin → Certificate settings (new issues only). |
-| Consent from the three people whose photos are on the landing page | Lead | Photos stay in `content-data/people/`, never in git. |
+| Consent from the three people for the "Who runs it" section, then copy the photos (`bhavesh-patel.jpg`, `nilakshi-jain.jpg`, `vineet-kumar.webp`) to `PEOPLE_PHOTO_DIR` on the server and set `PEOPLE_CONSENT_GIVEN=1`. Photos never go in git. | Lead | The landing page shows a placeholder card (Stage 9). |
 | Module 10 capstone materials | Programme team | Module 10 shows Coming soon (D26). |
 | Reviewed translations: lesson text, the 324 corrected-table drafts, the 509 hints (hi/mr/gu), Marathi and Gujarati film captions | Teammate B + reviewers | Lessons show draft translations with a tag. Assessments show only lines a reviewer approved in the app, English otherwise (D24). **The hint workbook has no Hindi, Marathi or Gujarati hints filled in yet**, so hints stay English. Films have English and Hindi captions. |
-| Review the UI catalogues (`locale/*/django.po`, 658 strings per language). All are drafts (`draft: needs review`): 167 from the prototype, the rest drafted in Stage 8. Edit in Rosetta, download, commit in a PR. | Teammate B + reviewers | The site shows the drafts. |
+| Review the UI catalogues (`locale/*/django.po`, 746 strings per language). All are drafts (`draft: needs review`): 167 from the prototype, the rest drafted in Stages 8 and 9 (88 new in Stage 9 for the landing and public pages). Edit in Rosetta, download, commit in a PR. | Teammate B + reviewers | The site shows the drafts. |
 | Grant reviewers: give each reviewer the permission for their language ("Reviewer: Hindi", "Reviewer: Marathi", "Reviewer: Gujarati") and translators "Translator: upload translation sheets" in the admin. | Lead | Only superusers can review. |
 | `_framework-labels-verify.csv` has its columns shifted one to the left (English under `id`). The importer copes, but the team's next copy should be fixed. | Teammate B | Imported correctly. |
 | Lines the importer could not match to the live course: `content-data/outputs/translation-import-report.csv` (private). Mostly the old jumbled booklet tables and framework labels that are UI strings. | Teammate B | Not imported. |
