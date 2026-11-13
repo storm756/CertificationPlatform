@@ -102,7 +102,7 @@ csfr-platform/                (git repo, cloned to D:\ locally — not OneDrive)
 ├── templates/                base.html, components/ (partials), allauth/ (element overrides), one folder per app
 ├── locale/                   our own gettext catalogues (hi, mr, gu; Django ships none for Gujarati)
 ├── tests/                    pytest (unit, integration) · Playwright (journeys in §18)
-├── deploy/                   compose.yml (per-env stack), compose.edge.yml (shared Caddy), compose.dev.yml, Caddyfile, backup/ + restore.sh, server/bootstrap.sh
+├── deploy/                   compose.yml (per-env stack), compose.edge.yml (shared Caddy), compose.dev.yml, caddy/Caddyfile, backup/ + restore.sh, server/bootstrap.sh
 ├── static/                   css/ (tokens, fonts, base, app, stage), js/ (ccfr-shell.js, ...), fonts/ (woff2 + OFL licences), img/ (logos, icons.svg sprite)
 ├── design-reference/         the approved frontend prototype: the look only, never code to copy (D20)
 ├── tools/                    screenshots.mjs (Playwright screenshots + axe), used by every PR

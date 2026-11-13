@@ -27,6 +27,7 @@ If two of these still disagree, or something is missing, **stop and ask in chat*
 | 4. Learning content | ✅ Merged (PR #7), content follow-up merged (PR #8) | [stage-4.md](history/stage-4.md), [stage-4-content.md](history/stage-4-content.md) |
 | 5. Results, final exam, pre-test, dashboard | ✅ Merged (PR #9, `505c33f`) | [stage-5.md](history/stage-5.md) |
 | Decisions D32–D35 | 🟡 PR from `decisions-d32-d35`: attempt limit (D32), lessons need sign-in (D34), films served by Caddy with range requests (D35) | — |
+| Deploy fix: Caddy reload | 🟡 PR from `deploy-caddy-reload`: `deploy/caddy/` is mounted as a directory and `deploy.sh` validates then reloads Caddy on every deploy | — |
 | 6. Staff tools | 🟡 On its branch: `stage-6-review` (2 commits on `505c33f`, the last marked "WIP, review not finished"); `stage-6` is the older copy on the old Stage 5 base | — |
 | 7–10 | ⬜ In order. One stage = one branch = one PR. | — |
 
@@ -53,6 +54,7 @@ Earlier table and open items: [status-2026-11-12.md](history/status-2026-11-12.m
 | Module 10 capstone materials | Programme team | Module 10 shows Coming soon (D26). |
 | Reviewed translations: lesson text, the 324 corrected-table drafts, the 509 hints (hi/mr/gu), Marathi and Gujarati film captions | Teammate B + reviewers | Lessons show draft translations with a tag; assessments stay English (D24); films have English and Hindi captions. |
 | YouTube IDs (D18) | Content team | Films stay MP4 for now (D35). |
+| **Fix before Stage 10: staging and prod share one Caddy (the `csfr-edge` stack), and its config comes from whichever checkout deployed last**, so a staging deploy also changes prod's routing (and could break it). Suggested fix: keep one fixed edge config outside both checkouts (e.g. `/srv/csfr/edge/caddy/`, installed from `main` by a separate `deploy/deploy.sh edge` step that validates and reloads), and stop `deploy.sh staging|prod` from touching Caddy. | Lead / next deploy-touching stage | Deploy staging and prod from the same ref, so the Caddyfile is the same. Reload itself is fixed (validated `caddy reload` on every deploy). |
 | Staging deploy and course load; branch protection on `main` (PR + green CI, no force pushes) | A person with server / GitHub access | Nothing new is visible on staging. |
 
 ## Design calls still in force

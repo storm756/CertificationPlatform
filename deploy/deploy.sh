@@ -70,6 +70,13 @@ echo "==> collectstatic"
 echo "==> restarting"
 "${COMPOSE[@]}" up -d --remove-orphans
 docker compose -f compose.edge.yml up -d
+# Caddy reads its config only at start, and `up -d` does not recreate it when just the Caddyfile changed.
+# Validate first: a broken file aborts the deploy and Caddy keeps serving the config it already has.
+EDGE=(docker compose -f compose.edge.yml exec -T caddy caddy)
+echo "==> reloading Caddy"
+"${EDGE[@]}" validate --config /etc/caddy/Caddyfile \
+  || { echo "Caddyfile is invalid: Caddy was NOT reloaded and still runs its previous config" >&2; exit 1; }
+"${EDGE[@]}" reload --config /etc/caddy/Caddyfile --force
 "${COMPOSE[@]}" up -d --wait web
 # tasks runs the same image as web; `up -d` recreates it with the new image, so it never runs old code.
 "${COMPOSE[@]}" up -d tasks
