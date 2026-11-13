@@ -1,0 +1,2 @@
+# Only for loadtest/. Not installed in the site's images.
+locust==2.32.4
