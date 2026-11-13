@@ -10,8 +10,10 @@ from allauth.account.models import EmailAddress
 from django.db.models import Max
 from django.utils import timezone
 
+from apps.accounts.rules import certificate_name_ok
 from apps.assessments.models import Attempt
 from apps.batches.models import Enrolment
+from apps.certificates import services as certificates
 from apps.content.models import UnitProgress
 from apps.results.policy import compute_results, round1
 
@@ -39,6 +41,8 @@ def _last_activity(user_ids):
 
 
 def status_label(enrolment, result, verified) -> str:
+    if result.already_issued:
+        return "certificate issued"
     if not verified:
         return "email not verified"
     if enrolment.user.status == "pending_guardian":
@@ -98,6 +102,7 @@ def batch_overview(batch, now=None) -> dict:
             "overall": r.overall_shown,
             "status": status_label(e, r, e.user_id in verified),
             "eligible": r.eligible,
+            "name_ok": certificate_name_ok(e.user.profile.certificate_name),
             "last_activity": last,
         }
         rows.append(row)
@@ -109,6 +114,7 @@ def batch_overview(batch, now=None) -> dict:
         "rows": rows,
         "modules": modules,
         "stuck": stuck,
-        "awaiting": awaiting,
-        "issued_this_week": 0,  # certificates arrive in Stage 7
+        "awaiting": awaiting,  # eligible and holding no certificate (§12)
+        "approvable": sum(1 for row in awaiting if row["name_ok"]),
+        "issued_this_week": list(certificates.issued_recently(batch, now)),
     }

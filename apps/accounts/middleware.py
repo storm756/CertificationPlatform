@@ -27,6 +27,7 @@ _GUARDIAN_WAIT_PREFIXES = (
     "/waiting/",
     "/guardian/",
     "/privacy/",
+    "/verify/",
     "/i18n/",
 )
 EMAIL_CHANGE_BLOCK = timedelta(days=7)

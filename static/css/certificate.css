@@ -1,0 +1,17 @@
+/* Certificate and verify pages (Stage 7). Tone modifiers for the shared .state-panel and
+   .verify-status components (CSP forbids inline styles, so the colour comes from a class). */
+.tone--teal { --c: var(--teal); }
+.tone--mustard { --c: var(--mustard-deep); }
+.tone--danger { --c: var(--danger); }
+.tone--blue { --c: var(--blue); }
+.tone--muted { --c: var(--ink-muted); }
+.align-top { align-items: start; }
+.cert-actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: flex-start; }
+.cert-details dd { overflow-wrap: anywhere; }
+.code-form { display: flex; flex-wrap: wrap; gap: .75rem; align-items: flex-end; }
+.code-form .field { flex: 1 1 14rem; }
+.code-form .btn { margin-bottom: 1.6rem; }
+.code-form input { text-transform: uppercase; letter-spacing: .12em; }
+.print-name { font-family: var(--font-display); letter-spacing: .02em; text-transform: uppercase; overflow-wrap: anywhere; }
+.verify-note { max-width: 36rem; margin-inline: auto; text-align: center; font-size: .92rem; }
+.name-hold { color: var(--terracotta-ink); font-weight: 600; }

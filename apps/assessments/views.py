@@ -16,6 +16,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from apps.accounts.models import Role
+from apps.certificates.services import auto_issue_after_submit
 from apps.questions import formats
 from apps.questions.models import QuestionImage
 from apps.questions.projections import client_projection
@@ -248,7 +249,9 @@ def review(request, pk):
 @require_POST
 def submit(request, pk):
     attempt = _own_attempt(request, pk)
-    services.submit(attempt.pk, request.user.pk)
+    closed = services.submit(attempt.pk, request.user.pk)
+    if closed.just_closed:  # a double tap closes the attempt once, so this runs once
+        auto_issue_after_submit(request.user, request)  # never raises; §12 auto-issue
     return redirect("attempt_result", pk=attempt.pk)
 
 

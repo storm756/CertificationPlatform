@@ -32,6 +32,8 @@
         {% if user.is_authenticated and user.role == 'learner' %}
           {% url 'start' as start_url %}
           <li><a href="{{ start_url }}"{% if request.path == start_url %} aria-current="page"{% endif %}>{% icon "chart" %}{% translate "My progress" %}</a></li>
+          {% url 'my_certificate' as cert_url %}
+          <li><a href="{{ cert_url }}"{% if request.path == cert_url %} aria-current="page"{% endif %}>{% icon "award" %}{% translate "Certificate" %}</a></li>
         {% endif %}
         {% url 'privacy' as privacy_url %}
         <li><a href="{{ privacy_url }}"{% if request.path == privacy_url %} aria-current="page"{% endif %}>{% icon "shield" %}{% translate "Privacy" %}</a></li>

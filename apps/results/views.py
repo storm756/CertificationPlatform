@@ -8,6 +8,7 @@ from django.urls import reverse
 
 from apps.assessments import examsets, programme
 from apps.assessments.models import Attempt, AttemptStatus, ProgrammeAssessmentKind
+from apps.certificates import services as certificates
 from apps.content import services as content
 from apps.results import insights
 from apps.results.policy import FINAL_PASS, compute_results, round1
@@ -30,7 +31,7 @@ def journey(result, final_state) -> list[dict]:
         ("Modules", result.parts_all_answered),
         ("Practice mock", None),
         ("Final", result.final_passed),
-        ("Certificate", False),
+        ("Certificate", result.already_issued),
     ]
     out, marked_next = [], False
     for label, done in steps:
@@ -73,8 +74,11 @@ def dashboard(request):
     cooldown = programme.cooldown_until(user) if final_open else None
     has_final = result.final_attempts > 0
     bands = _final_bands(user) if has_final else []
+    cert = certificates.current_certificate(user)
+    cert_state = certificates.certificate_state(cert, result)
     state = (
-        "eligible" if result.eligible
+        "certified" if cert_state == "issued"
+        else "eligible" if result.eligible
         else "unlocked" if result.final_unlocked
         else "new" if not any(p.attempts for m in result.modules for p in m.parts) and not result.pretest_done
         else "midway"
@@ -85,6 +89,8 @@ def dashboard(request):
         {
             "result": result,
             "state": state,
+            "cert": cert,
+            "cert_state": cert_state,
             "journey": journey(result, state),
             "left": whats_left(result, user, pretest_ready),
             "final_reasons": final_reasons,

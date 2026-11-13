@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-11-13: Stage 7, certificates (D36)
+
+- D36 records the lead's certificate decisions (answers D28): the title "Community Cyber First Responder (CCFR)", the one-page wording with the grade only (no percentages or hours), the three signatories in settings, the number `CCFR-<year>-<centre code>-<serial>`, NSQF wording and auto-issue off by default. Why: D28 left these to the lead before Stage 7.
+- Certificates: `issue()` locks the learner, re-checks eligibility, takes a serial from one global sequence, snapshots the result and renders a WeasyPrint PDF whose URL fetcher answers only an allowlist (fonts, logos, private signature images, the QR code). One issued certificate per learner (row lock + partial unique index). `revoke()` and `erase_holder()` are admin-only. Why: architecture §12.
+- New per-batch `centre_code` (2–6 capitals or digits, default `SAKEC`, admin-only, database check). Why: it is part of the certificate number (D36).
+- Pages: the learner's `/certificate/` page and owner-only download, a certificate card on My progress and a nav link; the public `/verify/<code>/` (rate-limited per client IP, no lookup by number, "Revoked" without the name, the erased-holder message); the mentor's "Awaiting approval" (Approve, Approve all) and "Issued this week"; admin revoke and remove-holder-details actions, NSQF settings and a batch "issue certificates" action. Auto-issue runs after the learner's own submit when the batch switch is on; switching it on never bulk-issues. Why: Stage 7.
+- Guard: while signature images are missing or `CERTIFICATE_DESIGN_FINAL` is off, mentors and admins see a warning that certificates issued now are final (approving still works). Why: each PDF is fixed at issue, and the signatures, final design and emblem are still to come.
+- The placeholder certificate is A4 landscape in the look of `cert-front.jpg`, in one self-contained template, so the final design is a template-only change.
+- The image installs Pango and HarfBuzz for WeasyPrint (CI too). New pins: `weasyprint==70.0`, `segno==1.6.6`, and `pypdf==6.21.4` for tests. Why: WeasyPrint and segno are the planned PDF and QR tools (architecture §3).
+- D37: certificate names are in English letters only. Sign-up and a mentor's or admin's name change refuse other scripts and digits; a stored name that breaks the rule is held back from issuing with "Correct the name first" for the mentor and a note for the learner. The PDF now loads Latin fonts only. Why: the certificate is English (D10) and a name in a script the fonts can't print would have been fixed into the PDF as empty boxes. Test learners and `tools/seed_e2e.py` use letters-only names.
+- Shared CSS: the `dt` labels of `.part-card` and `.verify-card` now use `--ink-muted`. Why: `--ink-soft` on white failed the axe contrast check.
+
 ## 2026-11-13: Deploy scripts are executable
 
 - `deploy/deploy.sh`, `deploy/restore.sh` and `deploy/server/bootstrap.sh` are now marked executable in git, so `deploy/deploy.sh staging` runs without `bash` in front (it gave "Permission denied" on the server). `docs/STATUS.md` now says staging was deployed at `fcce8b6` on 13 Nov. Why: found during the first staging deploy.

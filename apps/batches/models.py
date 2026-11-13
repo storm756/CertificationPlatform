@@ -1,7 +1,17 @@
 from django.conf import settings
+from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import Q
 from simple_history.models import HistoricalRecords
+
+CENTRE_CODE_PATTERN = r"^[A-Z0-9]{2,6}$"
+centre_code_validator = RegexValidator(
+    CENTRE_CODE_PATTERN, "Use 2 to 6 capital letters or digits, for example SAKEC."
+)
+
+
+def default_centre_code() -> str:
+    return settings.CERTIFICATE_DEFAULT_CENTRE
 
 
 class BatchStatus(models.TextChoices):
@@ -13,6 +23,14 @@ class Batch(models.Model):
     name = models.CharField(max_length=120)
     code = models.CharField(max_length=20, unique=True)
     centre = models.CharField(max_length=120, blank=True)
+    # Printed in the certificate number (D36). Admins set it; a new batch gets the default.
+    centre_code = models.CharField(
+        max_length=6,
+        default=default_centre_code,
+        validators=[centre_code_validator],
+        help_text="2 to 6 capital letters or digits. It is part of every certificate number "
+        "issued to this batch, e.g. CCFR-2026-SAKEC-000001.",
+    )
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     # Registration is closed by default (D9): nothing accepts sign-ups until someone opens it.
@@ -45,7 +63,11 @@ class Batch(models.Model):
                 fields=["is_open_pool"],
                 condition=Q(is_open_pool=True),
                 name="only_one_open_pool",
-            )
+            ),
+            models.CheckConstraint(
+                condition=Q(centre_code__regex=CENTRE_CODE_PATTERN),
+                name="batch_centre_code_format",
+            ),
         ]
 
     def __str__(self):

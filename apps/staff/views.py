@@ -411,7 +411,7 @@ def report(request):
                 "registered": len(ids),
                 "active": sum(1 for u in ids if results[u].active),
                 "eligible": sum(1 for u in ids if results[u].eligible),
-                "issued": 0,  # certificates arrive in a later stage
+                "issued": sum(1 for u in ids if results[u].already_issued),
                 "gain": (sum(gains) / len(gains)) if gains else None,
                 "gain_n": len(gains),
             }

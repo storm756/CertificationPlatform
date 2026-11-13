@@ -1,6 +1,6 @@
 # Project status: read this first
 
-**Updated:** 13 Nov 2026 (Stage 6 PR). Every Claude session starts here, then reads `CLAUDE.md`, `docs/decisions.md` and the current stage in `docs/build-stages.md`.
+**Updated:** 13 Nov 2026 (Stage 7 PR). Every Claude session starts here, then reads `CLAUDE.md`, `docs/decisions.md` and the current stage in `docs/build-stages.md`.
 At the end of every stage, Claude updates this file in the same PR. Dated review results live in [`docs/history/`](history/) (one file per stage), not here.
 
 ## Order of authority (when two documents disagree)
@@ -28,8 +28,9 @@ If two of these still disagree, or something is missing, **stop and ask in chat*
 | 5. Results, final exam, pre-test, dashboard | ✅ Merged (PR #9, `505c33f`) | [stage-5.md](history/stage-5.md) |
 | Decisions D32–D35 | ✅ Merged (PR #10, `30ac2db`): attempt limit (D32), lessons need sign-in (D34), films served by Caddy with range requests (D35) | — |
 | Deploy fix: Caddy reload | ✅ Merged (PR #11, `fcce8b6`): `deploy/caddy/` is mounted as a directory and `deploy.sh` validates then reloads Caddy on every deploy. Deployed to staging 13 Nov 2026; the reload ran and the config was valid. | — |
-| 6. Staff tools | 🟡 PR from `stage-6-review` (main merged in; review finished, D32 attempt-limit page added). Not merged. Certificate approve and revoke wait for Stage 7. | [stage-6.md](history/stage-6.md) |
-| 7–10 | ⬜ In order. One stage = one branch = one PR. | — |
+| 6. Staff tools | ✅ Merged (PR #13, `5a25aac`) | [stage-6.md](history/stage-6.md) |
+| 7. Certificates | 🟡 PR from `stage-7`. Not merged. Built to D36 with the **placeholder** design; no real certificate may be approved until the signature images, final design and emblem are in (see below). | [stage-7.md](history/stage-7.md) |
+| 8–10 | ⬜ In order. One stage = one branch = one PR. | — |
 
 Earlier table and open items: [status-2026-11-12.md](history/status-2026-11-12.md).
 
@@ -48,8 +49,13 @@ Earlier table and open items: [status-2026-11-12.md](history/status-2026-11-12.m
 | **Set D's surplus Module 8 question** (6 fresh for 5 places): hold one in reserve, or the owner approves a blueprint change. Blueprint is 6/6/5/6/6/6/5/5/5 = 50; changing it needs the owner. | Repo owner / content team | One row held in `reserve`. |
 | Module 8 page note "the crosswords stay in English" (D33): reviewed Hindi, Marathi and Gujarati wording | Teammate B + reviewers | Not built yet; build it with the wording (or in Stage 8). |
 | Help, terms and grievance pages (D34 lists them as public) and the grievance officer, guardian-consent method (DPDP) | CyberPeace legal | Only `/privacy/` exists, as a draft. |
-| Certificate qualification title, wording, signatories and number prefix (D28) | Lead + HOD, before Stage 7 | Stage 7 asks before building the PDF. |
-| CCFR's own emblem | Lead | `.brand-emblem` in `templates/components/header.html` shows "CCFR" in text. |
+| **Do not approve any real learner's certificate until the signature images, the final design and the emblem are in.** Each PDF is fixed at issue (D36). | Lead + every mentor | Mentors and admins see a warning while signatures are missing or `CERTIFICATE_DESIGN_FINAL` is off. Keep auto-issue off. |
+| The 3 signature images (transparent PNG): Dr. Nilakshi Jain, Dr. Bhavesh Patel, Maj. Vineet Kumar. **Never in git** (public repo). | Lead | A person copies them to `media/private/signatures/signature-1.png` … `-3.png` on the server (architecture §29). Until then names print over a blank line. |
+| The final certificate design | Lead | A placeholder in the look of `cert-front.jpg`. The swap is a template-only PR (`templates/certificates/pdf/certificate.html`), then set `CERTIFICATE_DESIGN_FINAL = True`. |
+| CCFR's own emblem (header, landing page, certificate) | Lead | `.brand-emblem` in `templates/components/header.html` and the certificate's emblem slot show "CCFR" in text. |
+| Check the printed college / department name and the signatory order on the sample PDF | Lead + HOD | Printed as agreed in D36: "Department of Cyber Security, Shah & Anchor Kutchhi Engineering College (SAKEC), in collaboration with CyberPeace Foundation"; Jain · Patel · Kumar. |
+| Optional: an official programme hours figure, if hours should be printed | Lead | No hours are printed (D36); the snapshot keeps each learner's hours. |
+| NSQF level and credits, once approved by the competent authority | Lead | The certificate says they are shown after approval. An admin turns `nsqf_approved` on in Admin → Certificate settings (new issues only). |
 | Consent from the three people whose photos are on the landing page | Lead | Photos stay in `content-data/people/`, never in git. |
 | Module 10 capstone materials | Programme team | Module 10 shows Coming soon (D26). |
 | Reviewed translations: lesson text, the 324 corrected-table drafts, the 509 hints (hi/mr/gu), Marathi and Gujarati film captions | Teammate B + reviewers | Lessons show draft translations with a tag; assessments stay English (D24); films have English and Hindi captions. |
@@ -69,9 +75,11 @@ One line each; the reasoning and check results are in `docs/history/`. Tell the 
 
 **Stage 4.** ~~Lessons are readable without signing in~~: withdrawn by D34. · Inline interactions come from the module's own material; reveal and myth-or-fact answers stay on the server until asked. · `/learn/check` accepts only live practice-pool MCQs used by a published unit. · Minors write no `TimeLog`. · The Caddy CSP allows `script-src https://www.youtube.com` (for the YouTube player later). · Grant `content.publish_unit` in the admin to make a "Content publisher". · Legacy PDF-extraction fragments await the content team's review. · `publish_ccfr_course` loads the course from private inputs (preview without `--apply`); it has no automated test.
 
-**Stage 5.** Exam sets B and D, one per batch, assigned by an admin and frozen per learner at the first programme exam (D31); released papers are fixed in the app and the database. · Go-live: `import_final_sets --source <xlsx>` (preview), `--apply`, then Admin → Exam sets → Check → Release, then pick the set on each batch. · A counted module with no published counted part keeps the final locked ("Course setup is incomplete"). · Combined results use unrounded question-level marks; the mean uses stored one-decimal attempt scores. · The pre-test prompt shows once after the first sign-in; "Later" goes to My progress. · The final shows overall % and bands; the pre-test the score only. · A question shown in any non-final attempt can't move into the final pool. · `eligible` ignores certificates until Stage 7. · The practice mock (D26) has no page yet.
+**Stage 5.** Exam sets B and D, one per batch, assigned by an admin and frozen per learner at the first programme exam (D31); released papers are fixed in the app and the database. · Go-live: `import_final_sets --source <xlsx>` (preview), `--apply`, then Admin → Exam sets → Check → Release, then pick the set on each batch. · A counted module with no published counted part keeps the final locked ("Course setup is incomplete"). · Combined results use unrounded question-level marks; the mean uses stored one-decimal attempt scores. · The pre-test prompt shows once after the first sign-in; "Later" goes to My progress. · The final shows overall % and bands; the pre-test the score only. · A question shown in any non-final attempt can't move into the final pool. · ~~`eligible` ignores certificates until Stage 7~~: Stage 7 counts them. · The practice mock (D26) has no page yet.
 
 **D32–D35 (this PR).** Every started attempt counts towards a limit; an attempt in progress always resumes; the pre-test takes no limit. · Signed-out GETs under `/learn/` go to sign-in and back; signed-out POSTs get 403. · Handout PDFs live in `apps/content/data/handouts/`, not `static/`. Captions (`static/captions/`) are still public static files. · Behind Caddy, `MEDIA_ACCEL_REDIRECT=1` and Caddy sends `/learn/media/<id>/` files from the read-only media volume.
+
+**Stage 7.** Certificate numbers `CCFR-<year>-<batch centre code>-<serial>` from one global sequence; a failed issue skips a serial. · Auto-issue runs after the learner's own submit only; a stale auto-submit never issues (the learner waits for approval). · "Awaiting approval" lists every eligible learner with no certificate, whatever the switch says. · "Approve all" issues at most 15 per click. · "Completed on" is the date the result was achieved. · A revoke blocks a new certificate unless the admin ticks "allow a new certificate". · Revoked verify pages show no name. · The verify page is limited to 30 checks per 10 minutes per client IP. · Signatories live in settings; signature images in `media/private/signatures/`. · Guard A: a warning, not a block. · D37: certificate names in English letters only (sign-up and mentor edits); an older name that breaks it is held back until a mentor corrects it. The test fixtures and `tools/seed_e2e.py` now use letters-only names.
 
 ## How to work with Claude on this project (the shared account)
 

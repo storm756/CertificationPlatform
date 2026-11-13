@@ -52,6 +52,7 @@ class BatchAdmin(ModelAdmin):
         "code",
         "name",
         "centre",
+        "centre_code",
         "accepting",
         "opens_at",
         "closes_at",
@@ -72,7 +73,8 @@ class BatchAdmin(ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         fields = list(super().get_readonly_fields(request, obj))
-        return fields if self._is_admin(request) else [*fields, "exam_set"]
+        # the exam set and the certificate centre code are admin-only (D31, D36)
+        return fields if self._is_admin(request) else [*fields, "exam_set", "centre_code"]
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "exam_set":
@@ -109,7 +111,7 @@ class BatchAdmin(ModelAdmin):
             examsets.assign(obj, chosen, request.user, request)
         obj.refresh_from_db()
 
-    actions = ["open_registration", "close_registration"]
+    actions = ["open_registration", "close_registration", "issue_certificates"]
 
     def _set_accepting(self, request, queryset, value):
         from apps.audit.services import audit
@@ -130,6 +132,30 @@ class BatchAdmin(ModelAdmin):
     @admin.action(description="Close registration for the selected batches")
     def close_registration(self, request, queryset):
         self._set_accepting(request, queryset, False)
+
+    @admin.action(description="Issue certificates to eligible learners in the selected batches")
+    def issue_certificates(self, request, queryset):
+        """The same approval as the mentor's "Approve all" (§12), for admins."""
+        from apps.certificates import services as certificates
+
+        if not self._is_admin(request):
+            self.message_user(request, "Only admins can issue certificates here.", messages.ERROR)
+            return
+        for warning in certificates.issue_warnings():
+            self.message_user(request, warning, messages.WARNING)
+        issued = failed = remaining = 0
+        for batch in queryset:
+            outcome = certificates.approve(request.user, batch, request=request)
+            issued, failed, remaining = (
+                issued + outcome["issued"],
+                failed + outcome["failed"],
+                remaining + outcome["remaining"],
+            )
+        self.message_user(
+            request,
+            f"{issued} certificate(s) issued, {failed} failed, {remaining} still waiting.",
+            messages.SUCCESS if not failed else messages.ERROR,
+        )
 
 
 @admin.register(Enrolment)

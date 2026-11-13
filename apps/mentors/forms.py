@@ -2,7 +2,7 @@ from django import forms
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from apps.accounts.forms import clean_person_name
+from apps.accounts.forms import clean_certificate_name
 from apps.batches.models import Batch, BatchStatus
 from apps.batches.scoping import batches_for
 
@@ -76,4 +76,4 @@ class CertificateNameForm(forms.Form):
     certificate_name = forms.CharField(max_length=120, label="Certificate name")
 
     def clean_certificate_name(self):
-        return clean_person_name(self.cleaned_data["certificate_name"])
+        return clean_certificate_name(self.cleaned_data["certificate_name"])

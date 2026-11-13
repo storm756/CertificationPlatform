@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load static i18n ccfr %}
+{% block head_title %}{% translate "My certificate" %}{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/certificate.css' %}">{% endblock %}
+{% block content %}
+  <section class="band"><div class="shell">
+    <p class="eyebrow eyebrow--cyan">{% translate "Certificate" %}</p>
+    <h1>{% if state == "issued" %}{% translate "Your certificate is ready" %}{% elif state == "awaiting" %}{% translate "Waiting for mentor approval" %}{% elif state == "revoked" %}{% translate "Certificate revoked" %}{% elif state == "erased" %}{% translate "Your certificate" %}{% else %}{% translate "Your certificate" %}{% endif %}</h1>
+    <p class="lede">{% if state == "issued" %}{% translate "Download it securely from this page. It is never sent by email." %}{% elif state == "awaiting" %}{% translate "You are eligible. Your mentor approves certificates for your batch, so you will see it here soon." %}{% elif state == "revoked" %}{% translate "This certificate is no longer valid." %}{% elif state == "erased" %}{% translate "Your details were removed from this certificate at your request." %}{% else %}{% translate "Pass every module and the final with 50% or more and your certificate appears here." %}{% endif %}</p>
+  </div></section>
+
+  {% if state == "issued" %}
+    <div class="grid-2 align-top">
+      <dl class="part-card cert-details">
+        <div><dt>{% translate "Name" %}</dt><dd class="print-name">{{ cert.holder_name }}</dd></div>
+        <div><dt>{% translate "Qualification" %}</dt><dd>{{ cert.snapshot.qualification }}</dd></div>
+        <div><dt>{% translate "Grade" %}</dt><dd>{{ cert.grade }}</dd></div>
+        <div><dt>{% translate "Certificate no." %}</dt><dd>{{ cert.certificate_no }}</dd></div>
+        <div><dt>{% translate "Issued" %}</dt><dd>{{ cert.issued_at|date:"j F Y" }}</dd></div>
+      </dl>
+      <div class="stack">
+        <p class="muted">{% translate "Your certificate is a PDF in English. Anyone can check it with the QR code printed on it." %}</p>
+        <div class="cert-actions">
+          <a class="btn btn-accent btn-lg" href="{% url 'certificate_download' %}">{% icon "download" %}{% translate "Download PDF" %}</a>
+          <a class="btn btn-outline" href="{% url 'verify_code' cert.verify_code %}">{% icon "qr" %}{% translate "Open the public verification page" %}</a>
+        </div>
+      </div>
+    </div>
+  {% elif state == "awaiting" %}
+    <div class="state-panel tone--mustard"><span class="big-icon">{% icon "clock" %}</span>
+      <h2>{% translate "You are eligible" %}</h2>
+      <p class="muted">{% blocktranslate with overall=result.overall_shown grade=result.grade %}Overall {{ overall }}% · Grade {{ grade }}. Your mentor will approve your certificate. There is nothing more you need to do.{% endblocktranslate %}</p>
+      {% if not name_ok %}<p>{% translate "Your certificate name must be in English letters. Your mentor will correct it before approving; tell them how you want it spelled." %}</p>{% endif %}
+    </div>
+  {% elif state == "revoked" %}
+    <div class="state-panel tone--danger"><span class="big-icon">{% icon "x" %}</span>
+      <h2>{% translate "This certificate has been revoked" %}</h2>
+      <p class="muted">{% blocktranslate %}The public verification page now shows it as revoked. If you think this is a mistake, contact the programme team at {{ SUPPORT_EMAIL }}.{% endblocktranslate %}</p>
+    </div>
+  {% elif state == "erased" %}
+    <div class="state-panel tone--blue"><span class="big-icon">{% icon "info" %}</span>
+      <h2>{% translate "Certificate issued" %}</h2>
+      <p class="muted">{% translate "The PDF and your name were removed at your request. The verification page still confirms that a certificate was issued." %}</p>
+    </div>
+  {% else %}
+    <div class="state-panel tone--muted"><span class="big-icon">{% icon "award" %}</span>
+      <h2>{% translate "Not yet" %}</h2>
+      <p class="muted">{% translate "Your certificate appears here when you have passed every module and the final." %}</p>
+      <a class="btn btn-outline" href="{% url 'start' %}">{% icon "chart" %}{% translate "See what is left" %}</a>
+    </div>
+  {% endif %}
+{% endblock %}

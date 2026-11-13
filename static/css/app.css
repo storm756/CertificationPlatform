@@ -144,7 +144,7 @@
 .part-card { display: grid; gap: .9rem; padding: 1.25rem; border: 2px solid var(--edge); border-radius: var(--r-lg); background: var(--surface); box-shadow: 5px 5px 0 var(--m, var(--teal)); }
 .part-card__head { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; flex-wrap: wrap; }
 .part-card dl { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; margin: 0; }
-.part-card dt { font-size: .76rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); }
+.part-card dt { font-size: .76rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-muted); }
 .part-card dd { margin: 0; font-weight: 700; }
 .outcomes { display: grid; gap: .6rem; }
 .outcomes li { display: flex; gap: .65rem; align-items: flex-start; }
@@ -456,7 +456,7 @@ fieldset.form-section { margin: 0; }
 .verify-status .icon { width: 2.2rem; height: 2.2rem; }
 .verify-card dl { display: grid; gap: .75rem; margin: 0; }
 .verify-card dl > div { display: grid; gap: .1rem; padding-bottom: .75rem; border-bottom: 1px solid var(--line); }
-.verify-card dt { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-soft); }
+.verify-card dt { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-muted); }
 .verify-card dd { margin: 0; font-weight: 700; font-size: 1.1rem; }
 .verify-logos { display: flex; align-items: center; gap: 1rem; padding: .75rem 1rem; border-radius: var(--r-md); background: #fff9ef; justify-self: start; }
 .verify-logos img:first-child { height: 3rem; width: auto; }

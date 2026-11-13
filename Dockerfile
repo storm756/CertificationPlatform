@@ -3,7 +3,14 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    DJANGO_SETTINGS_MODULE=config.settings.prod
+    DJANGO_SETTINGS_MODULE=config.settings.prod \
+    XDG_CACHE_HOME=/tmp/.cache
+
+# WeasyPrint (certificate PDFs, Stage 7) needs Pango and HarfBuzz. The fonts it uses are our own
+# bundled files; the containers run read-only, so fontconfig's cache goes to /tmp (XDG_CACHE_HOME).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 \
+    && rm -rf /var/lib/apt/lists/*
 
 # requirements.txt for prod images, requirements-dev.txt for the dev/test image
 ARG REQUIREMENTS=requirements.txt
