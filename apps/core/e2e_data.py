@@ -68,10 +68,11 @@ BATCHES = [
     ("E2E-B01", "E2E batch one", False, False),
     ("E2E-B02", "E2E batch two", False, True),
     ("E2E-B03", "E2E batch three", True, False),
+    ("E2E-B04", "E2E batch four", True, False),  # keeps registration open while B03 is closed
 ]
 STAFF = [
     # key, role, batches the mentor looks after
-    ("mentor1", Role.MENTOR, ["E2E-B01", "E2E-B03"]),
+    ("mentor1", Role.MENTOR, ["E2E-B01", "E2E-B03", "E2E-B04"]),
     ("mentor2", Role.MENTOR, ["E2E-B02"]),
     ("admin", Role.ADMIN, []),
 ]

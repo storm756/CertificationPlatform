@@ -51,7 +51,7 @@ def test_refuses_anything_but_dev_and_staging(monkeypatch, module):
 def test_seed_builds_a_working_course_and_clean_removes_it():
     before = counts()
     manifest = json.loads(run("e2e_seed"))
-    assert set(manifest["batches"]) == {"E2E-B01", "E2E-B02", "E2E-B03"}
+    assert set(manifest["batches"]) == {"E2E-B01", "E2E-B02", "E2E-B03", "E2E-B04"}
     assert Batch.objects.get(code="E2E-B03").accepting
     assert not Batch.objects.get(code="E2E-B01").accepting
 
@@ -65,7 +65,7 @@ def test_seed_builds_a_working_course_and_clean_removes_it():
 
     mentor = User.objects.get(email=manifest["users"]["mentor1"])
     assert mentor.authenticator_set.filter(type="totp").exists()
-    assert mentor.mentored.count() == 2  # B01 and B03
+    assert mentor.mentored.count() == 3  # B01, B03 and B04
 
     again = json.loads(run("e2e_seed"))  # safe to run twice
     assert again == manifest
