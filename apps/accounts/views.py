@@ -3,8 +3,10 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.sessions.models import Session
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
@@ -181,3 +183,17 @@ def privacy_view(request):
     return render(
         request, "registration/privacy.html", {"version": settings.PRIVACY_NOTICE_VERSION}
     )
+
+
+def admin_login(request):
+    """Where Django's admin sends anyone who may not use it (`/admin/login/?next=/admin/`).
+
+    Signed out: on to the real sign-in page (allauth, so TOTP always applies), keeping `next`.
+    Signed in but not allowed into the admin (a learner or a mentor): 403. Sending them to the
+    sign-in page would bounce them straight back to `next`, an endless redirect.
+    """
+    if request.user.is_authenticated:
+        audit("access.denied", actor=request.user, request=request, path="/admin/")
+        raise PermissionDenied
+    query = request.META.get("QUERY_STRING", "")
+    return redirect(reverse("account_login") + (f"?{query}" if query else ""))

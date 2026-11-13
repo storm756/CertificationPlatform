@@ -148,3 +148,10 @@ test("11. a final attempt shows the overall percentage and bands only", async ({
   expect(body).not.toMatch(/The RIGHT answer|A WRONG answer|E2E question/);
   await page.context().close();
 });
+
+test("extra: a signed-in learner who opens /admin/ gets a 403, not an endless redirect", async ({ browser }) => {
+  const page = await newPhone(browser, "fresh");
+  const response = await page.goto("/admin/");
+  expect(response?.status()).toBe(403);
+  await page.context().close();
+});

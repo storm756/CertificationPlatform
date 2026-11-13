@@ -19,7 +19,7 @@ urlpatterns = [
     path("styleguide/", styleguide, name="styleguide"),
     path("i18n/setlang/", set_language, name="set_language"),
     # Staff sign in through allauth so that TOTP is always applied.
-    path("admin/login/", RedirectView.as_view(pattern_name="account_login", query_string=True)),
+    path("admin/login/", account_views.admin_login, name="admin_login"),
     path("admin/", admin.site.urls),
     path("rosetta/", include("rosetta.urls")),  # staff translators only (rules.can_use_rosetta)
     # Public sign-up is closed (D9); the only way in is /register.
