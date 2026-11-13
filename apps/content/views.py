@@ -15,6 +15,7 @@ from django_ratelimit.decorators import ratelimit
 
 from apps.accounts.models import Role
 from apps.assessments.models import AssessmentPart
+from apps.core.security import allow_youtube_script
 from apps.translations import pages as tpages
 from apps.translations.keys import unit_prefix
 from apps.translations.service import block_keys, note, translate_blocks
@@ -243,6 +244,8 @@ def unit_page(request, number, slug):
     version.title = lookup.get(f"{prefix}:title", version.title)  # display only, never saved
     blocks = _prepare(request, unit, translate_blocks(prefix, version.blocks, lookup))
     video = next((b for b in blocks if b["type"] == "video"), None)
+    if any(b["type"] == "video" and b.get("youtube_id") for b in blocks):
+        allow_youtube_script(request)
     return render(
         request,
         "learn/unit.html",
