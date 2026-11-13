@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
 from unfold.admin import ModelAdmin, TabularInline
 
@@ -109,6 +109,28 @@ class BatchAdmin(ModelAdmin):
             examsets.assign(obj, chosen, request.user, request)
         obj.refresh_from_db()
 
+    actions = ["open_registration", "close_registration"]
+
+    def _set_accepting(self, request, queryset, value):
+        from apps.audit.services import audit
+
+        done = 0
+        for batch in queryset:
+            if batch.accepting != value:
+                batch.accepting = value
+                batch.save(update_fields=["accepting", "updated_at"])
+                audit("batch.registration_updated", actor=request.user, target=batch, request=request, was_accepting=not value, accepting=value, via="admin")  # fmt: skip
+                done += 1
+        self.message_user(request, f"{done} batch(es) updated.", messages.SUCCESS)
+
+    @admin.action(description="Open registration for the selected batches")
+    def open_registration(self, request, queryset):
+        self._set_accepting(request, queryset, True)
+
+    @admin.action(description="Close registration for the selected batches")
+    def close_registration(self, request, queryset):
+        self._set_accepting(request, queryset, False)
+
 
 @admin.register(Enrolment)
 class EnrolmentAdmin(ModelAdmin):
@@ -116,3 +138,19 @@ class EnrolmentAdmin(ModelAdmin):
     list_filter = ("batch",)
     search_fields = ("user__email",)
     raw_id_fields = ("user",)
+
+    def get_readonly_fields(self, request, obj=None):
+        return ("user",) if obj else ()  # a learner is moved, never swapped for another
+
+    def save_model(self, request, obj, form, change):
+        """Moving a learner goes through batches.services.move_learner: the target must be an
+        active batch the actor may use, and the move is audited. The learner keeps the exam set
+        they were frozen on (Stage 5), so a move never mixes papers."""
+        if change and "batch" in form.changed_data:
+            from . import services
+
+            target = obj.batch
+            obj.batch = Enrolment.objects.get(pk=obj.pk).batch  # leave the row as it was
+            services.move_learner(request.user, obj, target, request)
+            return
+        super().save_model(request, obj, form, change)

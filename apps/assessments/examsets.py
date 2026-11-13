@@ -33,7 +33,7 @@ def blueprint():
     return final_blueprint()
 
 
-def blueprint_problems() -> list[str]:
+def blueprint_problems(counted_modules=None) -> list[str]:
     """Why the blueprint cannot be trusted to define a whole paper. The same checks run for
     "Check sets" and for release. It must name exactly the counted learning modules, each with
     enough questions for its pre-test share, so a one-module paper can never pass."""
@@ -56,9 +56,13 @@ def blueprint_problems() -> list[str]:
                 f"Module {n}'s blueprint count must be a whole number of at least {PRETEST_PER_MODULE}."
             )
         parsed[n] = value
-    counted = set(
-        Module.objects.filter(counted=True, kind=ModuleKind.LEARNING).values_list(
-            "number", flat=True
+    counted = (
+        set(counted_modules)
+        if counted_modules is not None
+        else set(
+            Module.objects.filter(counted=True, kind=ModuleKind.LEARNING).values_list(
+                "number", flat=True
+            )
         )
     )
     for n in sorted(counted - set(parsed)):

@@ -162,3 +162,18 @@
 
 ## 2026-11-10: Stage 5, exactly 100 marks per counted module
 - The course-setup check now also requires the published counted marks of every counted module to total exactly 100 (D11). A module with only a 50-mark part keeps the final locked and the learner ineligible, and the message names the module and the configured marks ("Module 1 has 50 published marks configured; it needs exactly 100."). The unpublished-part check is unchanged. Why: §10.1 assumes 100.
+
+## 2026-11-10: Stage 6, staff tools
+- Mentor batch dashboard: roster with module %, final and overall, a module heatmap (red below 50), stuck learners, eligible-awaiting-approval, and the auto-issue switch (audited). Why: §15.
+- CSV export of a batch: scoped, POST-only, audited (counts only), spreadsheet-safe cells, UTF-8 with BOM, no-store. Why: §15, Stage 6 done-when.
+- Question editing with schema checking and "preview as learner" for mentors and admins; edits become new versions and go back to draft; only admins publish. **Final-pool questions are admin-only** (pages, list, Django admin, and the pool field). Why: §5, D19.
+- Mark-split editor (admin) with an impact preview computed by the same `compute_results`, a confirmation step and an audit event. Why: §10.4.
+- Admin report page (per-batch totals, knowledge gain vs 25, item statistics per language, email budget) and Django-admin actions to open/close registration. Why: §15.
+- simple-history on `Batch`, `Enrolment`, `Question` and `AssessmentPart`. Why: §6.
+- Not built (needs Stage 7's certificate table): approve, issue and revoke actions.
+
+## 2026-11-13: Stage 6 review finished, attempt limits in the staff tools
+- Merged `main` into the Stage 6 branch; the Stage 6 history migration is now `assessments.0008_history`, and `0009` adds `max_attempts` to the part history table. Why: `main` already used `0007` for the attempt limit (D32).
+- New admin page `/staff/attempts/`: set or clear the maximum attempts for every part and the final, audited. Why: D32 says the limit is admin-editable.
+- Question editor is the django-jsonform schema editor (the first Stage 6 notes said a plain JSON box); released-set questions are read-only. Why: review of the Stage 6 build.
+- Stage 6 notes moved from STATUS.md to `docs/history/stage-6.md`.

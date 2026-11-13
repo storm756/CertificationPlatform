@@ -40,3 +40,8 @@ def requires_mfa(user) -> bool:
     """Staff, mentors and admins must use TOTP (architecture 5). Mentors don't use Django admin
     so `is_staff` alone is not enough."""
     return user.is_authenticated and (user.is_staff or user.role in (Role.MENTOR, Role.ADMIN))
+
+
+def can_access_final_pool(user) -> bool:
+    """Final-pool questions are admin-only (§5, D19): mentors never see or edit them."""
+    return bool(user and user.is_authenticated and user.role == Role.ADMIN)

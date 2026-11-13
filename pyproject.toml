@@ -13,6 +13,10 @@ ignore = ["S101"]
 "apps/content/blocks.py" = ["E501"]
 "apps/content/views.py" = ["E501"]
 "apps/results/*.py" = ["E501"]
+"apps/batches/admin.py" = ["E501"]
+"apps/staff/*.py" = ["E501"]
+"apps/mentors/*.py" = ["E501"]
+"apps/batches/services.py" = ["E501"]
 "apps/assessments/programme.py" = ["E501"]
 "apps/assessments/views.py" = ["E501"]
 "apps/assessments/admin.py" = ["E501"]
@@ -20,6 +24,7 @@ ignore = ["S101"]
 "apps/assessments/management/commands/import_final_sets.py" = ["E501"]  # one report line per row
 "tests/**" = ["S105", "S106", "E501"]  # long lines in test data and docstrings are fine
 "tests/test_exam_set_hardening.py" = ["F811"]  # fixtures imported from test_exam_sets
+"tests/test_staff_review.py" = ["F811"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings.dev"

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load static i18n ccfr %}
+{% block head_title %}{% translate "Attempt limits" %}{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/staff.css' %}">{% endblock %}
+{% block content %}
+  <header class="stack"><p class="eyebrow">{% translate "Admin" %}</p><h1>{% translate "Attempt limits" %}</h1><p class="muted">{% translate "The most attempts a learner may start on each part and on the final. Leave a box blank for unlimited. Every started attempt counts; an attempt in progress can always be finished. The pre-test is once only and takes no limit. Changes are audited." %}</p></header>
+  {% if errors %}{% include "components/alert.html" with tone="danger" icon="alert" title=_("Please fix this") text=_("Some limits were not saved.") %}{% endif %}
+  <form class="form-stack" method="post">{% csrf_token %}
+    <div class="table-wrap"><table class="table"><thead><tr><th scope="col">{% translate "Assessment" %}</th><th scope="col">{% translate "Maximum attempts" %}</th></tr></thead><tbody>
+      {% for r in rows %}<tr><th scope="row">{{ r.label }}</th><td><input class="input" type="number" min="1" max="100" inputmode="numeric" name="{{ r.key }}" value="{{ r.value }}" placeholder="{% translate 'Unlimited' %}" aria-label="{% translate 'Maximum attempts for' %} {{ r.label }}">{% if r.error %}<p class="field-error">{{ r.error }}</p>{% endif %}</td></tr>{% empty %}<tr><td colspan="2">{% translate "No assessments yet." %}</td></tr>{% endfor %}
+    </tbody></table></div>
+    <div><button class="btn btn-primary" type="submit">{% translate "Save limits" %}</button></div>
+  </form>
+{% endblock %}

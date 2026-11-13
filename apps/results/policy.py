@@ -137,63 +137,78 @@ class Result:
 
     @property
     def modules_passed(self) -> bool:
-        return all(m.passed for m in self.modules)
+        # a counted module with no published assessment is a set-up gap (reported separately)
+        return all(m.passed for m in self.modules if m.parts)
 
     @property
     def final_passed(self) -> bool:
         return self.final_shown >= FINAL_PASS
 
     @property
-    def eligible(self) -> bool:  # §10.2
+    def meets_requirements(self) -> bool:
+        """Everything about the learner's own results, ignoring course set-up (used by the
+        mark-split impact preview, which is about marks and not about missing content)."""
         return (
-            not self.setup_gaps
-            and self.email_verified
+            self.email_verified
             and self.active
             and self.modules_passed
             and self.final_passed
             and not self.already_issued
         )
 
+    @property
+    def eligible(self) -> bool:  # §10.2
+        return self.meets_requirements and not self.setup_gaps
 
-def _counted_parts():
+
+def _counted_parts(overrides=None):
+    """(counted modules, published counted parts per module, set-up gaps).
+
+    `overrides` is for the impact preview (§10.4): {"parts": {part_id: {"marks": n, "counted": b}},
+    "modules": {module_id: counted}} is applied in memory only, so the preview and the real
+    results come from the same code.
+    """
     from apps.assessments.models import AssessmentPart
     from apps.content.models import Module
 
-    modules = list(Module.objects.filter(counted=True, kind="learning").order_by("order", "number"))
-    parts = defaultdict(list)
-    for part in AssessmentPart.objects.filter(
-        module__in=modules, counted=True, is_published=True
-    ).order_by("module__order", "pk"):
-        parts[part.module_id].append(part)
-    return modules, parts, setup_gaps(modules, parts)
+    overrides = overrides or {}
+    module_flags = overrides.get("modules", {})
+    part_flags = overrides.get("parts", {})
+    modules = [
+        m
+        for m in Module.objects.filter(kind="learning").order_by("order", "number")
+        if module_flags.get(m.pk, m.counted)
+    ]
+    published, unpublished = defaultdict(list), defaultdict(list)
+    for part in AssessmentPart.objects.filter(module__in=modules).order_by("module__order", "pk"):
+        change = part_flags.get(part.pk, {})
+        part.marks = change.get("marks", part.marks)
+        part.counted = change.get("counted", part.counted)
+        if not part.counted:
+            continue
+        (published if part.is_published else unpublished)[part.module_id].append(part)
+    return modules, published, setup_gaps(modules, published, unpublished)
 
 
-def setup_gaps(modules, published_parts) -> list[str]:
+def setup_gaps(modules, published_parts, unpublished_parts) -> list[str]:
     """Course set-up problems that keep the final locked: a counted module with no published
     counted assessment, a counted assessment that is not published yet, or published counted
-    marks that do not total exactly 100 (D11). Learners cannot fix
-    these, and the missing marks must not be silently treated as zero or as "nothing required"."""
-    from apps.assessments.models import AssessmentPart
-
-    unpublished = defaultdict(list)
-    for part in AssessmentPart.objects.filter(module__in=modules, counted=True, is_published=False):
-        unpublished[part.module_id].append(part.name)
+    marks that do not total exactly 100 (D11). Learners cannot fix these, and the missing marks
+    must not be silently treated as zero or as "nothing required"."""
     gaps = []
     for module in modules:
         if not published_parts[module.pk]:
             gaps.append(f"Module {module.number} has no published assessment yet.")
-        else:
-            if unpublished[module.pk]:
-                gaps.append(
-                    f"Module {module.number}: {', '.join(unpublished[module.pk])} "
-                    "is not published yet."
-                )
-            marks = sum(part.marks for part in published_parts[module.pk])
-            if marks != 100:
-                gaps.append(
-                    f"Module {module.number} has {marks} published marks configured; "
-                    "it needs exactly 100."
-                )
+            continue
+        if unpublished_parts[module.pk]:
+            names = ", ".join(p.name for p in unpublished_parts[module.pk])
+            gaps.append(f"Module {module.number}: {names} is not published yet.")
+        marks = sum(part.marks for part in published_parts[module.pk])
+        if marks != 100:
+            gaps.append(
+                f"Module {module.number} has {marks} published marks configured; "
+                "it needs exactly 100."
+            )
     return gaps
 
 
@@ -210,7 +225,7 @@ def _raw_percent(attempt):
     return attempt.score
 
 
-def compute_results(user_ids) -> dict:
+def compute_results(user_ids, overrides=None) -> dict:
     """{user_id: Result} for these users, from their attempts. Nothing is read from a stored total."""
     from allauth.account.models import EmailAddress
 
@@ -218,7 +233,7 @@ def compute_results(user_ids) -> dict:
     from apps.assessments.models import Attempt, AttemptStatus, ProgrammeAssessmentKind
 
     user_ids = list(user_ids)
-    modules, parts_by_module, gaps = _counted_parts()
+    modules, parts_by_module, gaps = _counted_parts(overrides)
     submitted = (AttemptStatus.SUBMITTED, AttemptStatus.AUTO_SUBMITTED)
     attempts = defaultdict(list)
     marks = ExpressionWrapper(

@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
+from simple_history.models import HistoricalRecords
 
 from apps.questions.models import Pool
 
@@ -40,6 +41,7 @@ class AssessmentPart(models.Model):
     is_published = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
 
     class Meta:
         constraints = [

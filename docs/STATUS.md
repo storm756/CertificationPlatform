@@ -1,6 +1,6 @@
 # Project status: read this first
 
-**Updated:** 13 Nov 2026. Every Claude session starts here, then reads `CLAUDE.md`, `docs/decisions.md` and the current stage in `docs/build-stages.md`.
+**Updated:** 13 Nov 2026 (Stage 6 PR). Every Claude session starts here, then reads `CLAUDE.md`, `docs/decisions.md` and the current stage in `docs/build-stages.md`.
 At the end of every stage, Claude updates this file in the same PR. Dated review results live in [`docs/history/`](history/) (one file per stage), not here.
 
 ## Order of authority (when two documents disagree)
@@ -26,9 +26,9 @@ If two of these still disagree, or something is missing, **stop and ask in chat*
 | 3. Interactive engine (13 formats) | ✅ Merged (PR #6) | [stage-3.md](history/stage-3.md) |
 | 4. Learning content | ✅ Merged (PR #7), content follow-up merged (PR #8) | [stage-4.md](history/stage-4.md), [stage-4-content.md](history/stage-4-content.md) |
 | 5. Results, final exam, pre-test, dashboard | ✅ Merged (PR #9, `505c33f`) | [stage-5.md](history/stage-5.md) |
-| Decisions D32–D35 | 🟡 PR from `decisions-d32-d35`: attempt limit (D32), lessons need sign-in (D34), films served by Caddy with range requests (D35) | — |
+| Decisions D32–D35 | ✅ Merged (PR #10, `30ac2db`): attempt limit (D32), lessons need sign-in (D34), films served by Caddy with range requests (D35) | — |
 | Deploy fix: Caddy reload | ✅ Merged (PR #11, `fcce8b6`): `deploy/caddy/` is mounted as a directory and `deploy.sh` validates then reloads Caddy on every deploy. Deployed to staging 13 Nov 2026; the reload ran and the config was valid. | — |
-| 6. Staff tools | 🟡 On its branch: `stage-6-review` (2 commits on `505c33f`, the last marked "WIP, review not finished"); `stage-6` is the older copy on the old Stage 5 base | — |
+| 6. Staff tools | 🟡 PR from `stage-6-review` (main merged in; review finished, D32 attempt-limit page added). Not merged. Certificate approve and revoke wait for Stage 7. | [stage-6.md](history/stage-6.md) |
 | 7–10 | ⬜ In order. One stage = one branch = one PR. | — |
 
 Earlier table and open items: [status-2026-11-12.md](history/status-2026-11-12.md).

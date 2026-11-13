@@ -1,15 +1,25 @@
 {% extends "base.html" %}
-{% load i18n ccfr %}
+{% load static i18n ccfr %}
 {% block head_title %}{{ batch.code }}{% endblock %}
 {% block page_class %} page--wide{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/staff.css' %}">{% endblock %}
 {% block content %}
-  <p><a class="link" href="{% url 'mentor_home' %}">{% icon "arrow-left" "sm" %} {% translate "My batches" %}</a></p>
-  <div>
+  <section class="band"><div class="shell">
+    <p class="eyebrow eyebrow--cyan">{% translate "Mentor dashboard" %}</p>
     <h1>{{ batch.code }} · {{ batch.name }}</h1>
-    <p>
+    <p class="lede">{% translate "You can see your own batches only. Every action here is logged." %}</p>
+    <p class="band-meta">
       {% if accepting_now %}{% include "components/badge.html" with text=_("Registration open") colour="teal" icon="unlock" %}{% else %}{% include "components/badge.html" with text=_("Registration closed") colour="terracotta" icon="lock" %}{% endif %}
-      {{ seats }} / {{ batch.seat_limit }} seats used
+      <span>{{ seats }} / {{ batch.seat_limit }} seats used</span>
     </p>
+  </div></section>
+  <p><a class="link" href="{% url 'mentor_home' %}">{% icon "arrow-left" "sm" %} {% translate "My batches" %}</a></p>
+
+  <div class="stat-grid" role="list">
+    <div class="stat stat--teal" role="listitem"><strong>{{ roster|length }}</strong><span>{% translate "Learners" %}</span></div>
+    <div class="stat stat--mustard" role="listitem"><strong>{{ overview.awaiting|length }}</strong><span>{% translate "Eligible for a certificate" %}</span></div>
+    <div class="stat stat--terracotta" role="listitem"><strong>{{ overview.stuck|length }}</strong><span>{% translate "Need a nudge" %}</span></div>
+    <div class="stat stat--plum" role="listitem"><strong>{{ new_signups|length }}</strong><span>{% translate "New sign-ups this week" %}</span></div>
   </div>
 
   <section class="card stack">
@@ -41,22 +51,43 @@
     {% endif %}
   </section>
 
+  <section class="card stack" aria-labelledby="cert-switch">
+    <h2 id="cert-switch">{% translate "Certificates" %}</h2>
+    <form class="row" method="post" action="{% url 'mentor_batch_auto_issue' batch.pk %}">{% csrf_token %}
+      <label class="check"><input type="checkbox" name="auto_issue"{% if batch.auto_issue %} checked{% endif %}><span>{% translate "Issue certificates automatically when a learner is eligible" %}</span></label>
+      <button class="btn btn-sm btn-outline" type="submit">{% translate "Save" %}</button>
+    </form>
+    <p class="muted">{% blocktranslate with n=overview.awaiting|length %}{{ n }} eligible and awaiting approval · 0 issued this week (certificates arrive in a later stage){% endblocktranslate %}</p>
+    {% if overview.awaiting %}<ul class="result-list">{% for r in overview.awaiting %}<li class="result-item"><a class="link" href="{% url 'mentor_learner' r.user.pk %}">{{ r.name }}</a><span>{{ r.overall }}%</span></li>{% endfor %}</ul>{% endif %}
+  </section>
+
+  {% if overview.stuck %}
+    <section class="stack" aria-labelledby="stuck">
+      <h2 id="stuck">{% translate "Learners who may be stuck" %}</h2>
+      <p class="muted">{% translate "Inactive 7+ days, or below 50% after 3 attempts" %}</p>
+      <div class="stuck-grid">{% for r in overview.stuck %}<article class="card stack"><h3><a class="link" href="{% url 'mentor_learner' r.user.pk %}">{{ r.name }}</a></h3><p class="muted">{{ r.reasons|join:"; " }}</p></article>{% endfor %}</div>
+    </section>
+  {% endif %}
+
   <section class="stack">
-    <h2>Roster ({{ roster|length }})</h2>
-    <div class="table-wrap">
-      <table class="table">
-        <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Joined</th><th scope="col">Status</th></tr></thead>
+    <div class="section-title"><h2>{% translate "Roster" %} ({{ roster|length }})</h2>
+      <form method="post" action="{% url 'mentor_batch_export' batch.pk %}">{% csrf_token %}<button class="btn btn-sm btn-outline" type="submit">{% icon "download" %}{% translate "Download CSV" %}</button></form></div>
+    <div class="table-wrap" tabindex="0" role="region" aria-label="{% translate 'Results by learner' %}">
+      <table class="table heatmap">
+        <thead><tr><th scope="col">{% translate "Learner" %}</th>{% for number, title in overview.modules %}<th scope="col"><abbr title="{{ title }}">M{{ number }}</abbr></th>{% endfor %}<th scope="col">{% translate "Final" %}</th><th scope="col">{% translate "Overall" %}</th><th scope="col">{% translate "Status" %}</th></tr></thead>
         <tbody>
-          {% for e in roster %}
+          {% for r in overview.rows %}
             <tr>
-              <th scope="row"><a class="link" href="{% url 'mentor_learner' e.user_id %}">{{ e.user.profile.certificate_name }}</a></th>
-              <td>{{ e.user.email }}</td>
-              <td>{{ e.joined_at|date:"d M Y" }}</td>
-              <td>{% if not e.email_verified %}unverified{% elif e.user.status == 'pending_guardian' %}waiting for guardian{% else %}{{ e.user.status }}{% endif %}</td>
+              <th scope="row"><a class="link" href="{% url 'mentor_learner' r.user.pk %}">{{ r.name }}</a><br><small class="muted">{{ r.user.email }}</small></th>
+              {% for c in r.cells %}<td class="heat{% if c.fail %} heat--fail{% elif c.parts and c.value >= 75 %} heat--strong{% elif c.parts %} heat--ok{% endif %}">{% if c.parts %}{{ c.value }}{% if c.fail %} <span class="sr-only">{% translate "below 50" %}</span>{% endif %}{% else %}—{% endif %}</td>{% endfor %}
+              <td>{% if r.final is not None %}{{ r.final }}{% else %}—{% endif %}</td>
+              <td><strong>{{ r.overall }}</strong></td>
+              <td><span class="chip{% if r.status == 'active' %} chip--ok{% endif %}">{{ r.status }}</span></td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
+    <p class="muted">{% translate "Red cells are below 50%." %} {% translate "Green cells are 75% or more." %}</p>
   </section>
 {% endblock %}

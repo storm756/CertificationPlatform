@@ -1,0 +1,4 @@
+{# Overrides django-jsonform's template: the library adds style="display: none" to its hidden data textarea, which the production CSP (no inline styles) blocks. staff.css hides it instead. #}
+<div data-django-jsonform-container="true" {% include 'django_jsonform/attrs.html' %}></div>
+
+<textarea cols="40" id="{{ widget.attrs.id }}" name="{{ widget.name }}" rows="10" {% if widget.attrs.disabled %}disabled{% endif %} data-django-jsonform="{{ widget.config }}"></textarea>
