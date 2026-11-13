@@ -1,10 +1,21 @@
 {% extends "base.html" %}
 {% load i18n ccfr %}
 {% block head_title %}{% translate "Privacy notice" %}{% endblock %}
-{% block content %}
-  <h1>Privacy notice (version {{ version }})</h1>
-  <div class="notice notice--mustard">{% icon "info" %}<p>Draft: the final text is being prepared with CyberPeace legal.</p></div>
-  <p>We collect the minimum needed to run the course: your name, email, date of birth, language, your answers and scores.
-  Email is used only for verification, password reset and guardian consent. Under-18s are not tracked for time spent.</p>
-  <p>Processors: our email provider, error monitoring, YouTube (embedded films) and the backup provider.</p>
+{% block body %}
+  <main id="main" tabindex="-1">
+    {% translate "Policies" as eyebrow %}{% translate "Privacy notice" as title %}{% translate "What we collect, why, and who sees it." as lede %}
+    {% include "public/_band.html" %}
+    <div class="shell section prose">
+      {% include "public/_draft_notice.html" %}
+      <p class="muted">{% blocktranslate %}Version {{ version }}{% endblocktranslate %}</p>
+      <h2>{% translate "What we collect" %}</h2>
+      <p>{% translate "We collect the minimum needed to run the course: your name, email, date of birth, language, your answers and scores. Under-18s are not tracked for time spent." %}</p>
+      <h2>{% translate "How we use it" %}</h2>
+      <p>{% translate "Email is used only for verification, password reset and guardian consent. Your mentor can see your progress and results; other batches cannot." %}</p>
+      <h2>{% translate "Who processes it for us" %}</h2>
+      <p>{% translate "Our email provider, error monitoring, YouTube (embedded films) and the backup provider." %}</p>
+      <h2>{% translate "Your rights" %}</h2>
+      <p>{% translate "You can ask to see, correct or delete your data." %} <a class="link" href="{% url 'grievance' %}">{% translate "Contact us" %}</a></p>
+    </div>
+  </main>
 {% endblock %}

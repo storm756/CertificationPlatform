@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-13: Stage 9, landing page and public pages
+
+- New landing page ported from the prototype (hero with the stage tabs, facts, a first-response check with its own four scenarios, the module list, how certification works, challenge formats, languages, certificate, who runs it, FAQ, call to action). Calls to action go to register and sign-in (D34); night mode, "learning never locked", "unlimited attempts" and "CSFR" wording from the prototype were changed to match D21, D34, D32 and D23/D30.
+- New public pages `/terms/`, `/grievance/`, `/help/` (shared FAQ) and a restyled `/privacy/`; legal text is placeholder marked "Draft" until CyberPeace legal sends it. Custom 404 and a standalone 500 page.
+- "Who runs it" is a placeholder card until `PEOPLE_CONSENT_GIVEN` is set and the three photos are in `PEOPLE_PHOTO_DIR`; photos are served by `/people/<slug>/`, never static and never in git.
+- Favicon, apple-touch icon, social preview image (text emblem slot, D23) and Open Graph tags. 88 new UI strings added as hi/mr/gu drafts.
+- Why: the public face of the programme, translated and mobile-first; Lighthouse accessibility 100 on the five public pages, axe clean at 360/390/1366 in four languages.
+
+
 ## 2026-11-13: Stage 8, multilingual (Hindi, Marathi, Gujarati)
 
 - UI strings: Python messages, form labels and choice labels are now gettext; complete `hi`, `mr` and `gu` catalogues (658 strings each) are committed with compiled `.mo` files. 167 per language come from the prototype's phrase drafts; the rest were drafted for this PR. **Every entry is a draft marked `draft: needs review`** for the team to check in Rosetta (D7). Why: Stage 8, every page in four languages.

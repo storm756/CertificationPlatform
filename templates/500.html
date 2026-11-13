@@ -1,0 +1,25 @@
+{% load static i18n %}{% get_current_language as LANGUAGE_CODE %}<!doctype html>
+{# Standalone on purpose: a server error must not depend on the database, sessions or any context processor. #}
+<html lang="{{ LANGUAGE_CODE|default:'en' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071a3d">
+  <meta name="robots" content="noindex">
+  <title>{% translate "Something went wrong" %}</title>
+  <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+  <main id="main" tabindex="-1">
+    <section class="error-page"><p class="code" aria-hidden="true">500</p>
+      <h1>{% translate "Something went wrong on our side" %}</h1>
+      <p class="muted">{% translate "We have been told about it. Your saved answers are safe. Please try again in a few minutes." %}</p>
+      <div class="row row--center"><a class="btn btn-primary" href="/">{% translate "Go home" %}</a></div>
+    </section>
+  </main>
+</body>
+</html>

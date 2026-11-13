@@ -4,6 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#071a3d">
+  <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
+  <link rel="icon" href="{% static 'img/favicon-32.png' %}" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="{% static 'img/apple-touch-icon.png' %}">
+  {% block meta %}
+  <meta name="description" content="{% block meta_description %}{% translate 'Learn practical cyber first-response skills and earn a certificate that anyone can verify.' %}{% endblock %}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ PROGRAMME_NAME }}">
+  <meta property="og:title" content="{% block og_title %}{{ PROGRAMME_NAME }}{% endblock %}">
+  
+  <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'img/social-preview.png' %}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  {% endblock %}
   <title>{% block head_title %}{{ PROGRAMME_NAME }}{% endblock %}{% block head_suffix %} · {{ PROGRAMME_NAME }}{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
   <link rel="stylesheet" href="{% static 'css/tokens.css' %}">

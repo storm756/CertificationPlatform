@@ -809,3 +809,19 @@ Where the build made a choice the design left open. Each is a one-line change if
 **UI catalogues.** `fill_ui_drafts [--extra file.json]` fills empty `.po` entries from the prototype's phrases, its i18n files and the framework-labels sheet, then an optional JSON of further drafts; it never replaces a translation and skips a draft whose placeholders or tags differ. Filled entries carry the translator comment `draft: needs review`. Rosetta (`/rosetta/`, staff with `upload_translations` or superusers) edits the `.po` files of the running checkout; on a server those edits are lost at the next deploy, so download the catalogue from Rosetta and commit it in a PR. The dev image has GNU gettext for `makemessages`/`compilemessages`; production uses the committed `.mo` files.
 
 **Interactive engine.** The engine's interface labels (`apps/questions/engine_labels.py`) reach the page as a `json_script` block (`{% engine_labels %}`); `engine/src/i18n.ts` looks them up and falls back to English. The block is data (never executed), so the CSP stays `script-src 'self'`. Crossword labels stay English (D33).
+
+## 31. Stage 9 implementation notes (landing page and public pages)
+
+**Pages.** `/` is `templates/landing.html` (signed-out visitors see Start certification and Sign in; a signed-in user sees Continue). `/privacy/`, `/terms/`, `/grievance/` and `/help/` are public, also for a learner waiting for guardian consent (the middleware allow-list). Privacy, terms and grievance carry a visible "Draft" notice until CyberPeace legal sends the wording. `404.html` extends the base layout; `500.html` is standalone (no context processors, no database) so an error never depends on what failed. Both are wired as `handler404` / `handler500`.
+
+**D34 on a public page.** Calls to action go to `/register/` and sign-in, never into `/learn/`. The module list on the landing page is a plain list of the live modules (title, hours, 100 marks), not links.
+
+**One FAQ.** `apps/core/faq.py` holds the questions once; the landing page shows those flagged for it, the help page all of them.
+
+**The first-response check** has its own four scenarios written in the landing template. It never reads the question bank, which a test proves (no overlap with banked text, and the landing view imports neither the questions nor the assessments app).
+
+**Who runs it.** A placeholder card until `PEOPLE_CONSENT_GIVEN` is on **and** `bhavesh-patel.jpg`, `nilakshi-jain.jpg` and `vineet-kumar.webp` are all in `PEOPLE_PHOTO_DIR` (default `content-data/people/`). Photos are served by `/people/<slug>/` (404 otherwise), never as static files, and are never in git (D22).
+
+**Assets and CSP.** `static/css/landing.css` (the prototype's sections; the stage strip comes from `stage.css`), `static/js/landing.js` (tabs and one-open FAQ; panels are server-rendered and translated, JavaScript only toggles `hidden`). No inline script or style, which the Caddy CSP forbids. `static/img/favicon.svg`, `favicon-32.png`, `apple-touch-icon.png` and `social-preview.png` come from `tools/make_brand_assets.mjs`; the emblem slot is the text "CCFR" until the emblem exists (D23). `base.html` gains description, Open Graph and Twitter card tags.
+
+**Translation.** 88 new UI strings were added as drafts (`draft: needs review`) in hi, mr and gu through `fill_ui_drafts --extra`.

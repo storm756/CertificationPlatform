@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load i18n ccfr %}
+{% block head_title %}{% translate "Terms of use" %}{% endblock %}
+{% block body %}
+  <main id="main" tabindex="-1">
+    {% translate "Policies" as eyebrow %}{% translate "Terms of use" as title %}{% translate "The rules for using the programme and its certificate." as lede %}
+    {% include "public/_band.html" %}
+    <div class="shell section prose">
+      {% include "public/_draft_notice.html" %}
+      <h2>{% translate "Using the programme" %}</h2>
+      <p>{% translate "The programme is free. Use your own account, keep your password private, and do your own assessments." %}</p>
+      <h2>{% translate "Certificates" %}</h2>
+      <p>{% translate "A certificate is issued when you are eligible and your mentor approves it. It can be checked by anyone on a public page, and it can be revoked if it was issued by mistake or obtained unfairly." %}</p>
+      <h2>{% translate "Course content" %}</h2>
+      <p>{% translate "Course films, readings and questions belong to the programme. Do not copy or share assessment questions." %}</p>
+    </div>
+  </main>
+{% endblock %}

@@ -28,6 +28,9 @@ _GUARDIAN_WAIT_PREFIXES = (
     "/waiting/",
     "/guardian/",
     "/privacy/",
+    "/terms/",
+    "/grievance/",
+    "/help/",
     "/verify/",
     "/i18n/",
 )
