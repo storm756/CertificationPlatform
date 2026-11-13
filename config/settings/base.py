@@ -58,6 +58,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "apps.core.security.SecurityHeadersMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -70,6 +71,7 @@ MIDDLEWARE = [
     "apps.accounts.middleware.ProfileLanguageMiddleware",
     "apps.accounts.middleware.StaffMFARequiredMiddleware",
     "apps.accounts.middleware.LearnerGateMiddleware",
+    "django_ratelimit.middleware.RatelimitMiddleware",  # block=True -> RATELIMIT_VIEW
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -144,6 +146,21 @@ ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 LOGIN_REDIRECT_URL = "start"
 LOGIN_URL = "account_login"
 ACCOUNT_LOGOUT_REDIRECT_URL = "/"
+
+# --- Rate limits (Stage 10). Never key on django-ratelimit's "ip": see apps/core/ratelimits.py ---
+# allauth's limits; the rest of allauth's defaults stay. "ip" here is the real client: behind Caddy,
+# _hosted.py sets ALLAUTH_TRUSTED_PROXY_COUNT = 1. A classroom shares one network, so per-network
+# numbers are high enough for a whole batch (lead, 14 Nov 2026); the per-email limit (5 wrong
+# passwords in 5 minutes) is what stops password guessing.
+ACCOUNT_RATE_LIMITS = {
+    "login": "90/m/ip",
+    "login_failed": "30/m/ip,5/5m/key",
+    "reset_password": "20/m/ip,5/m/key",
+    "reset_password_from_key": "20/m/ip",
+}
+RATELIMIT_VIEW = "apps.core.ratelimits.ratelimited_view"  # the "Too many tries" page, with the wait
+ANSWER_RATE = "1200/h"  # per learner: saving answers (autosave on every change)
+SUBMIT_RATE = "60/h"  # per learner: submitting attempts
 
 MFA_SUPPORTED_TYPES = ["totp", "recovery_codes"]
 MFA_TOTP_ISSUER = PROGRAMME_NAME
@@ -221,7 +238,7 @@ LOGGING = {
 # Fold Gmail dots / +tags so one person can't register twice. On in prod, off on staging.
 EMAIL_NORMALISE_ALIASES = env_bool("EMAIL_NORMALISE_ALIASES", False)
 PRIVACY_NOTICE_VERSION = "1"
-REGISTER_RATE = "30/10m"  # per batch, not per IP
+REGISTER_RATE = "90/10m"  # per batch, not per IP: a whole batch signs up at once (lead, 14 Nov)
 GUARDIAN_LINK_DAYS = 14
 EMAIL_DAILY_BUDGET = {"registration": 150, "reset_guardian": 100, "reserve": 50}
 EMAIL_ALERT_AT = 150
@@ -271,6 +288,8 @@ CERTIFICATE_APPROVE_PER_REQUEST = 15  # "Approve all" issues at most this many p
 from datetime import time as _time  # noqa: E402
 
 PERIODIC_RUN_AT = _time(3, 0)
+# Pinged after every wake-up of the `tasks` loop (apps/core/monitoring.py). Empty: off.
+TASKS_PING_URL = env("TASKS_PING_URL", "")
 
 # --- Public pages (Stage 9) ---
 # "Who runs it" shows the three people with photos only after each has agreed to appear. Until then

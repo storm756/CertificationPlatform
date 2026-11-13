@@ -1,8 +1,9 @@
-# Backup / cron container: pg_dump 17 + age (encryption) + rclone (upload). Runs as non-root.
+# Backup / cron container: pg_dump 17 + age (encryption) + rclone (upload) + curl (heartbeat pings).
+# Runs as non-root.
 FROM postgres:17
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends age rclone ca-certificates tzdata \
+    && apt-get install -y --no-install-recommends age rclone ca-certificates tzdata curl \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --system --uid 10002 --home-dir /home/csfrbackup --create-home csfrbackup \
     && mkdir -p /backups && chown csfrbackup /backups

@@ -5,6 +5,10 @@
   <div class="state-panel accent--mustard">
     <span class="big-icon">{% icon "clock" %}</span>
     <h1>{% translate "Too many attempts" %}</h1>
-    <p>{% translate "Many people are registering for this batch right now. Please wait a few minutes and try again." %}</p>
+    <p>{% blocktranslate count minutes=wait_minutes trimmed %}
+      Many people are registering for this batch right now. Please wait {{ minutes }} minute and try again.
+    {% plural %}
+      Many people are registering for this batch right now. Please wait up to {{ minutes }} minutes and try again.
+    {% endblocktranslate %}</p>
   </div>
 {% endblock %}

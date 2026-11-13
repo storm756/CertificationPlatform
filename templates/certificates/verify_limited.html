@@ -5,6 +5,11 @@
 {% block content %}
   <article class="verify-card">
     <h1>{% translate "Too many checks" %}</h1>
-    {% include "components/alert.html" with tone="mustard" icon="clock" text=_("This device has checked a lot of certificates in a short time. Please wait a few minutes and scan the QR code again.") %}
+    {% blocktranslate asvar wait_text count minutes=wait_minutes trimmed %}
+      This device has checked a lot of certificates in a short time. Please wait {{ minutes }} minute and scan the QR code again.
+    {% plural %}
+      This device has checked a lot of certificates in a short time. Please wait up to {{ minutes }} minutes and scan the QR code again.
+    {% endblocktranslate %}
+    {% include "components/alert.html" with tone="mustard" icon="clock" text=wait_text %}
   </article>
 {% endblock %}

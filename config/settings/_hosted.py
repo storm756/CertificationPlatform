@@ -15,3 +15,9 @@ X_FRAME_OPTIONS = "DENY"
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
+
+# allauth works out the client IP for its sign-in and reset limits. Behind Caddy, REMOTE_ADDR is
+# Caddy's own address, so read X-Forwarded-For: Caddy 2.11 replaces any client-sent value with the
+# real client, giving exactly one entry. Same rule as apps.audit.services.client_ip. If a CDN or
+# another proxy is ever put in front of Caddy, raise this and revisit client_ip (STATUS, PR #15).
+ALLAUTH_TRUSTED_PROXY_COUNT = 1

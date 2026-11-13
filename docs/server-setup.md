@@ -41,11 +41,12 @@ chmod 600 app.env db.env
 
 ```bash
 git clone https://github.com/storm756/CertificationPlatform.git ~/csfr-repo   # only to get deploy.sh
+~/csfr-repo/deploy/deploy.sh edge              # the shared Caddy, from main, in /srv/csfr/edge (Stage 10)
 ~/csfr-repo/deploy/deploy.sh staging           # then check https://staging.cyberfirstresponse.io
 ~/csfr-repo/deploy/deploy.sh prod              # takes a DB dump first
 ```
 
-The script clones its own checkout into `/srv/csfr/<env>/src`. `deploy.sh prod v1.2.0` deploys a tag (rollback = deploy the previous tag).
+The script clones its own checkout into `/srv/csfr/<env>/src`. `deploy.sh prod v1.2.0` deploys a tag (rollback = deploy the previous tag). `deploy.sh staging|prod` never touches Caddy; `deploy.sh edge` does. Day-to-day operations (deploy, roll back, restore, secrets, incidents, admins, loading the course, monitoring) are in [`runbook.md`](runbook.md).
 
 First admin: `docker compose -p csfr-staging ... run --rm web python manage.py createsuperuser`, i.e. from `/srv/csfr/staging/src/deploy`:
 

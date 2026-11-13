@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load i18n ccfr %}
+{% block head_title %}{% translate "Too many tries" %}{% endblock %}
+{% block content %}
+  <div class="state-panel accent--mustard">
+    <span class="big-icon">{% icon "clock" %}</span>
+    <h1>{% translate "Too many tries" %}</h1>
+    <p>{% blocktranslate count minutes=wait_minutes trimmed %}
+      This was tried many times in a short while. Please wait {{ minutes }} minute and try again.
+    {% plural %}
+      This was tried many times in a short while. Please wait up to {{ minutes }} minutes and try again.
+    {% endblocktranslate %}</p>
+    <p class="muted">{% translate "Nothing you have saved is lost." %}</p>
+  </div>
+{% endblock %}

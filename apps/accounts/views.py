@@ -12,6 +12,7 @@ from django_ratelimit.decorators import ratelimit
 
 from apps.audit.services import audit, client_ip
 from apps.batches.rules import accepting_batches
+from apps.core.ratelimits import too_many, window_minutes
 
 from . import guardian
 from .forms import GuardianConfirmForm, RegistrationForm
@@ -25,7 +26,7 @@ def _rate_key(group, request):
     return request.POST.get("batch", "none")
 
 
-@ratelimit(key=_rate_key, rate=settings.REGISTER_RATE, method="POST", block=False)
+@ratelimit(key=_rate_key, rate=lambda g, r: settings.REGISTER_RATE, method="POST", block=False)
 def register_view(request):
     now = timezone.now()
     if request.user.is_authenticated:
@@ -38,7 +39,8 @@ def register_view(request):
 
     if request.method == "POST":
         if getattr(request, "limited", False):
-            return render(request, "registration/too_many.html", status=429)
+            minutes = window_minutes(settings.REGISTER_RATE)
+            return too_many(request, minutes, "registration/too_many.html")
         form = RegistrationForm(request.POST, now=now)
         if form.is_valid():
             result = register(form.cleaned_data, request)

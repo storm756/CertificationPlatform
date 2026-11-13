@@ -19,6 +19,7 @@ from django_ratelimit.decorators import ratelimit
 from apps.accounts.models import Role
 from apps.accounts.rules import certificate_name_ok
 from apps.audit.services import client_ip
+from apps.core.ratelimits import too_many, window_minutes
 from apps.results.policy import compute_results
 
 from . import services
@@ -105,7 +106,8 @@ def verify_state(cert) -> str:
 @ratelimit(key=_verify_key, rate=_verify_rate, method=ratelimit.ALL, block=False)
 def verify(request, code=None):
     if getattr(request, "limited", False):
-        return _public(render(request, "certificates/verify_limited.html", status=429))
+        minutes = window_minutes(_verify_rate(None, request))
+        return _public(too_many(request, minutes, "certificates/verify_limited.html"))
     if code is None:  # the page without a code: a box to type the code printed on paper
         form = VerifyCodeForm(request.GET if "code" in request.GET else None)
         if form.is_valid():

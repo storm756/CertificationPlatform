@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ccfr\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 21:43+0530\n"
+"POT-Creation-Date: 2026-11-14 01:21+0530\n"
 "PO-Revision-Date: 2026-11-13 21:00+0530\n"
 "Language-Team: CCFR translators (drafts pending review)\n"
 "Language: mr\n"
@@ -11,6 +11,13 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# draft: needs review
+#: apps/accounts/adapter.py:29
+msgid "Too many wrong passwords. Please wait 5 minutes and try again, or reset your password."
+msgstr ""
+"खूप वेळा चुकीचा पासवर्ड टाकला गेला. कृपया 5 मिनिटे थांबून पुन्हा प्रयत्न करा, किंवा तुमचा पासवर्ड "
+"रीसेट करा."
 
 # draft: needs review
 #: apps/accounts/forms.py:28
@@ -115,17 +122,17 @@ msgid "Your email can't be changed for 7 days after a password reset by your men
 msgstr "मेंटरने पासवर्ड रीसेट केल्यानंतर 7 दिवस तुमचा ईमेल बदलता येणार नाही."
 
 # draft: needs review
-#: apps/accounts/views.py:114
+#: apps/accounts/views.py:116
 msgid "We have emailed your guardian again."
 msgstr "आम्ही तुमच्या पालकांना पुन्हा ईमेल पाठवला आहे."
 
 # draft: needs review
-#: apps/accounts/views.py:116
+#: apps/accounts/views.py:118
 msgid "We could not send the email right now. Please try again later."
 msgstr "आत्ता ईमेल पाठवता आला नाही. कृपया नंतर पुन्हा प्रयत्न करा."
 
 # draft: needs review
-#: apps/accounts/views.py:165
+#: apps/accounts/views.py:167
 msgid "Your password is changed. Please sign in."
 msgstr "तुमचा पासवर्ड बदलला आहे. कृपया साइन इन करा."
 
@@ -256,7 +263,7 @@ msgid "Reading topic"
 msgstr "वाचन विषय"
 
 # draft: needs review
-#: apps/content/models.py:54 apps/content/views.py:26
+#: apps/content/models.py:54 apps/content/views.py:27
 msgid "Handout"
 msgstr "हँडआउट"
 
@@ -271,52 +278,52 @@ msgid "Practice quiz"
 msgstr "सराव प्रश्नमंजूषा"
 
 # draft: needs review
-#: apps/content/views.py:26
+#: apps/content/views.py:27
 msgid "Watch"
 msgstr "पाहा"
 
 # draft: needs review
-#: apps/content/views.py:26
+#: apps/content/views.py:27
 msgid "Read"
 msgstr "वाचा"
 
 # draft: needs review
-#: apps/content/views.py:26 templates/landing.html:45
+#: apps/content/views.py:27 templates/landing.html:45
 msgid "Practise"
 msgstr "सराव करा"
 
 # draft: needs review
-#: apps/content/views.py:78
+#: apps/content/views.py:79
 msgid "Capstone simulation"
 msgstr "कॅपस्टोन सिम्युलेशन"
 
 # draft: needs review
-#: apps/content/views.py:79
+#: apps/content/views.py:80
 msgid "Bring every module together in one realistic case."
 msgstr "सर्व मॉड्यूल एका वास्तववादी केसमध्ये एकत्र आणा."
 
 # draft: needs review
-#: apps/content/views.py:81
+#: apps/content/views.py:82
 msgid "Completes at 80% watched"
 msgstr "80% पाहिल्यावर पूर्ण होते"
 
 # draft: needs review
-#: apps/content/views.py:82
+#: apps/content/views.py:83
 msgid "Completes when you reach the end"
 msgstr "शेवटपर्यंत पोहोचल्यावर पूर्ण होते"
 
 # draft: needs review
-#: apps/content/views.py:83
+#: apps/content/views.py:84
 msgid "Completes when opened"
 msgstr "उघडल्यावर पूर्ण होते"
 
 # draft: needs review
-#: apps/content/views.py:84
+#: apps/content/views.py:85
 msgid "Completes after one try"
 msgstr "एका प्रयत्नानंतर पूर्ण होते"
 
 # draft: needs review
-#: apps/content/views.py:85
+#: apps/content/views.py:86
 msgid "Completes when submitted once"
 msgstr "एकदा सादर केल्यावर पूर्ण होते"
 
@@ -327,9 +334,6 @@ msgstr "कोण सहभागी होऊ शकते?"
 
 # draft: needs review
 #: apps/core/faq.py:15
-#| msgid ""
-#| "Because you are 16 or 17, a parent or guardian needs to confirm by email before your account "
-#| "starts. We don't track time-on-task for learners under 18."
 msgid ""
 "Anyone aged 16 or over. If you are 16 or 17, a parent or guardian confirms by email before your "
 "account starts. Under-16s can't register."
@@ -358,9 +362,6 @@ msgstr "शिकण्यासाठी साइन इन करणे आ�
 
 # draft: needs review
 #: apps/core/faq.py:32
-#| msgid ""
-#| "Each module has a short film, six or seven readings, a handout and practice checks. It ends in a "
-#| "two-part assessment worth 100 marks. Nothing is locked, so start anywhere and come back any time."
 msgid ""
 "Yes. Films, readings, handouts and practice checks open after you sign in. Once you are in, "
 "nothing is locked: go in any order and come back any time."
@@ -385,7 +386,6 @@ msgstr ""
 
 # draft: needs review
 #: apps/core/faq.py:47
-#| msgid "My certificate"
 msgid "How do I get my certificate?"
 msgstr "मला प्रमाणपत्र कसे मिळेल?"
 
@@ -402,7 +402,6 @@ msgstr ""
 
 # draft: needs review
 #: apps/core/faq.py:57
-#| msgid "This certificate has been revoked"
 msgid "Why is my certificate name locked?"
 msgstr "माझे प्रमाणपत्रावरील नाव बंद का आहे?"
 
@@ -417,7 +416,6 @@ msgstr ""
 
 # draft: needs review
 #: apps/core/faq.py:65
-#| msgid "How each module went"
 msgid "How are modules marked?"
 msgstr "मॉड्यूलचे गुण कसे दिले जातात?"
 
@@ -432,15 +430,11 @@ msgstr ""
 
 # draft: needs review
 #: apps/core/faq.py:73
-#| msgid "Back to the assessment"
 msgid "What do I see after an assessment?"
 msgstr "मूल्यमापनानंतर मला काय दिसते?"
 
 # draft: needs review
 #: apps/core/faq.py:75
-#| msgid ""
-#| "Afterwards you see your score, which answers were right or wrong, and a hint for each, but never "
-#| "the correct option."
 msgid ""
 "Your score, which questions were right or wrong, and a hint for each. Never the correct option, so"
 " the assessment stays fair for everyone."
@@ -450,7 +444,6 @@ msgstr ""
 
 # draft: needs review
 #: apps/core/faq.py:81
-#| msgid "Safety gate"
 msgid "What is a safety gate?"
 msgstr "सुरक्षा द्वार म्हणजे काय?"
 
@@ -467,7 +460,6 @@ msgstr ""
 
 # draft: needs review
 #: apps/core/faq.py:90
-#| msgid "Nothing left: the final is unlocked."
 msgid "When does the final unlock?"
 msgstr "अंतिम परीक्षा कधी उघडते?"
 
@@ -496,7 +488,6 @@ msgstr ""
 
 # draft: needs review
 #: apps/core/faq.py:106
-#| msgid "Forgot your password?"
 msgid "I forgot my password"
 msgstr "मी माझा पासवर्ड विसरलो/विसरले"
 
@@ -1003,7 +994,6 @@ msgstr ""
 
 # draft: needs review
 #: templates/404.html:3
-#| msgid "Not found"
 msgid "Page not found"
 msgstr "पान सापडले नाही"
 
@@ -1027,6 +1017,28 @@ msgstr "मुख्यपृष्ठावर जा"
 #: templates/404.html:9 templates/components/footer.html:9 templates/public/help.html:3
 msgid "Help and FAQ"
 msgstr "मदत आणि वारंवार विचारले जाणारे प्रश्न"
+
+# draft: needs review
+#: templates/429.html:3 templates/429.html:7
+msgid "Too many tries"
+msgstr "खूप प्रयत्न"
+
+# draft: needs review
+#: templates/429.html:8
+#, python-format
+msgid "This was tried many times in a short while. Please wait %(minutes)s minute and try again."
+msgid_plural ""
+"This was tried many times in a short while. Please wait up to %(minutes)s minutes and try again."
+msgstr[0] ""
+"थोड्या वेळात हे अनेकदा करून पाहिले गेले. कृपया %(minutes)s मिनिट थांबून पुन्हा प्रयत्न करा."
+msgstr[1] ""
+"थोड्या वेळात हे अनेकदा करून पाहिले गेले. कृपया %(minutes)s मिनिटांपर्यंत थांबून पुन्हा प्रयत्न "
+"करा."
+
+# draft: needs review
+#: templates/429.html:13
+msgid "Nothing you have saved is lost."
+msgstr "तुम्ही जतन केलेले काहीही गमावलेले नाही."
 
 # draft: needs review
 #: templates/500.html:9
@@ -1763,7 +1775,6 @@ msgstr "सबमिट करा"
 
 # draft: needs review
 #: templates/base.html:11
-#| msgid "Practical cyber first-response skills for every community."
 msgid "Learn practical cyber first-response skills and earn a certificate that anyone can verify."
 msgstr "व्यावहारिक सायबर प्रथम-प्रतिसाद कौशल्ये शिका आणि कोणीही पडताळू शकेल असे प्रमाणपत्र मिळवा."
 
@@ -2029,12 +2040,19 @@ msgstr "खूप तपासण्या"
 
 # draft: needs review
 #: templates/certificates/verify_limited.html:8
+#, python-format
 msgid ""
-"This device has checked a lot of certificates in a short time. Please wait a few minutes and scan "
-"the QR code again."
-msgstr ""
-"या डिव्हाइसवरून कमी वेळात खूप प्रमाणपत्रे तपासली गेली आहेत. कृपया काही मिनिटे थांबा आणि QR कोड "
+"This device has checked a lot of certificates in a short time. Please wait %(minutes)s minute and "
+"scan the QR code again."
+msgid_plural ""
+"This device has checked a lot of certificates in a short time. Please wait up to %(minutes)s "
+"minutes and scan the QR code again."
+msgstr[0] ""
+"या डिव्हाइसने थोड्या वेळात बरीच प्रमाणपत्रे तपासली आहेत. कृपया %(minutes)s मिनिट थांबून QR कोड "
 "पुन्हा स्कॅन करा."
+msgstr[1] ""
+"या डिव्हाइसने थोड्या वेळात बरीच प्रमाणपत्रे तपासली आहेत. कृपया %(minutes)s मिनिटांपर्यंत थांबून QR"
+" कोड पुन्हा स्कॅन करा."
 
 # draft: needs review
 #: templates/components/confirm_dialog.html:9
@@ -2082,7 +2100,6 @@ msgstr "वापराच्या अटी"
 # draft: needs review
 #: templates/components/footer.html:8 templates/public/grievance.html:3
 #: templates/public/grievance.html:6
-#| msgid "Guardian consent"
 msgid "Grievance contact"
 msgstr "तक्रार संपर्क"
 
@@ -2263,7 +2280,6 @@ msgstr "सामुदायिक सायबर"
 
 # draft: needs review
 #: templates/landing.html:23
-#| msgid "First Responder."
 msgid "First Responder"
 msgstr "फर्स्ट रिस्पॉन्डर"
 
@@ -2279,19 +2295,16 @@ msgstr ""
 
 # draft: needs review
 #: templates/landing.html:29 templates/landing.html:303
-#| msgid "Certificate verification"
 msgid "Start certification"
 msgstr "प्रमाणन सुरू करा"
 
 # draft: needs review
 #: templates/landing.html:33
-#| msgid "Programme structure"
 msgid "Programme at a glance"
 msgstr "कार्यक्रम एका दृष्टिक्षेपात"
 
 # draft: needs review
 #: templates/landing.html:34
-#| msgid "%(n)s counted modules + capstone"
 msgid "9 modules + capstone"
 msgstr "9 मॉड्यूल + कॅपस्टोन"
 
@@ -2302,7 +2315,6 @@ msgstr "विनामूल्य, शिकण्यासाठी साइ
 
 # draft: needs review
 #: templates/landing.html:36
-#| msgid "By language"
 msgid "4 languages"
 msgstr "4 भाषा"
 
@@ -2313,7 +2325,6 @@ msgstr "प्रमाणनापर्यंतचा तुमचा मा�
 
 # draft: needs review
 #: templates/landing.html:43
-#| msgid "Learner"
 msgid "Learn"
 msgstr "शिका"
 
@@ -2324,7 +2335,6 @@ msgstr "मूल्यमापन"
 
 # draft: needs review
 #: templates/landing.html:49
-#| msgid "Certificate"
 msgid "Certify"
 msgstr "प्रमाणित व्हा"
 
@@ -2396,7 +2406,6 @@ msgstr "प्रत्येक मॉड्यूलच्या शेवट�
 # draft: needs review
 #: templates/landing.html:64
 #, python-format
-#| msgid "Attempts are unlimited. Your best attempt counts."
 msgid "The pass mark is 50%% and your best attempt counts"
 msgstr "उत्तीर्ण गुण 50%% आहेत आणि तुमचा सर्वोत्तम प्रयत्न मोजला जातो"
 
@@ -2412,7 +2421,6 @@ msgstr "टप्पा 4 / 4"
 
 # draft: needs review
 #: templates/landing.html:68
-#| msgid "Verify a certificate"
 msgid "Earn a verifiable certificate"
 msgstr "पडताळणीयोग्य प्रमाणपत्र मिळवा"
 
@@ -2434,13 +2442,11 @@ msgstr "QR कोडद्वारे कोणीही ते खरे अ�
 
 # draft: needs review
 #: templates/landing.html:77
-#| msgid "Programme structure"
 msgid "Programme facts"
 msgstr "कार्यक्रमाची माहिती"
 
 # draft: needs review
 #: templates/landing.html:79
-#| msgid "%(n)s counted modules + capstone"
 msgid "counted modules, plus a capstone simulation"
 msgstr "गणले जाणारे मॉड्यूल, सोबत एक कॅपस्टोन सिम्युलेशन"
 
@@ -2451,13 +2457,11 @@ msgstr "प्रत्येक मॉड्यूलचे गुण: बह�
 
 # draft: needs review
 #: templates/landing.html:81
-#| msgid "Pass every module and the final with 50%% or more."
 msgid "pass mark for every module and for the final"
 msgstr "प्रत्येक मॉड्यूल आणि अंतिम परीक्षेसाठी उत्तीर्ण गुण"
 
 # draft: needs review
 #: templates/landing.html:82
-#| msgid "Interactive: multiple choice"
 msgid "interactive challenge formats, as well as multiple choice"
 msgstr "परस्परसंवादी आव्हानांचे प्रकार, सोबत बहुपर्यायी"
 
@@ -2473,13 +2477,11 @@ msgstr "आत्ताच काहीतरी घडले आहे. आध�
 
 # draft: needs review
 #: templates/landing.html:93
-#| msgid "Situation"
 msgid "Situations"
 msgstr "परिस्थिती"
 
 # draft: needs review
 #: templates/landing.html:94
-#| msgid "Create my account"
 msgid "Money just left my account"
 msgstr "माझ्या खात्यातून आत्ताच पैसे गेले"
 
@@ -2515,7 +2517,6 @@ msgstr "पहिल्या तासात पैसे थांबवण्
 
 # draft: needs review
 #: templates/landing.html:102
-#| msgid "Right"
 msgid "Right now"
 msgstr "आत्ताच"
 
@@ -2561,21 +2562,16 @@ msgstr "मग तो डिलीट करा. त्याची लिंक
 
 # draft: needs review
 #: templates/landing.html:114
-#| msgid "Join the programme"
 msgid "The programme"
 msgstr "कार्यक्रम"
 
 # draft: needs review
 #: templates/landing.html:115
-#| msgid "%(n)s counted modules + capstone"
 msgid "Nine modules and a capstone"
 msgstr "नऊ मॉड्यूल आणि एक कॅपस्टोन"
 
 # draft: needs review
 #: templates/landing.html:116
-#| msgid ""
-#| "Each module has a short film, six or seven readings, a handout and practice checks. It ends in a "
-#| "two-part assessment worth 100 marks. Nothing is locked, so start anywhere and come back any time."
 msgid ""
 "Each module has a short film, six or seven readings, a handout and practice checks, and ends in a "
 "two-part assessment. Sign in to open any module."
@@ -2585,7 +2581,6 @@ msgstr ""
 
 # draft: needs review
 #: templates/landing.html:124
-#| msgid "Not graded"
 msgid "Not graded."
 msgstr "गुण दिले जात नाहीत."
 
@@ -2597,25 +2592,21 @@ msgstr "सुमारे %(h)s तास · 100 गुण"
 
 # draft: needs review
 #: templates/landing.html:124
-#| msgid "marks"
 msgid "100 marks"
 msgstr "100 गुण"
 
 # draft: needs review
 #: templates/landing.html:129
-#| msgid "Other modules"
 msgid "Open the modules"
 msgstr "मॉड्यूल उघडा"
 
 # draft: needs review
 #: templates/landing.html:129
-#| msgid "Registration is open"
 msgid "Register to start learning"
 msgstr "शिकणे सुरू करण्यासाठी नोंदणी करा"
 
 # draft: needs review
 #: templates/landing.html:137
-#| msgid "Verification code"
 msgid "How certification works"
 msgstr "प्रमाणन कसे होते"
 
@@ -2626,7 +2617,6 @@ msgstr "न्याय्य, पारदर्शक आणि तुम्�
 
 # draft: needs review
 #: templates/landing.html:142
-#| msgid "Your result"
 msgid "Your final result"
 msgstr "तुमचा अंतिम निकाल"
 
@@ -2637,7 +2627,6 @@ msgstr "तुमचा निकाल 50 टक्के मॉड्यूल
 
 # draft: needs review
 #: templates/landing.html:144
-#| msgid "No assessments yet."
 msgid "Module assessments"
 msgstr "मॉड्यूल मूल्यमापन"
 
@@ -2658,15 +2647,11 @@ msgstr ""
 
 # draft: needs review
 #: templates/landing.html:156
-#| msgid "Not answered"
 msgid "Hints, not answers"
 msgstr "सूचना, उत्तरे नाहीत"
 
 # draft: needs review
 #: templates/landing.html:156
-#| msgid ""
-#| "Afterwards you see your score, which answers were right or wrong, and a hint for each, but never "
-#| "the correct option."
 msgid ""
 "After each module assessment you see your score, which questions to revisit, and a hint for each."
 msgstr ""
@@ -2675,7 +2660,6 @@ msgstr ""
 
 # draft: needs review
 #: templates/landing.html:157
-#| msgid "Start the final"
 msgid "A clear route to the final"
 msgstr "अंतिम परीक्षेपर्यंत स्पष्ट मार्ग"
 
@@ -2695,13 +2679,11 @@ msgstr "सुरक्षित गुणांकन"
 
 # draft: needs review
 #: templates/landing.html:158
-#| msgid "All marking happens on the server, so it is fair for everyone."
 msgid "All marking happens on the server, so results are fair and consistent for everyone."
 msgstr "सर्व गुणांकन सर्व्हरवर होते, त्यामुळे निकाल सर्वांसाठी निष्पक्ष आणि सारखे असतात."
 
 # draft: needs review
 #: templates/landing.html:168
-#| msgid "Interactive: settings"
 msgid "Interactive learning"
 msgstr "परस्परसंवादी शिक्षण"
 
@@ -2726,19 +2708,16 @@ msgstr "परिस्थितीसाठी सर्वोत्तम प�
 
 # draft: needs review
 #: templates/landing.html:174
-#| msgid "Start the final"
 msgid "Spot the signs"
 msgstr "चिन्हे ओळखा"
 
 # draft: needs review
 #: templates/landing.html:174
-#| msgid "Reload the page and try again."
 msgid "Read a message and tap every warning sign."
 msgstr "संदेश वाचा आणि प्रत्येक धोक्याच्या चिन्हावर टॅप करा."
 
 # draft: needs review
 #: templates/landing.html:175
-#| msgid "Take the pre-test"
 msgid "Tap the picture"
 msgstr "चित्रावर टॅप करा"
 
@@ -2749,7 +2728,6 @@ msgstr "चित्रातील धोकादायक उपकरणे 
 
 # draft: needs review
 #: templates/landing.html:176
-#| msgid "Mentor dashboard"
 msgid "Sort board"
 msgstr "वर्गीकरण फलक"
 
@@ -2770,7 +2748,6 @@ msgstr "प्रत्येक गोष्ट तिच्या योग्
 
 # draft: needs review
 #: templates/landing.html:178
-#| msgid "Your order"
 msgid "Put in order"
 msgstr "क्रमाने लावा"
 
@@ -2811,7 +2788,6 @@ msgstr "योग्य संख्या ठरवा: तास, दिवस
 
 # draft: needs review
 #: templates/landing.html:182
-#| msgid "Back to the assessment"
 msgid "Talk to the person"
 msgstr "व्यक्तीशी बोला"
 
@@ -2831,7 +2807,6 @@ msgstr ""
 
 # draft: needs review
 #: templates/landing.html:194
-#| msgid "Module"
 msgid "Module 1"
 msgstr "मॉड्यूल 1"
 
@@ -2856,7 +2831,6 @@ msgstr ""
 
 # draft: needs review
 #: templates/landing.html:208
-#| msgid "Choose one answer"
 msgid "Choose a language"
 msgstr "भाषा निवडा"
 
@@ -2867,21 +2841,17 @@ msgstr "मोबाइलसाठी आधी, मोठ्या टॅप �
 
 # draft: needs review
 #: templates/landing.html:214
-#| msgid ""
-#| "Your answers are saved to your account as you go, so you can continue on any device."
 msgid "Answers save to your account as you go, so you can pick up on any device"
 msgstr ""
 "उत्तरे लगेच तुमच्या खात्यात जतन होतात, त्यामुळे तुम्ही कोणत्याही डिव्हाइसवर पुढे सुरू ठेवू शकता"
 
 # draft: needs review
 #: templates/landing.html:215
-#| msgid "Certificate issued"
 msgid "Certificates are issued in English"
 msgstr "प्रमाणपत्रे इंग्रजीत दिली जातात"
 
 # draft: needs review
 #: templates/landing.html:226
-#| msgid "Certificate name changed."
 msgid "A certificate anyone can verify."
 msgstr "कोणीही पडताळू शकेल असे प्रमाणपत्र."
 
@@ -2896,7 +2866,6 @@ msgstr ""
 
 # draft: needs review
 #: templates/landing.html:229
-#| msgid "Download it securely from this page. It is never sent by email."
 msgid "Download it securely from the site. It is never sent by email."
 msgstr "ते साइटवरून सुरक्षितपणे डाउनलोड करा. ते कधीही ईमेलने पाठवले जात नाही."
 
@@ -2907,7 +2876,6 @@ msgstr "पडताळणी पानावर फक्त तुमचे �
 
 # draft: needs review
 #: templates/landing.html:231
-#| msgid "You are eligible. Your mentor approves certificates for your batch."
 msgid "Your mentor approves it, or it is issued automatically for your batch"
 msgstr "तुमचा मेंटर ते मंजूर करतो, किंवा तुमच्या बॅचसाठी ते आपोआप जारी होते"
 
@@ -2920,9 +2888,11 @@ msgstr "सक्षम प्राधिकरणाच्या मंजु�
 #: templates/landing.html:236
 #, python-format
 msgid ""
-"A sample %(short)s certificate with an invented name, showing the SAKEC and CyberPeace logos, "
-"the grade, three signatories and a QR code"
-msgstr "काल्पनिक नाव असलेला %(short)s प्रमाणपत्राचा नमुना, ज्यात SAKEC आणि CyberPeace चे लोगो, ग्रेड, तीन स्वाक्षरीकर्ते आणि एक QR कोड दिसतो"
+"A sample %(short)s certificate with an invented name, showing the SAKEC and CyberPeace logos, the "
+"grade, three signatories and a QR code"
+msgstr ""
+"काल्पनिक नाव असलेला %(short)s प्रमाणपत्राचा नमुना, ज्यात SAKEC आणि CyberPeace चे लोगो, ग्रेड, तीन "
+"स्वाक्षरीकर्ते आणि एक QR कोड दिसतो"
 
 # draft: needs review
 #: templates/landing.html:237
@@ -2936,7 +2906,6 @@ msgstr "नेतृत्व"
 
 # draft: needs review
 #: templates/landing.html:247
-#| msgid "What is it?"
 msgid "Who runs it"
 msgstr "हे कोण चालवते"
 
@@ -2970,7 +2939,6 @@ msgstr ""
 
 # draft: needs review
 #: templates/landing.html:282
-#| msgid "See what you know before you start."
 msgid "Good to know before you start"
 msgstr "सुरू करण्यापूर्वी जाणून घेण्यासारखे"
 
@@ -4027,7 +3995,6 @@ msgstr "तुमचे प्रमाणपत्र जारी झाले
 
 # draft: needs review
 #: templates/public/_draft_notice.html:2
-#| msgid "Draft"
 msgid "Draft."
 msgstr "मसुदा."
 
@@ -4093,13 +4060,11 @@ msgstr ""
 
 # draft: needs review
 #: templates/public/terms.html:6
-#| msgid "This module counts towards the certificate"
 msgid "The rules for using the programme and its certificate."
 msgstr "कार्यक्रम आणि त्याचे प्रमाणपत्र वापरण्याचे नियम."
 
 # draft: needs review
 #: templates/public/terms.html:10
-#| msgid "Join the programme"
 msgid "Using the programme"
 msgstr "कार्यक्रमाचा वापर"
 
@@ -4208,20 +4173,17 @@ msgstr ""
 
 # draft: needs review
 #: templates/registration/privacy.html:6
-#| msgid "What we collect, and why"
 msgid "What we collect, why, and who sees it."
 msgstr "आम्ही काय गोळा करतो, का, आणि कोण पाहते."
 
 # draft: needs review
 #: templates/registration/privacy.html:10
 #, python-format
-#| msgid "Question %(n)s"
 msgid "Version %(version)s"
 msgstr "आवृत्ती %(version)s"
 
 # draft: needs review
 #: templates/registration/privacy.html:11
-#| msgid "What we collect, and why"
 msgid "What we collect"
 msgstr "आम्ही काय गोळा करतो"
 
@@ -4236,7 +4198,6 @@ msgstr ""
 
 # draft: needs review
 #: templates/registration/privacy.html:13
-#| msgid "How each module went"
 msgid "How we use it"
 msgstr "आम्ही त्याचा वापर कसा करतो"
 
@@ -4261,7 +4222,6 @@ msgstr "आमचा ईमेल पुरवठादार, त्रुट�
 
 # draft: needs review
 #: templates/registration/privacy.html:17
-#| msgid "Your verdict"
 msgid "Your rights"
 msgstr "तुमचे अधिकार"
 
@@ -4435,9 +4395,18 @@ msgstr "खूप प्रयत्न"
 
 # draft: needs review
 #: templates/registration/too_many.html:8
+#, python-format
 msgid ""
-"Many people are registering for this batch right now. Please wait a few minutes and try again."
-msgstr "सध्या या बॅचसाठी अनेक लोक नोंदणी करत आहेत. कृपया काही मिनिटे थांबा आणि पुन्हा प्रयत्न करा."
+"Many people are registering for this batch right now. Please wait %(minutes)s minute and try "
+"again."
+msgid_plural ""
+"Many people are registering for this batch right now. Please wait up to %(minutes)s minutes and "
+"try again."
+msgstr[0] ""
+"सध्या या बॅचसाठी बरेच लोक नोंदणी करत आहेत. कृपया %(minutes)s मिनिट थांबून पुन्हा प्रयत्न करा."
+msgstr[1] ""
+"सध्या या बॅचसाठी बरेच लोक नोंदणी करत आहेत. कृपया %(minutes)s मिनिटांपर्यंत थांबून पुन्हा प्रयत्न "
+"करा."
 
 # draft: needs review
 #: templates/staff/attempts.html:3 templates/staff/attempts.html:6
