@@ -171,3 +171,9 @@
 - Admin report page (per-batch totals, knowledge gain vs 25, item statistics per language, email budget) and Django-admin actions to open/close registration. Why: §15.
 - simple-history on `Batch`, `Enrolment`, `Question` and `AssessmentPart`. Why: §6.
 - Not built (needs Stage 7's certificate table): approve, issue and revoke actions.
+
+## 2026-11-13: Stage 6 review finished, attempt limits in the staff tools
+- Merged `main` into the Stage 6 branch; the Stage 6 history migration is now `assessments.0008_history`, and `0009` adds `max_attempts` to the part history table. Why: `main` already used `0007` for the attempt limit (D32).
+- New admin page `/staff/attempts/`: set or clear the maximum attempts for every part and the final, audited. Why: D32 says the limit is admin-editable.
+- Question editor is the django-jsonform schema editor (the first Stage 6 notes said a plain JSON box); released-set questions are read-only. Why: review of the Stage 6 build.
+- Stage 6 notes moved from STATUS.md to `docs/history/stage-6.md`.

@@ -9,5 +9,6 @@ urlpatterns = [
     path("questions/<int:pk>/publish/", views.question_publish, name="staff_question_publish"),
     path("marks/", views.marks_index, name="staff_marks"),
     path("marks/<int:number>/", views.marks_edit, name="staff_marks_edit"),
+    path("attempts/", views.attempt_limits, name="staff_attempts"),
     path("report/", views.report, name="staff_report"),
 ]

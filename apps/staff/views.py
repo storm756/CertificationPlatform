@@ -164,10 +164,6 @@ def question_edit(request, pk):
     )
 
 
-def _allowed_pools(user):
-    return [p for p in Pool.values if p != Pool.FINAL or can_access_final_pool(user)]
-
-
 @transaction.atomic
 def _save_question(request, question, data, is_admin) -> list[str]:
     """Add a version from the validated form data and update the tags and pool. Returns errors."""
@@ -463,3 +459,58 @@ def item_statistics(limit=40):
             }
         )
     return sorted(rows, key=lambda r: (r["percent"], r["id"]))[:limit]
+
+
+# --- attempt limits (D32) ---------------------------------------------------------------------------
+
+
+def _limit_rows():
+    """Every assessment part (grouped by module order) and the final, with their limit."""
+    from apps.assessments.models import ProgrammeAssessment, ProgrammeAssessmentKind
+
+    rows = [
+        {"key": f"part_{p.pk}", "label": f"Module {p.module.number}: {p.name}", "obj": p}
+        for p in AssessmentPart.objects.select_related("module").order_by("module__number", "pk")
+    ]
+    final = ProgrammeAssessment.objects.filter(kind=ProgrammeAssessmentKind.FINAL).first()
+    if final:
+        rows.append({"key": f"final_{final.pk}", "label": "Final exam", "obj": final})
+    return rows
+
+
+@admin_required
+def attempt_limits(request):
+    """D32: one box per part and for the final. Blank = unlimited. Changes are audited."""
+    from apps.assessments import services as aservices
+
+    rows = _limit_rows()
+    errors = {}
+    posted = request.POST if request.method == "POST" else None
+    if posted is not None:
+        values = {}
+        for r in rows:
+            raw = posted.get(r["key"], "").strip()
+            if raw == "":
+                values[r["key"]] = None
+            elif raw.isdigit() and 1 <= int(raw) <= 100:
+                values[r["key"]] = int(raw)
+            else:
+                errors[r["key"]] = "Use a whole number from 1 to 100, or leave blank for unlimited."
+        if not errors:
+            changed = 0
+            with transaction.atomic():
+                for r in rows:
+                    obj = type(r["obj"]).objects.select_for_update().get(pk=r["obj"].pk)
+                    old = obj.max_attempts
+                    obj.max_attempts = values[r["key"]]
+                    if old != obj.max_attempts:
+                        obj.save()
+                        aservices.audit_limit_change(obj, old, actor=request.user, request=request)
+                        changed += 1
+            messages.success(request, f"Attempt limits saved ({changed} changed).")
+            return redirect("staff_attempts")
+    for r in rows:
+        r["value"] = posted.get(r["key"], "") if posted is not None else r["obj"].max_attempts
+        r["value"] = "" if r["value"] is None else r["value"]
+        r["error"] = errors.get(r["key"])
+    return render(request, "staff/attempts.html", {"rows": rows, "errors": errors})

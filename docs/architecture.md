@@ -736,8 +736,15 @@ Where the build made a choice the design left open. Each is a one-line change if
 
 **Pages.** `/exam/<final|pretest>/` and `/exam/<kind>/start/`; the attempt pages work for programme attempts (`Attempt.title`). `/start/` is the learner's My progress dashboard (`results/views.py`, `templates/progress/dashboard.html`): journey strip, what's left (to do first, finished collapsed), module cards, final state with bands, blockers, weakest PCs, hours, certificate placeholder.
 
-<<<<<<< HEAD
-## 27. Stage 6 implementation notes (staff tools)
+## 27. Attempt limit and lesson sign-in (D32–D35)
+
+**Attempt limit (D32).** `AssessmentPart.max_attempts` and `ProgrammeAssessment.max_attempts` (blank = unlimited; a database check allows a value only on the final, never on the pre-test or mock, and never 0). `services.check_attempt_limit()` runs inside `start()` and `start_programme()` after the learner's row lock and after an open attempt has been resumed, so parallel starts at the limit create at most one attempt and an attempt in progress is never cut off. Every started attempt counts as used (`services.attempt_allowance()`). The part intro, the final intro and the module page show "N of M attempts used"; at the limit Start and "Try again" are replaced by "No attempts left". The best counted attempt still counts. The admin audits a change as `assessment.max_attempts_changed` (old and new values).
+
+**Lesson sign-in (D34).** `content.views.signin_required` wraps every `/learn/` view. The public pages are landing, register, sign-in and privacy (help, terms, grievance and certificate verify when they exist).
+
+**Media (D34, D35).** `deploy/compose.yml` sets `MEDIA_ACCEL_REDIRECT=1` for web; `deploy/compose.edge.yml` mounts `csfr-<env>_media` read-only at `/srv/<env>/media` (created by `deploy.sh` like the static volumes); the Caddyfile's `handle_response` for `X-Accel-Redirect` serves the file with `file_server` (range requests, ETag, Last-Modified) and copies `Cache-Control`, `Content-Disposition` and `X-Content-Type-Options`. In development Django streams the file without range support.
+
+## 28. Stage 6 implementation notes (staff tools)
 
 **Access.** `batches_for` still scopes every mentor query. `apps/staff` adds `staff_required` (mentor or admin; a learner gets 403 and an `access.denied` audit) and `admin_required`. `rules.can_access_final_pool` is the single check for the final pool: `visible_questions` excludes it for mentors, the question pages 403 and log, the Django-admin `QuestionAdmin.get_queryset` hides it, and the editor refuses `pool=final` from a mentor.
 
@@ -748,12 +755,5 @@ Where the build made a choice the design left open. Each is a one-line change if
 **Report.** Per batch: registered, active, eligible, issued (0 until Stage 7), mean knowledge gain against the 25-point target; item statistics (% correct per question, per learner language); the email budget today.
 
 **History.** simple-history records `Batch`, `Enrolment`, `Question` and `AssessmentPart` (`Historical*` tables).
-=======
-## 27. Attempt limit and lesson sign-in (D32–D35)
 
-**Attempt limit (D32).** `AssessmentPart.max_attempts` and `ProgrammeAssessment.max_attempts` (blank = unlimited; a database check allows a value only on the final, never on the pre-test or mock, and never 0). `services.check_attempt_limit()` runs inside `start()` and `start_programme()` after the learner's row lock and after an open attempt has been resumed, so parallel starts at the limit create at most one attempt and an attempt in progress is never cut off. Every started attempt counts as used (`services.attempt_allowance()`). The part intro, the final intro and the module page show "N of M attempts used"; at the limit Start and "Try again" are replaced by "No attempts left". The best counted attempt still counts. The admin audits a change as `assessment.max_attempts_changed` (old and new values).
-
-**Lesson sign-in (D34).** `content.views.signin_required` wraps every `/learn/` view. The public pages are landing, register, sign-in and privacy (help, terms, grievance and certificate verify when they exist).
-
-**Media (D34, D35).** `deploy/compose.yml` sets `MEDIA_ACCEL_REDIRECT=1` for web; `deploy/compose.edge.yml` mounts `csfr-<env>_media` read-only at `/srv/<env>/media` (created by `deploy.sh` like the static volumes); the Caddyfile's `handle_response` for `X-Accel-Redirect` serves the file with `file_server` (range requests, ETag, Last-Modified) and copies `Cache-Control`, `Content-Disposition` and `X-Content-Type-Options`. In development Django streams the file without range support.
->>>>>>> main
+**Attempt limits (D32).** `/staff/attempts/` (admin only) lists every assessment part and the final with one "maximum attempts" box each; blank is unlimited, 1–100 is accepted, anything else saves nothing. A change is saved under a row lock and audited as `assessment.max_attempts_changed` through `services.audit_limit_change`, like the Django-admin forms. The pre-test and mock have no field. The check at the start of an attempt is unchanged (§27).
