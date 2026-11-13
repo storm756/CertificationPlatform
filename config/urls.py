@@ -47,3 +47,4 @@ urlpatterns = [
 
 handler404 = "apps.core.views.not_found"
 handler500 = "apps.core.views.server_error"
+handler429 = "apps.core.ratelimits.allauth_429"  # allauth calls it when its own limits are hit

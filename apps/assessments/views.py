@@ -7,6 +7,7 @@ or an option map to a template, so a key can't leak by a template mistake.
 
 import json
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -14,6 +15,7 @@ from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
+from django_ratelimit.decorators import ratelimit
 
 from apps.accounts.models import Role
 from apps.certificates.services import auto_issue_after_submit
@@ -174,6 +176,7 @@ def _saved_response(request, attempt, position, status=200):
 
 @learner_required
 @require_POST
+@ratelimit(key="user", rate=lambda g, r: settings.ANSWER_RATE, method="POST", block=True)
 def answer(request, pk):
     attempt = _own_attempt(request, pk)
     if not request.headers.get("HX-Request"):
@@ -255,6 +258,7 @@ def review(request, pk):
 
 @learner_required
 @require_POST
+@ratelimit(key="user", rate=lambda g, r: settings.SUBMIT_RATE, method="POST", block=True)
 def submit(request, pk):
     attempt = _own_attempt(request, pk)
     closed = services.submit(attempt.pk, request.user.pk)

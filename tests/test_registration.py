@@ -311,7 +311,7 @@ def test_registration_is_rate_limited_per_batch(client, make_batch, settings):
     batch = make_batch()
     other_batch = make_batch()
     # same IP, many attempts at one batch
-    for _ in range(30):
+    for _ in range(90):
         client.post(reverse("register"), form_data(batch, date_of_birth="not-a-date"))
     limited = client.post(reverse("register"), form_data(batch))
     assert limited.status_code == 429

@@ -1,6 +1,7 @@
 import logging
 
 from allauth.account.adapter import DefaultAccountAdapter
+from django.utils.translation import gettext_lazy as _
 
 from . import email_budget
 
@@ -19,6 +20,15 @@ _KIND_BY_TEMPLATE = {
 class BudgetedAccountAdapter(DefaultAccountAdapter):
     """Public sign-up is closed (D9): accounts are only made by /register, after is_accepting().
     Every allauth email passes the daily budgets and the one-per-address-per-day limit."""
+
+    # Say when they can try again (Stage 10). Five wrong passwords for one email in 5 minutes, or
+    # 30 from one network in a minute, stop sign-in for that long.
+    error_messages = {
+        **DefaultAccountAdapter.error_messages,
+        "too_many_login_attempts": _(
+            "Too many wrong passwords. Please wait 5 minutes and try again, or reset your password."
+        ),
+    }
 
     def is_open_for_signup(self, request):
         return False
