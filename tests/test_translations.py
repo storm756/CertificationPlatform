@@ -137,7 +137,7 @@ def test_unit_page_in_hindi_with_draft_tag(unit, learner, learner_client):
     learner.profile.preferred_language = "hi"
     learner.profile.save()
     html = learner_client.get(reverse("learn_unit", args=[1, "t1"])).content.decode()
-    assert "परिचय" in html
+    assert "<h1>परिचय</h1>" in html  # the heading, not only the outline
     assert "यह क्या है?" in html
     assert "badge--mustard" in html  # the "draft translation" tag
 

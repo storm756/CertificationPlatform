@@ -240,6 +240,7 @@ def unit_page(request, number, slug):
     )
     tpages.localise_module(module, lookup)
     tpages.localise_rows(module.number, rows, lookup)
+    version.title = lookup.get(f"{prefix}:title", version.title)  # display only, never saved
     blocks = _prepare(request, unit, translate_blocks(prefix, version.blocks, lookup))
     video = next((b for b in blocks if b["type"] == "video"), None)
     return render(
