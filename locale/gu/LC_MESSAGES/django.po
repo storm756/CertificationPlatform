@@ -1,12 +1,2918 @@
-# Gujarati catalogue for the UI. Django ships none, and without a catalogue it refuses to
-# activate "gu". The real strings arrive in Stage 8 (gettext + Rosetta, reviewed by the team).
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: ccfr
-"
-"Content-Type: text/plain; charset=UTF-8
-"
-"Language: gu
-"
-"Plural-Forms: nplurals=2; plural=(n != 1);
-"
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-13 20:21+0530\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: apps/accounts/forms.py:28
+msgid "Please enter a valid name."
+msgstr ""
+
+#: apps/accounts/forms.py:43
+msgid "Full name for your certificate"
+msgstr ""
+
+#: apps/accounts/forms.py:45
+msgid ""
+"In English letters. This exact name will be printed on your certificate. Check the spelling now."
+msgstr ""
+
+#: apps/accounts/forms.py:49
+msgid "Email"
+msgstr ""
+
+#: apps/accounts/forms.py:50
+msgid "Password"
+msgstr ""
+
+#: apps/accounts/forms.py:51 templates/components/header.html:45
+msgid "Language"
+msgstr ""
+
+#: apps/accounts/forms.py:53
+msgid "Date of birth"
+msgstr ""
+
+# draft: needs review
+#: apps/accounts/forms.py:58 templates/staff/report.html:9
+msgid "Batch"
+msgstr "બૅચ"
+
+#: apps/accounts/forms.py:60
+msgid "Guardian's full name"
+msgstr ""
+
+#: apps/accounts/forms.py:61
+msgid "Guardian's email"
+msgstr ""
+
+#: apps/accounts/forms.py:63
+msgid "I have read and accept the privacy notice."
+msgstr ""
+
+#: apps/accounts/forms.py:77
+#, python-format
+msgid "%(batch)s (closed)"
+msgstr ""
+
+#: apps/accounts/forms.py:91
+msgid "Please check the date of birth."
+msgstr ""
+
+#: apps/accounts/forms.py:94
+#, python-format
+msgid "You must be %(age)s or older to join."
+msgstr ""
+
+#: apps/accounts/forms.py:109
+msgid "A guardian is needed if you are 16 or 17."
+msgstr ""
+
+#: apps/accounts/forms.py:112
+msgid "Your guardian needs their own email address."
+msgstr ""
+
+# draft: needs review
+#: apps/accounts/forms.py:117
+msgid "Your full name"
+msgstr "તમારું પૂરું નામ"
+
+#: apps/accounts/forms.py:120
+msgid ""
+"I declare that I am the parent or legal guardian of this learner and I consent to the collection "
+"and use of their data as described above."
+msgstr ""
+
+#: apps/accounts/middleware.py:73
+msgid "Your email can't be changed for 7 days after a password reset by your mentor."
+msgstr ""
+
+#: apps/accounts/views.py:114
+msgid "We have emailed your guardian again."
+msgstr ""
+
+#: apps/accounts/views.py:116
+msgid "We could not send the email right now. Please try again later."
+msgstr ""
+
+#: apps/accounts/views.py:165
+msgid "Your password is changed. Please sign in."
+msgstr ""
+
+#: apps/assessments/examsets.py:245
+msgid "Your batch has not been given a final exam set yet."
+msgstr ""
+
+#: apps/assessments/examsets.py:247 apps/assessments/examsets.py:262
+msgid "Your batch's final exam set is not ready yet."
+msgstr ""
+
+#: apps/assessments/programme.py:101
+msgid "Course setup is incomplete, so the final cannot open yet."
+msgstr ""
+
+#: apps/assessments/programme.py:109
+msgid "Do the pre-test first."
+msgstr ""
+
+#: apps/assessments/programme.py:112 templates/progress/dashboard.html:30
+msgid "The pre-test is not available yet."
+msgstr ""
+
+#: apps/assessments/programme.py:119 apps/results/policy.py:366
+#, python-format
+msgid "Module %(number)s, %(part)s: submit it once with every question answered."
+msgstr ""
+
+#: apps/assessments/programme.py:146
+#, python-format
+msgid "Please wait %(hours)s hours between final attempts."
+msgstr ""
+
+#: apps/assessments/programme.py:165
+msgid "This exam is not ready yet."
+msgstr ""
+
+#: apps/assessments/programme.py:185
+msgid "You have already done the pre-test."
+msgstr ""
+
+#: apps/assessments/programme.py:198
+msgid "That assessment is not available."
+msgstr ""
+
+#: apps/assessments/programme.py:207 apps/assessments/services.py:180
+msgid "This assessment has no questions yet."
+msgstr ""
+
+#: apps/assessments/services.py:169
+msgid "This assessment is not available yet."
+msgstr ""
+
+#: apps/assessments/services.py:219
+msgid "This attempt has already been submitted."
+msgstr ""
+
+#: apps/assessments/services.py:227
+msgid "No such question."
+msgstr ""
+
+#: apps/certificates/forms.py:9
+msgid "Verification code"
+msgstr ""
+
+#: apps/certificates/forms.py:11
+msgid "The 10 letters and digits printed under the QR code."
+msgstr ""
+
+#: apps/certificates/forms.py:21
+msgid "That is not a verification code. It has 10 letters and digits."
+msgstr ""
+
+#: apps/content/learncheck.py:67
+msgid "This question is not a practice check."
+msgstr ""
+
+#: apps/content/learncheck.py:71
+msgid "Reload the page and try again."
+msgstr ""
+
+# draft: needs review
+#: apps/content/models.py:52 templates/learn/_video.html:4
+msgid "Film"
+msgstr "ફિલ્મ"
+
+#: apps/content/models.py:53
+msgid "Reading topic"
+msgstr ""
+
+# draft: needs review
+#: apps/content/models.py:54 apps/content/views.py:26
+msgid "Handout"
+msgstr "હૅન્ડઆઉટ"
+
+# draft: needs review
+#: apps/content/models.py:55 templates/learn/_blocks.html:23
+msgid "Practice check"
+msgstr "અભ્યાસ ચકાસણી"
+
+# draft: needs review
+#: apps/content/models.py:56
+msgid "Practice quiz"
+msgstr "અભ્યાસ ક્વિઝ"
+
+#: apps/content/views.py:26
+msgid "Watch"
+msgstr ""
+
+#: apps/content/views.py:26
+msgid "Read"
+msgstr ""
+
+# draft: needs review
+#: apps/content/views.py:26
+msgid "Practise"
+msgstr "અભ્યાસ કરો"
+
+#: apps/content/views.py:78
+msgid "Capstone simulation"
+msgstr ""
+
+# draft: needs review
+#: apps/content/views.py:79
+msgid "Bring every module together in one realistic case."
+msgstr "બધા મોડ્યુલને એક વાસ્તવિક કેસમાં સાથે લાવો."
+
+# draft: needs review
+#: apps/content/views.py:81
+msgid "Completes at 80% watched"
+msgstr "80% જોયા પછી પૂર્ણ થાય છે"
+
+# draft: needs review
+#: apps/content/views.py:82
+msgid "Completes when you reach the end"
+msgstr "અંત સુધી પહોંચો ત્યારે પૂર્ણ થાય છે"
+
+# draft: needs review
+#: apps/content/views.py:83
+msgid "Completes when opened"
+msgstr "ખોલો ત્યારે પૂર્ણ થાય છે"
+
+# draft: needs review
+#: apps/content/views.py:84
+msgid "Completes after one try"
+msgstr "એક પ્રયાસ પછી પૂર્ણ થાય છે"
+
+# draft: needs review
+#: apps/content/views.py:85
+msgid "Completes when submitted once"
+msgstr "એક વાર સબમિટ કરો ત્યારે પૂર્ણ થાય છે"
+
+#: apps/mentors/forms.py:21
+msgid "The end date is before the start date."
+msgstr ""
+
+#: apps/mentors/forms.py:26
+msgid "Registration is open"
+msgstr ""
+
+#: apps/mentors/forms.py:43
+msgid "Registration must close after it opens."
+msgstr ""
+
+#: apps/mentors/forms.py:64
+msgid "Move to"
+msgstr ""
+
+#: apps/mentors/forms.py:65
+msgid "Pick a batch."
+msgstr ""
+
+#: apps/mentors/forms.py:76
+msgid "Certificate name"
+msgstr ""
+
+#: apps/mentors/views.py:61
+#, python-format
+msgid "Batch %(code)s created. Registration is closed until you open it."
+msgstr ""
+
+#: apps/mentors/views.py:107
+msgid "Registration settings saved."
+msgstr ""
+
+#: apps/mentors/views.py:162
+msgid "Learner moved."
+msgstr ""
+
+#: apps/mentors/views.py:185
+msgid "Certificate name changed."
+msgstr ""
+
+#: apps/mentors/views.py:217
+msgid "Auto-issue updated."
+msgstr ""
+
+#: apps/mentors/views.py:230
+#, python-format
+msgid "%(n)s certificate(s) issued."
+msgstr ""
+
+#: apps/mentors/views.py:235
+#, python-format
+msgid ""
+"%(n)s learner(s) held back: their certificate name is not in English letters. Correct the name on "
+"the learner's page, then approve."
+msgstr ""
+
+#: apps/mentors/views.py:243
+#, python-format
+msgid ""
+"%(n)s certificate(s) could not be issued. They are still waiting; try again or tell an admin."
+msgstr ""
+
+#: apps/mentors/views.py:250
+#, python-format
+msgid "%(n)s learner(s) still waiting. Click Approve all again to continue."
+msgstr ""
+
+#: apps/mentors/views.py:254
+msgid "Nobody was waiting for approval."
+msgstr ""
+
+#: apps/questions/models.py:9
+msgid "Multiple choice (part A)"
+msgstr ""
+
+#: apps/questions/models.py:10
+msgid "Interactive: multiple choice"
+msgstr ""
+
+#: apps/questions/models.py:11
+msgid "Interactive: spot"
+msgstr ""
+
+#: apps/questions/models.py:12
+msgid "Interactive: chat"
+msgstr ""
+
+#: apps/questions/models.py:13
+msgid "Interactive: pick"
+msgstr ""
+
+#: apps/questions/models.py:14
+msgid "Interactive: build"
+msgstr ""
+
+#: apps/questions/models.py:15
+msgid "Interactive: crossword"
+msgstr ""
+
+#: apps/questions/models.py:16
+msgid "Interactive: settings"
+msgstr ""
+
+#: apps/questions/models.py:17
+msgid "Interactive: sort"
+msgstr ""
+
+#: apps/questions/models.py:18
+msgid "Interactive: match"
+msgstr ""
+
+#: apps/questions/models.py:19
+msgid "Interactive: order"
+msgstr ""
+
+#: apps/questions/models.py:20
+msgid "Interactive: dial"
+msgstr ""
+
+#: apps/questions/models.py:21
+msgid "Interactive: hotspot"
+msgstr ""
+
+#: apps/questions/models.py:22
+msgid "Interactive: cards"
+msgstr ""
+
+#: apps/questions/models.py:26
+msgid "Module quiz"
+msgstr ""
+
+# draft: needs review
+#: apps/questions/models.py:27 templates/assessments/programme_intro.html:3
+#: templates/assessments/programme_intro.html:7 templates/learn/catalogue.html:30
+#: templates/progress/dashboard.html:64
+msgid "Final exam"
+msgstr "અંતિમ પરીક્ષા"
+
+# draft: needs review
+#: apps/questions/models.py:28
+msgid "Practice"
+msgstr "અભ્યાસ"
+
+#: apps/questions/models.py:32
+msgid "Draft"
+msgstr ""
+
+#: apps/questions/models.py:33
+msgid "Live"
+msgstr ""
+
+#: apps/questions/models.py:34
+msgid "Retired"
+msgstr ""
+
+#: apps/results/policy.py:348
+msgid "Your certificate was revoked. Contact the programme team if you have questions."
+msgstr ""
+
+#: apps/results/policy.py:352
+msgid "Course setup is incomplete, so the final stays locked."
+msgstr ""
+
+#: apps/results/policy.py:357
+msgid "Verify your email address."
+msgstr ""
+
+#: apps/results/policy.py:359
+msgid "Your account is waiting for your guardian's consent."
+msgstr ""
+
+#: apps/results/policy.py:361
+msgid "Take the short pre-test. The final stays locked until it is done."
+msgstr ""
+
+#: apps/results/policy.py:372
+#, python-format
+msgid "your best %(part)s is %(score)s%%"
+msgstr ""
+
+#: apps/results/policy.py:376
+#, python-format
+msgid "Module %(number)s is at %(score)s%%."
+msgstr ""
+
+#: apps/results/policy.py:381
+msgid "Take the final exam."
+msgstr ""
+
+#: apps/results/policy.py:382
+#, python-format
+msgid "Your best final is %(best)s%%. You need %(need)s%%."
+msgstr ""
+
+#: apps/staff/forms.py:100 templates/staff/question_edit.html:20
+msgid "PC tag"
+msgstr ""
+
+#: apps/staff/forms.py:101 templates/staff/question_edit.html:21
+msgid "Type"
+msgstr ""
+
+#: apps/staff/forms.py:102 templates/staff/question_edit.html:22
+#: templates/staff/question_list.html:11 templates/staff/question_list.html:16
+msgid "Pool"
+msgstr ""
+
+#: apps/staff/forms.py:104 templates/staff/question_edit.html:24
+msgid "Keep it live (publishes this version now)"
+msgstr ""
+
+#: apps/staff/forms.py:113
+msgid "Question"
+msgstr ""
+
+#: apps/staff/forms.py:125
+msgid "The question must be an object."
+msgstr ""
+
+#: apps/staff/views.py:205
+msgid "Saved as a new version."
+msgstr ""
+
+#: apps/staff/views.py:246
+msgid "The question is live."
+msgstr ""
+
+#: apps/staff/views.py:306
+msgid ""
+"The impact changed since you previewed it (or it was not previewed). Nothing was saved. Check the "
+"new preview and confirm again."
+msgstr ""
+
+#: apps/staff/views.py:383
+msgid "The real effect differed from the preview, so nothing was saved. Preview again."
+msgstr ""
+
+#: templates/account/login.html:3 templates/account/login.html:34
+#: templates/assessments/attempt.html:26 templates/components/header.html:60 templates/home.html:16
+#: templates/registration/register.html:23
+msgid "Sign in"
+msgstr ""
+
+# draft: needs review
+#: templates/account/login.html:10
+msgid "Pick up right"
+msgstr "ત્યાંથી જ આગળ વધો"
+
+# draft: needs review
+#: templates/account/login.html:10
+msgid "where you left off."
+msgstr "જ્યાં તમે અટક્યા હતા."
+
+# draft: needs review
+#: templates/account/login.html:11
+msgid "Your answers are saved to your account as you go, so you can continue on any device."
+msgstr "તમારા જવાબો સાથે-સાથે તમારા ખાતામાં સચવાય છે, તેથી તમે કોઈ પણ ડિવાઇસ પર ચાલુ રાખી શકો છો."
+
+# draft: needs review
+#: templates/account/login.html:13
+msgid "Every module stays open. Revisit any topic, any time."
+msgstr "દરેક મોડ્યુલ ખુલ્લું રહે છે. કોઈ પણ વિષય, ક્યારેય પણ ફરી જુઓ."
+
+# draft: needs review
+#: templates/account/login.html:14
+msgid "Unlimited attempts. Your best attempt counts."
+msgstr "અમર્યાદિત પ્રયાસો. તમારો શ્રેષ્ઠ પ્રયાસ ગણાય છે."
+
+# draft: needs review
+#: templates/account/login.html:22
+msgid "Learner & mentor sign-in"
+msgstr "શીખનાર અને મેન્ટર સાઇન-ઇન"
+
+#: templates/account/login.html:23
+msgid "Welcome back"
+msgstr ""
+
+#: templates/account/login.html:24
+msgid "Sign in to continue your certification."
+msgstr ""
+
+#: templates/account/login.html:29 templates/registration/register.html:38
+msgid "Email address"
+msgstr ""
+
+#: templates/account/login.html:31
+msgid "Forgot your password?"
+msgstr ""
+
+#: templates/account/login.html:32
+msgid "Keep me signed in for 14 days"
+msgstr ""
+
+#: templates/account/login.html:36
+msgid "New here?"
+msgstr ""
+
+#: templates/account/login.html:37
+msgid "Create your account"
+msgstr ""
+
+#: templates/accounts/reset_link_form.html:3 templates/accounts/reset_link_form.html:5
+msgid "Choose a new password"
+msgstr ""
+
+#: templates/accounts/reset_link_form.html:10
+msgid "Save password"
+msgstr ""
+
+#: templates/accounts/reset_link_invalid.html:3 templates/accounts/reset_link_invalid.html:7
+#: templates/registration/guardian_invalid.html:3 templates/registration/guardian_invalid.html:7
+msgid "This link is not valid"
+msgstr ""
+
+#: templates/accounts/reset_link_invalid.html:8
+msgid "It may have expired (links last 1 hour) or already been used. Ask your mentor for a new one."
+msgstr ""
+
+# draft: needs review
+#: templates/accounts/waiting_for_guardian.html:3 templates/accounts/waiting_for_guardian.html:7
+msgid "Waiting for your guardian"
+msgstr "તમારા વાલીની રાહ"
+
+#: templates/accounts/waiting_for_guardian.html:10
+msgid "Send the email again"
+msgstr ""
+
+#: templates/admin/index.html:4
+msgid "Django site admin"
+msgstr ""
+
+#: templates/assessments/_palette.html:8 templates/assessments/_question_panel.html:41
+msgid "Review and submit"
+msgstr ""
+
+#: templates/assessments/_pill.html:6 templates/assessments/_pill.html:7
+#: templates/components/save_pill.html:7
+msgid "Saved"
+msgstr ""
+
+#: templates/assessments/_pill.html:6 templates/components/save_pill.html:5
+msgid "Saving…"
+msgstr ""
+
+#: templates/assessments/_pill.html:6
+msgid "Offline. Retrying…"
+msgstr ""
+
+#: templates/assessments/_pill.html:6
+msgid "Not saved"
+msgstr ""
+
+#: templates/assessments/_pill.html:6
+msgid "Sign in again to save"
+msgstr ""
+
+# draft: needs review
+#: templates/assessments/_question_panel.html:11 templates/learn/module.html:61
+msgid "Interactive"
+msgstr "ઇન્ટરઍક્ટિવ"
+
+# draft: needs review
+#: templates/assessments/_question_panel.html:11 templates/learn/module.html:61
+msgid "Multiple choice"
+msgstr "બહુવિકલ્પ"
+
+#: templates/assessments/_question_panel.html:20
+msgid "This kind of question needs JavaScript. Please turn it on, or ask your mentor for help."
+msgstr ""
+
+#: templates/assessments/_question_panel.html:23
+msgid "Choose one answer."
+msgstr ""
+
+#: templates/assessments/_question_panel.html:35
+msgid "Mark for review"
+msgstr ""
+
+#: templates/assessments/_question_panel.html:36
+msgid "Save answer"
+msgstr ""
+
+#: templates/assessments/_question_panel.html:39 templates/learn/unit.html:24
+msgid "Previous"
+msgstr ""
+
+#: templates/assessments/_question_panel.html:40 templates/learn/unit.html:25
+#: templates/progress/dashboard.html:18
+msgid "Next"
+msgstr ""
+
+#: templates/assessments/attempt.html:14 templates/assessments/intro.html:6
+#, python-format
+msgid "Module %(n)s"
+msgstr ""
+
+#: templates/assessments/attempt.html:14 templates/assessments/intro.html:42
+#: templates/assessments/programme_intro.html:59 templates/assessments/programme_result.html:8
+#: templates/assessments/result.html:9
+#, python-format
+msgid "Attempt %(n)s"
+msgstr ""
+
+#: templates/assessments/attempt.html:19 templates/components/timer.html:4
+msgid "Time spent"
+msgstr ""
+
+#: templates/assessments/attempt.html:25
+msgid "You have been signed out."
+msgstr ""
+
+#: templates/assessments/attempt.html:25
+msgid ""
+"Your answers are kept on this page but are not saved yet. Sign in again in a new tab, then come "
+"back and save."
+msgstr ""
+
+#: templates/assessments/attempt.html:27
+msgid "I have signed in: save now"
+msgstr ""
+
+#: templates/assessments/intro.html:8
+#, python-format
+msgid "Worth %(marks)s marks of the module."
+msgstr ""
+
+# draft: needs review
+#: templates/assessments/intro.html:12 templates/assessments/programme_intro.html:22
+msgid "Before you start"
+msgstr "શરૂ કરતાં પહેલાં"
+
+#: templates/assessments/intro.html:14
+#, python-format
+msgid "%(n)s questions, drawn from a larger pool."
+msgstr ""
+
+#: templates/assessments/intro.html:16 templates/assessments/programme_intro.html:28
+#, python-format
+msgid "%(used)s of %(limit)s attempt used."
+msgid_plural "%(used)s of %(limit)s attempts used."
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/assessments/intro.html:16 templates/assessments/programme_intro.html:28
+msgid "Your best counted attempt counts."
+msgstr ""
+
+#: templates/assessments/intro.html:18
+msgid "Attempts are unlimited. Your best attempt counts."
+msgstr ""
+
+#: templates/assessments/intro.html:20
+msgid "A timer counts up. It is only a guide: there is no time limit."
+msgstr ""
+
+#: templates/assessments/intro.html:21
+msgid "Every answer saves as you go. If you close the page, you can resume on any device."
+msgstr ""
+
+# draft: needs review
+#: templates/assessments/intro.html:22
+msgid "Answer every question."
+msgstr "દરેક પ્રશ્નનો જવાબ આપો."
+
+# draft: needs review
+#: templates/assessments/intro.html:22
+msgid "A submission only counts towards unlocking the final when nothing is left blank."
+msgstr "કંઈ ખાલી ન રહે ત્યારે જ સબમિશન અંતિમ પરીક્ષા ખોલવા માટે ગણાય છે."
+
+#: templates/assessments/intro.html:23
+msgid ""
+"Afterwards you see your score, which answers were right or wrong, and a hint for each, but never "
+"the correct option."
+msgstr ""
+
+#: templates/assessments/intro.html:25
+#, python-format
+msgid "Your best score so far: <strong>%(score)s%%</strong>. The pass mark is %(pass_mark)s%%."
+msgstr ""
+
+#: templates/assessments/intro.html:27
+#, python-format
+msgid "You have used your %(limit)s attempt. Your best counted attempt is the one that counts."
+msgid_plural ""
+"You have used all %(limit)s attempts. Your best counted attempt is the one that counts."
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/assessments/intro.html:28 templates/assessments/programme_intro.html:44
+msgid "No attempts left"
+msgstr ""
+
+# draft: needs review
+#: templates/assessments/intro.html:31 templates/assessments/programme_intro.html:47
+msgid "Resume where you left off"
+msgstr "જ્યાં અટક્યા હતા ત્યાંથી ફરી શરૂ કરો"
+
+#: templates/assessments/intro.html:31 templates/assessments/programme_intro.html:47
+#: templates/learn/module.html:23 templates/learn/module.html:64
+#: templates/progress/dashboard.html:55
+msgid "Start"
+msgstr ""
+
+#: templates/assessments/intro.html:38 templates/assessments/programme_intro.html:56
+msgid "Your attempts"
+msgstr ""
+
+#: templates/assessments/intro.html:43 templates/assessments/programme_intro.html:59
+msgid "in progress"
+msgstr ""
+
+#: templates/assessments/intro.html:43 templates/assessments/programme_intro.html:59
+msgid "doesn't count"
+msgstr ""
+
+#: templates/assessments/intro.html:44 templates/assessments/programme_intro.html:60
+msgid "Resume"
+msgstr ""
+
+# draft: needs review
+#: templates/assessments/intro.html:44 templates/assessments/programme_intro.html:60
+msgid "View result"
+msgstr "પરિણામ જુઓ"
+
+# draft: needs review
+#: templates/assessments/programme_intro.html:3 templates/assessments/programme_intro.html:7
+#: templates/learn/catalogue.html:26
+msgid "Pre-test"
+msgstr "પ્રી-ટેસ્ટ"
+
+#: templates/assessments/programme_intro.html:8
+#, python-format
+msgid "Half of your overall result. You need 50%% to pass."
+msgstr ""
+
+#: templates/assessments/programme_intro.html:8
+msgid "A short check of what you already know before you start. It is not marked against you."
+msgstr ""
+
+#: templates/assessments/programme_intro.html:12
+msgid "The final is locked"
+msgstr ""
+
+#: templates/assessments/programme_intro.html:12
+msgid "Finish these first:"
+msgstr ""
+
+#: templates/assessments/programme_intro.html:15
+#, python-format
+msgid "You can try the final again after %(when)s."
+msgstr ""
+
+#: templates/assessments/programme_intro.html:16
+msgid "Please wait before your next try"
+msgstr ""
+
+#: templates/assessments/programme_intro.html:18
+msgid "The exam questions are still being prepared. Please check back soon."
+msgstr ""
+
+#: templates/assessments/programme_intro.html:19
+msgid "Coming soon"
+msgstr ""
+
+#: templates/assessments/programme_intro.html:25
+msgid "About 50 questions, drawn from every module."
+msgstr ""
+
+#: templates/assessments/programme_intro.html:26
+msgid "The timer shows about 60 minutes. It is only a guide: there is no time limit."
+msgstr ""
+
+#: templates/assessments/programme_intro.html:30
+msgid "Attempts are unlimited. Your best counts."
+msgstr ""
+
+#: templates/assessments/programme_intro.html:32
+msgid "Afterwards you see your overall score and how strong each module is, never the answers."
+msgstr ""
+
+#: templates/assessments/programme_intro.html:34
+msgid "A timer counts up. Take your time."
+msgstr ""
+
+#: templates/assessments/programme_intro.html:35
+msgid "You can do it once. If you close the page you can resume where you left off."
+msgstr ""
+
+#: templates/assessments/programme_intro.html:36
+msgid "You will see your score afterwards, but not the answers."
+msgstr ""
+
+#: templates/assessments/programme_intro.html:38
+msgid "Every answer saves as you go."
+msgstr ""
+
+#: templates/assessments/programme_intro.html:41
+msgid "You have already done the pre-test. Thank you."
+msgstr ""
+
+#: templates/assessments/programme_intro.html:43
+#, python-format
+msgid ""
+"You have used your %(limit)s attempt at the final. Your best counted attempt is the one that "
+"counts."
+msgid_plural ""
+"You have used all %(limit)s attempts at the final. Your best counted attempt is the one that "
+"counts."
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/assessments/programme_intro.html:48 templates/progress/dashboard.html:18
+msgid "Later"
+msgstr ""
+
+#: templates/assessments/programme_intro.html:65 templates/assessments/programme_result.html:41
+msgid "Back to My progress"
+msgstr ""
+
+#: templates/assessments/programme_result.html:3 templates/assessments/result.html:3
+msgid "Your result"
+msgstr ""
+
+#: templates/assessments/programme_result.html:6 templates/assessments/result.html:7
+msgid "score"
+msgstr ""
+
+#: templates/assessments/programme_result.html:10
+msgid "Pre-test done. Thank you."
+msgstr ""
+
+#: templates/assessments/programme_result.html:11 templates/assessments/result.html:11
+msgid "This attempt doesn't count"
+msgstr ""
+
+# draft: needs review
+#: templates/assessments/programme_result.html:12 templates/assessments/result.html:12
+msgid "Passed. Well done!"
+msgstr "પાસ. શાબાશ!"
+
+#: templates/assessments/programme_result.html:13
+msgid "Not yet. Revise the weaker modules and try again."
+msgstr ""
+
+#: templates/assessments/programme_result.html:17 templates/assessments/result.html:17
+msgid "counts"
+msgstr ""
+
+#: templates/assessments/programme_result.html:18 templates/assessments/result.html:19
+msgid "auto-submitted"
+msgstr ""
+
+# draft: needs review
+#: templates/assessments/programme_result.html:24 templates/assessments/result.html:25
+msgid "Safety gate"
+msgstr "સુરક્ષા દ્વાર"
+
+#: templates/assessments/programme_result.html:24
+msgid ""
+"This attempt doesn't count: one of your choices would have put a citizen at risk. Revise the "
+"safety steps and retake."
+msgstr ""
+
+#: templates/assessments/programme_result.html:29
+msgid "How each module went"
+msgstr ""
+
+#: templates/assessments/programme_result.html:32 templates/components/module_card.html:6
+#: templates/learn/_outline.html:7 templates/learn/capstone.html:3 templates/learn/capstone.html:9
+#: templates/learn/capstone.html:10 templates/learn/catalogue.html:53 templates/learn/module.html:3
+#: templates/learn/module.html:9 templates/learn/module.html:12 templates/learn/module.html:72
+#: templates/learn/module.html:73 templates/learn/unit.html:3 templates/learn/unit.html:15
+#: templates/learn/unit.html:25 templates/progress/dashboard.html:51
+#: templates/progress/dashboard.html:67 templates/staff/marks_edit.html:3
+#: templates/staff/marks_edit.html:7 templates/staff/marks_index.html:6
+#: templates/staff/question_list.html:10
+msgid "Module"
+msgstr ""
+
+# draft: needs review
+#: templates/assessments/programme_result.html:33 templates/progress/dashboard.html:67
+#: templates/registration/register.html:42
+msgid "Strong"
+msgstr "મજબૂત"
+
+# draft: needs review
+#: templates/assessments/programme_result.html:33 templates/progress/dashboard.html:67
+msgid "OK"
+msgstr "ઠીક"
+
+# draft: needs review
+#: templates/assessments/programme_result.html:33 templates/progress/dashboard.html:67
+msgid "Needs work"
+msgstr "સુધારાની જરૂર"
+
+#: templates/assessments/programme_result.html:36
+msgid "To keep the exam fair, we show how strong each module is, not which questions you got right."
+msgstr ""
+
+# draft: needs review
+#: templates/assessments/programme_result.html:42 templates/assessments/result.html:56
+msgid "Try again"
+msgstr "ફરી પ્રયાસ કરો"
+
+#: templates/assessments/result.html:13
+msgid "Not yet. Review the hints and try again."
+msgstr ""
+
+#: templates/assessments/result.html:18
+msgid "some questions blank"
+msgstr ""
+
+#: templates/assessments/result.html:25
+msgid ""
+"This attempt doesn't count: one of your choices would have put a citizen at risk. Read the hint "
+"and retake."
+msgstr ""
+
+#: templates/assessments/result.html:27
+msgid ""
+"You need 50% to pass. Attempts are unlimited and only your best counts, so this won't hold you "
+"back."
+msgstr ""
+
+#: templates/assessments/result.html:30
+msgid "This attempt left some questions blank, so it does not count towards unlocking the final."
+msgstr ""
+
+# draft: needs review
+#: templates/assessments/result.html:34
+msgid "Question by question"
+msgstr "પ્રશ્નવાર"
+
+# draft: needs review
+#: templates/assessments/result.html:43
+msgid "Right."
+msgstr "સાચું."
+
+#: templates/assessments/result.html:43
+msgid "Right"
+msgstr ""
+
+#: templates/assessments/result.html:43
+msgid "Partly right."
+msgstr ""
+
+#: templates/assessments/result.html:43
+msgid "Partly right"
+msgstr ""
+
+#: templates/assessments/result.html:43
+msgid "Wrong."
+msgstr ""
+
+#: templates/assessments/result.html:43
+msgid "Not quite"
+msgstr ""
+
+# draft: needs review
+#: templates/assessments/result.html:44 templates/components/question_palette.html:24
+msgid "Not answered"
+msgstr "જવાબ નથી આપ્યો"
+
+#: templates/assessments/result.html:46 templates/staff/question_preview.html:19
+msgid "Hint"
+msgstr ""
+
+#: templates/assessments/result.html:53
+msgid "Back to the assessment"
+msgstr ""
+
+#: templates/assessments/review.html:3 templates/assessments/review.html:7
+msgid "Review your answers"
+msgstr ""
+
+#: templates/assessments/review.html:8
+#, python-format
+msgid "%(total)s questions, %(missing)s not answered yet."
+msgstr ""
+
+#: templates/assessments/review.html:11
+msgid "Some questions are blank"
+msgstr ""
+
+#: templates/assessments/review.html:11
+msgid ""
+"You can still submit, but this attempt won't count towards unlocking the final unless every "
+"question is answered."
+msgstr ""
+
+#: templates/assessments/review.html:13
+msgid "Every question is answered"
+msgstr ""
+
+#: templates/assessments/review.html:13
+msgid "You can't change answers after submitting."
+msgstr ""
+
+#: templates/assessments/review.html:20 templates/components/question_palette.html:14
+#: templates/components/question_palette.html:17
+msgid "marked for review"
+msgstr ""
+
+# draft: needs review
+#: templates/assessments/review.html:21 templates/components/header.html:49
+msgid "Change"
+msgstr "બદલો"
+
+# draft: needs review
+#: templates/assessments/review.html:21
+msgid "Answer"
+msgstr "જવાબ આપો"
+
+# draft: needs review
+#: templates/assessments/review.html:26
+msgid "Back to questions"
+msgstr "પ્રશ્નો પર પાછા"
+
+# draft: needs review
+#: templates/assessments/review.html:27
+msgid "Submit this attempt?"
+msgstr "આ પ્રયાસ સબમિટ કરવો છે?"
+
+# draft: needs review
+#: templates/assessments/review.html:27
+msgid "You can’t change answers after submitting."
+msgstr "સબમિટ કર્યા પછી જવાબો બદલી શકાતા નથી."
+
+#: templates/assessments/review.html:27 templates/assessments/review.html:28
+msgid "Submit"
+msgstr ""
+
+#: templates/base.html:15
+msgid "Skip to main content"
+msgstr ""
+
+#: templates/certificates/mine.html:3
+msgid "My certificate"
+msgstr ""
+
+# draft: needs review
+#: templates/certificates/mine.html:7 templates/components/header.html:36
+#: templates/progress/dashboard.html:91
+msgid "Certificate"
+msgstr "પ્રમાણપત્ર"
+
+# draft: needs review
+#: templates/certificates/mine.html:8
+msgid "Your certificate is ready"
+msgstr "તમારું પ્રમાણપત્ર તૈયાર છે"
+
+# draft: needs review
+#: templates/certificates/mine.html:8
+msgid "Waiting for mentor approval"
+msgstr "મેન્ટરની મંજૂરીની રાહ"
+
+# draft: needs review
+#: templates/certificates/mine.html:8 templates/progress/dashboard.html:98
+msgid "Certificate revoked"
+msgstr "પ્રમાણપત્ર રદ"
+
+# draft: needs review
+#: templates/certificates/mine.html:8
+msgid "Your certificate"
+msgstr "તમારું પ્રમાણપત્ર"
+
+# draft: needs review
+#: templates/certificates/mine.html:9
+msgid "Download it securely from this page. It is never sent by email."
+msgstr "તેને આ પેજ પરથી સુરક્ષિત રીતે ડાઉનલોડ કરો. તે ક્યારેય ઈમેલથી મોકલાતું નથી."
+
+#: templates/certificates/mine.html:9
+msgid ""
+"You are eligible. Your mentor approves certificates for your batch, so you will see it here soon."
+msgstr ""
+
+# draft: needs review
+#: templates/certificates/mine.html:9 templates/certificates/verify.html:44
+msgid "This certificate is no longer valid."
+msgstr "આ પ્રમાણપત્ર હવે માન્ય નથી."
+
+#: templates/certificates/mine.html:9
+msgid "Your details were removed from this certificate at your request."
+msgstr ""
+
+#: templates/certificates/mine.html:9
+#, python-format
+msgid "Pass every module and the final with 50%% or more and your certificate appears here."
+msgstr ""
+
+# draft: needs review
+#: templates/certificates/mine.html:15 templates/certificates/verify.html:21
+msgid "Name"
+msgstr "નામ"
+
+# draft: needs review
+#: templates/certificates/mine.html:16 templates/certificates/verify.html:22
+#: templates/certificates/verify.html:31 templates/certificates/verify.html:40
+msgid "Qualification"
+msgstr "લાયકાત"
+
+# draft: needs review
+#: templates/certificates/mine.html:17 templates/certificates/verify.html:23
+#: templates/certificates/verify.html:32
+msgid "Grade"
+msgstr "ગ્રેડ"
+
+# draft: needs review
+#: templates/certificates/mine.html:18
+msgid "Certificate no."
+msgstr "પ્રમાણપત્ર નં."
+
+# draft: needs review
+#: templates/certificates/mine.html:19 templates/certificates/verify.html:24
+#: templates/certificates/verify.html:29 templates/certificates/verify.html:33
+#: templates/certificates/verify.html:41 templates/mentors/batch_detail.html:90
+#: templates/staff/report.html:9
+msgid "Issued"
+msgstr "જારી"
+
+#: templates/certificates/mine.html:22
+msgid "Your certificate is a PDF in English. Anyone can check it with the QR code printed on it."
+msgstr ""
+
+# draft: needs review
+#: templates/certificates/mine.html:24
+msgid "Download PDF"
+msgstr "PDF ડાઉનલોડ કરો"
+
+# draft: needs review
+#: templates/certificates/mine.html:25
+msgid "Open the public verification page"
+msgstr "જાહેર ચકાસણી પેજ ખોલો"
+
+#: templates/certificates/mine.html:31
+msgid "You are eligible"
+msgstr ""
+
+#: templates/certificates/mine.html:32
+#, python-format
+msgid ""
+"Overall %(overall)s%% · Grade %(grade)s. Your mentor will approve your certificate. There is "
+"nothing more you need to do."
+msgstr ""
+
+#: templates/certificates/mine.html:33
+msgid ""
+"Your certificate name must be in English letters. Your mentor will correct it before approving; "
+"tell them how you want it spelled."
+msgstr ""
+
+# draft: needs review
+#: templates/certificates/mine.html:37
+msgid "This certificate has been revoked"
+msgstr "આ પ્રમાણપત્ર રદ કરવામાં આવ્યું છે"
+
+#: templates/certificates/mine.html:38
+#, python-format
+msgid ""
+"The public verification page now shows it as revoked. If you think this is a mistake, contact the "
+"programme team at %(SUPPORT_EMAIL)s."
+msgstr ""
+
+# draft: needs review
+#: templates/certificates/mine.html:42 templates/progress/dashboard.html:92
+msgid "Certificate issued"
+msgstr "પ્રમાણપત્ર જારી"
+
+#: templates/certificates/mine.html:43
+msgid ""
+"The PDF and your name were removed at your request. The verification page still confirms that a "
+"certificate was issued."
+msgstr ""
+
+# draft: needs review
+#: templates/certificates/mine.html:47 templates/progress/dashboard.html:39
+#: templates/progress/dashboard.html:53
+msgid "Not yet"
+msgstr "હજી નહીં"
+
+#: templates/certificates/mine.html:48 templates/progress/dashboard.html:101
+msgid "Your certificate appears here when you have passed every module and the final."
+msgstr ""
+
+#: templates/certificates/mine.html:49
+msgid "See what is left"
+msgstr ""
+
+#: templates/certificates/verify.html:3 templates/certificates/verify_limited.html:3
+msgid "Verify a certificate"
+msgstr ""
+
+# draft: needs review
+#: templates/certificates/verify.html:14
+msgid "Certificate verification"
+msgstr "પ્રમાણપત્ર ચકાસણી"
+
+# draft: needs review
+#: templates/certificates/verify.html:19 templates/certificates/verify.html:25
+msgid "Valid"
+msgstr "માન્ય"
+
+# draft: needs review
+#: templates/certificates/verify.html:25 templates/certificates/verify.html:42
+#: templates/mentors/batch_detail.html:111 templates/staff/question_list.html:12
+#: templates/staff/question_list.html:16
+msgid "Status"
+msgstr "સ્થિતિ"
+
+#: templates/certificates/verify.html:27
+msgid "This certificate was issued by the programme and is valid."
+msgstr ""
+
+# draft: needs review
+#: templates/certificates/verify.html:34
+msgid "Holder"
+msgstr "ધારક"
+
+#: templates/certificates/verify.html:34
+msgid "Holder details removed at the holder's request"
+msgstr ""
+
+#: templates/certificates/verify.html:36
+msgid "Issued; holder details removed at the holder's request."
+msgstr ""
+
+# draft: needs review
+#: templates/certificates/verify.html:38
+msgid "Revoked"
+msgstr "રદ"
+
+# draft: needs review
+#: templates/certificates/verify.html:42
+msgid "Revoked by the programme"
+msgstr "કાર્યક્રમ દ્વારા રદ"
+
+#: templates/certificates/verify.html:46
+msgid "Not found"
+msgstr ""
+
+#: templates/certificates/verify.html:47
+msgid "No certificate has this code. Check the code printed under the QR code and try again."
+msgstr ""
+
+#: templates/certificates/verify.html:49
+msgid "Scan the QR code on a certificate, or type the code printed under it."
+msgstr ""
+
+# draft: needs review
+#: templates/certificates/verify.html:55
+msgid "Check"
+msgstr "તપાસો"
+
+#: templates/certificates/verify.html:59
+msgid ""
+"Each certificate has its own QR code that opens this page. To protect holders' privacy, there is "
+"no search by name or certificate number."
+msgstr ""
+
+#: templates/certificates/verify_limited.html:7
+msgid "Too many checks"
+msgstr ""
+
+#: templates/certificates/verify_limited.html:8
+msgid ""
+"This device has checked a lot of certificates in a short time. Please wait a few minutes and scan "
+"the QR code again."
+msgstr ""
+
+#: templates/components/confirm_dialog.html:9
+msgid "Cancel"
+msgstr ""
+
+# draft: needs review
+#: templates/components/confirm_dialog.html:10 templates/learn/module.html:23
+msgid "Continue"
+msgstr "આગળ વધો"
+
+#: templates/components/field.html:23
+msgid "Show"
+msgstr ""
+
+#: templates/components/field.html:23
+msgid "Hide"
+msgstr ""
+
+#: templates/components/footer.html:4
+msgid "Practical cyber first-response skills for every community."
+msgstr ""
+
+# draft: needs review
+#: templates/components/footer.html:5
+msgid "Policies"
+msgstr "નીતિઓ"
+
+# draft: needs review
+#: templates/components/footer.html:6 templates/registration/privacy.html:3
+msgid "Privacy notice"
+msgstr "ગોપનીયતા સૂચના"
+
+#: templates/components/footer.html:8
+msgid "Languages"
+msgstr ""
+
+#: templates/components/footer.html:13
+msgid "A joint initiative of CyberPeace Foundation and SAKEC."
+msgstr ""
+
+#: templates/components/form_errors.html:8
+msgid "Please check the highlighted fields"
+msgstr ""
+
+#: templates/components/header.html:4 templates/components/header.html:21
+#: templates/learn/catalogue.html:10 templates/learn/module.html:9
+msgid "Home"
+msgstr ""
+
+#: templates/components/header.html:8
+msgid "A Shah &amp; Anchor × CyberPeace"
+msgstr ""
+
+# draft: needs review
+#: templates/components/header.html:8
+msgid "initiative for community cybersecurity"
+msgstr "સામુદાયિક સાયબર સુરક્ષા પહેલ"
+
+#: templates/components/header.html:13 templates/components/header.html:14
+msgid "Menu"
+msgstr ""
+
+# draft: needs review
+#: templates/components/header.html:18
+msgid "Primary"
+msgstr "મુખ્ય"
+
+# draft: needs review
+#: templates/components/header.html:23 templates/learn/capstone.html:9
+#: templates/learn/catalogue.html:3 templates/learn/catalogue.html:10 templates/learn/module.html:9
+#: templates/learn/unit.html:15
+msgid "Modules"
+msgstr "મોડ્યુલ"
+
+#: templates/components/header.html:26 templates/mentors/batch_detail.html:16
+#: templates/mentors/home.html:3 templates/mentors/home.html:9
+msgid "My batches"
+msgstr ""
+
+# draft: needs review
+#: templates/components/header.html:27 templates/staff/question_edit.html:7
+#: templates/staff/question_list.html:3 templates/staff/question_list.html:7
+#: templates/staff/question_list.html:15
+msgid "Questions"
+msgstr "પ્રશ્નો"
+
+# draft: needs review
+#: templates/components/header.html:28 templates/learn/module.html:63
+#: templates/staff/marks_edit.html:11
+msgid "Marks"
+msgstr "ગુણ"
+
+# draft: needs review
+#: templates/components/header.html:29 templates/learn/module.html:63
+msgid "Attempts"
+msgstr "પ્રયાસો"
+
+# draft: needs review
+#: templates/components/header.html:30 templates/learn/_blocks.html:14
+#: templates/learn/module.html:47 templates/staff/report.html:3 templates/staff/report.html:7
+msgid "Report"
+msgstr "ફરિયાદ કરો"
+
+#: templates/components/header.html:34 templates/progress/dashboard.html:3
+msgid "My progress"
+msgstr ""
+
+#: templates/components/header.html:39
+msgid "Privacy"
+msgstr ""
+
+#: templates/components/header.html:57
+msgid "Sign out"
+msgstr ""
+
+#: templates/components/header.html:61 templates/home.html:15
+msgid "Enrol now"
+msgstr ""
+
+#: templates/components/messages.html:6
+msgid "Dismiss"
+msgstr ""
+
+#: templates/components/module_card.html:8 templates/learn/catalogue.html:63
+#: templates/learn/module.html:18
+msgid "topics"
+msgstr ""
+
+#: templates/components/module_card.html:9
+msgid "Progress"
+msgstr ""
+
+#: templates/components/notice_reset.html:5
+msgid "Your password was reset by your mentor. If you did not expect this, tell your trainer."
+msgstr ""
+
+#: templates/components/notice_reset.html:7
+msgid "OK, got it"
+msgstr ""
+
+#: templates/components/question_palette.html:7 templates/components/question_palette.html:8
+msgid "Question map"
+msgstr ""
+
+#: templates/components/question_palette.html:14 templates/components/question_palette.html:17
+#, python-format
+msgid "Question %(n)s"
+msgstr ""
+
+#: templates/components/question_palette.html:14 templates/components/question_palette.html:17
+msgid "answered"
+msgstr ""
+
+# draft: needs review
+#: templates/components/question_palette.html:22
+msgid "Answered"
+msgstr "જવાબ આપ્યો"
+
+# draft: needs review
+#: templates/components/question_palette.html:23
+msgid "Marked for review"
+msgstr "સમીક્ષા માટે ચિહ્નિત"
+
+#: templates/components/save_pill.html:6
+msgid "Offline"
+msgstr ""
+
+#: templates/components/stage_strip.html:6
+msgid "Your route to certification"
+msgstr ""
+
+#: templates/home.html:13
+msgid "The certification programme by CyberPeace Foundation and SAKEC."
+msgstr ""
+
+#: templates/learn/_blocks.html:8
+msgid ""
+"Table being fixed: the columns below may be out of place until the corrected version is loaded."
+msgstr ""
+
+# draft: needs review
+#: templates/learn/_blocks.html:12
+msgid "Colour"
+msgstr "રંગ"
+
+# draft: needs review
+#: templates/learn/_blocks.html:12
+msgid "When"
+msgstr "ક્યારે"
+
+# draft: needs review
+#: templates/learn/_blocks.html:12
+msgid "First action"
+msgstr "પહેલું પગલું"
+
+# draft: needs review
+#: templates/learn/_blocks.html:12
+msgid "Act"
+msgstr "કરો"
+
+# draft: needs review
+#: templates/learn/_blocks.html:14
+msgid "Stop, Save, Report"
+msgstr "રોકો, સાચવો, ફરિયાદ કરો"
+
+# draft: needs review
+#: templates/learn/_blocks.html:14 templates/learn/module.html:47
+msgid "Stop"
+msgstr "રોકો"
+
+# draft: needs review
+#: templates/learn/_blocks.html:14 templates/learn/module.html:47
+#: templates/mentors/batch_detail.html:34 templates/mentors/batch_detail.html:58
+msgid "Save"
+msgstr "સાચવો"
+
+# draft: needs review
+#: templates/learn/_blocks.html:15
+msgid "Case"
+msgstr "કેસ"
+
+# draft: needs review
+#: templates/learn/_blocks.html:16
+msgid "Remember"
+msgstr "યાદ રાખો"
+
+# draft: needs review
+#: templates/learn/_blocks.html:17
+msgid "Ask yourself"
+msgstr "પોતાને પૂછો"
+
+#: templates/learn/_blocks.html:20
+msgid "Think about it first, then reveal the answer."
+msgstr ""
+
+#: templates/learn/_blocks.html:20
+msgid "Reveal the answer"
+msgstr ""
+
+#: templates/learn/_blocks.html:21
+msgid "Tap to flip"
+msgstr ""
+
+# draft: needs review
+#: templates/learn/_blocks.html:22
+msgid "Myth or fact?"
+msgstr "માન્યતા કે હકીકત?"
+
+# draft: needs review
+#: templates/learn/_blocks.html:22
+msgid "Your answer"
+msgstr "તમારો જવાબ"
+
+# draft: needs review
+#: templates/learn/_blocks.html:22
+msgid "Fact"
+msgstr "હકીકત"
+
+# draft: needs review
+#: templates/learn/_blocks.html:22
+msgid "Myth"
+msgstr "માન્યતા"
+
+#: templates/learn/_outline.html:2 templates/learn/_outline.html:3
+msgid "Module outline"
+msgstr ""
+
+#: templates/learn/_outline.html:10 templates/learn/catalogue.html:43
+#: templates/learn/catalogue.html:75 templates/learn/module.html:52 templates/learn/unit.html:20
+msgid "Completed"
+msgstr ""
+
+#: templates/learn/_outline.html:10 templates/learn/module.html:52 templates/learn/unit.html:16
+msgid "min"
+msgstr ""
+
+#: templates/learn/_outline.html:12
+msgid "Assess"
+msgstr ""
+
+# draft: needs review
+#: templates/learn/_outline.html:13 templates/learn/module.html:63
+msgid "Best"
+msgstr "શ્રેષ્ઠ"
+
+#: templates/learn/_outline.html:13 templates/learn/catalogue.html:42
+#: templates/learn/catalogue.html:75 templates/learn/module.html:52 templates/learn/module.html:62
+msgid "Not started"
+msgstr ""
+
+#: templates/learn/_outline.html:14 templates/learn/module.html:67
+msgid "Assessments are being prepared"
+msgstr ""
+
+#: templates/learn/_video.html:8
+msgid "English"
+msgstr ""
+
+#: templates/learn/_video.html:9
+msgid "Hindi"
+msgstr ""
+
+#: templates/learn/_video.html:13
+msgid "The film is being uploaded. Read the transcript below in the meantime."
+msgstr ""
+
+#: templates/learn/_video.html:16
+msgid "Transcript"
+msgstr ""
+
+# draft: needs review
+#: templates/learn/capstone.html:9 templates/learn/catalogue.html:10 templates/learn/module.html:9
+#: templates/learn/unit.html:15
+msgid "Breadcrumb"
+msgstr "બ્રેડક્રમ્બ"
+
+# draft: needs review
+#: templates/learn/capstone.html:10 templates/learn/catalogue.html:28
+#: templates/learn/catalogue.html:53
+msgid "Capstone"
+msgstr "કેપસ્ટોન"
+
+#: templates/learn/capstone.html:13
+msgid "Run in the classroom with your mentor"
+msgstr ""
+
+#: templates/learn/capstone.html:13
+msgid "Learning module, not graded"
+msgstr ""
+
+#: templates/learn/capstone.html:16
+msgid "What the capstone is"
+msgstr ""
+
+#: templates/learn/capstone.html:16
+msgid ""
+"A realistic case that uses every module: identify the incident, triage it, preserve evidence, "
+"report it and support the person. It doesn't count towards your result, but it is the best "
+"preparation for the final."
+msgstr ""
+
+#: templates/learn/capstone.html:17
+msgid "Coming soon. The programme team is preparing the capstone brief, case material and handout."
+msgstr ""
+
+#: templates/learn/capstone.html:18
+msgid "Back to the modules"
+msgstr ""
+
+# draft: needs review
+#: templates/learn/catalogue.html:11
+msgid "Course catalogue"
+msgstr "અભ્યાસક્રમ સૂચિ"
+
+# draft: needs review
+#: templates/learn/catalogue.html:12
+msgid "Nine modules. One clear route."
+msgstr "નવ મોડ્યુલ. એક સ્પષ્ટ માર્ગ."
+
+# draft: needs review
+#: templates/learn/catalogue.html:13
+msgid ""
+"Each module has a short film, six or seven readings, a handout and practice checks. It ends in a "
+"two-part assessment worth 100 marks. Nothing is locked, so start anywhere and come back any time."
+msgstr ""
+"દરેક મોડ્યુલમાં એક ટૂંકી ફિલ્મ, છ-સાત પાઠ, એક હેન્ડઆઉટ અને અભ્યાસ તપાસો છે. અંતે 100 ગુણનું બે "
+"ભાગનું મૂલ્યાંકન હોય છે. કંઈ લૉક નથી, ગમે ત્યાંથી શરૂ કરો અને ગમે ત્યારે પાછા આવો."
+
+#: templates/learn/catalogue.html:15
+#, python-format
+msgid "%(n)s counted modules + capstone"
+msgstr ""
+
+#: templates/learn/catalogue.html:16
+#, python-format
+msgid "%(n)s readings"
+msgstr ""
+
+#: templates/learn/catalogue.html:17
+#, python-format
+msgid "%(n)s films"
+msgstr ""
+
+#: templates/learn/catalogue.html:18
+#, python-format
+msgid "≈ %(n)s hours of guided study"
+msgstr ""
+
+# draft: needs review
+#: templates/learn/catalogue.html:25
+msgid "Programme structure"
+msgstr "કાર્યક્રમની રચના"
+
+#: templates/learn/catalogue.html:26
+msgid "See what you know before you start."
+msgstr ""
+
+#: templates/learn/catalogue.html:26
+msgid "Coming soon. See what you know before you start."
+msgstr ""
+
+# draft: needs review
+#: templates/learn/catalogue.html:27
+msgid "Modules 1–9"
+msgstr "મોડ્યુલ 1–9"
+
+#: templates/learn/catalogue.html:27
+#, python-format
+msgid "Learn, practise, then pass each part with 50%%"
+msgstr ""
+
+#: templates/learn/catalogue.html:28
+msgid "Coming soon. An ungraded case simulation."
+msgstr ""
+
+# draft: needs review
+#: templates/learn/catalogue.html:29
+msgid "Practice mock"
+msgstr "અભ્યાસ મૉક"
+
+# draft: needs review
+#: templates/learn/catalogue.html:29
+msgid "18 mixed challenges before the final"
+msgstr "અંતિમ પરીક્ષા પહેલાં 18 મિશ્ર પડકારો"
+
+#: templates/learn/catalogue.html:30
+msgid "Unlocks after the pre-test and every module part. It counts for half of your overall grade."
+msgstr ""
+
+#: templates/learn/catalogue.html:30
+msgid "Coming soon. The final counts for half of your overall grade."
+msgstr ""
+
+# draft: needs review
+#: templates/learn/catalogue.html:36
+msgid "Search modules and topics"
+msgstr "મોડ્યુલ અને વિષયો શોધો"
+
+# draft: needs review
+#: templates/learn/catalogue.html:37
+msgid "Search modules and topics, e.g. UPI, deepfake, router"
+msgstr "મોડ્યુલ અને વિષય શોધો, જેમ કે UPI, ડીપફેક, રાઉટર"
+
+# draft: needs review
+#: templates/learn/catalogue.html:39
+msgid "Filter modules"
+msgstr "મોડ્યુલ ગાળો"
+
+# draft: needs review
+#: templates/learn/catalogue.html:40 templates/staff/question_list.html:10
+#: templates/staff/question_list.html:11 templates/staff/question_list.html:12
+msgid "All"
+msgstr "બધા"
+
+#: templates/learn/catalogue.html:41 templates/learn/catalogue.html:75
+msgid "In progress"
+msgstr ""
+
+# draft: needs review
+#: templates/learn/catalogue.html:54
+msgid "Not graded"
+msgstr "ગુણ ગણાતા નથી"
+
+#: templates/learn/catalogue.html:54 templates/learn/module.html:20
+msgid "marks"
+msgstr ""
+
+# draft: needs review
+#: templates/learn/catalogue.html:61
+msgid "Classroom simulation"
+msgstr "વર્ગખંડ સિમ્યુલેશન"
+
+#: templates/learn/catalogue.html:66
+msgid "challenges"
+msgstr ""
+
+#: templates/learn/catalogue.html:69
+msgid "Assessment questions are being prepared."
+msgstr ""
+
+# draft: needs review
+#: templates/learn/catalogue.html:72
+msgid "Content arriving from the programme team"
+msgstr "સામગ્રી કાર્યક્રમ ટીમ તરફથી આવી રહી છે"
+
+#: templates/learn/catalogue.html:82
+msgid "No modules match. Try another word, or clear the filter."
+msgstr ""
+
+# draft: needs review
+#: templates/learn/catalogue.html:87
+msgid "Before the final"
+msgstr "અંતિમ પરીક્ષા પહેલાં"
+
+# draft: needs review
+#: templates/learn/catalogue.html:88
+msgid "Practice mock: mixed challenges"
+msgstr "અભ્યાસ મૉક: મિશ્ર પડકારો"
+
+# draft: needs review
+#: templates/learn/catalogue.html:89
+msgid ""
+"Eighteen rounds, two from each module, each one playing differently: fix settings, spot scams, "
+"sort evidence, match, order, dial and more. It is practice only, so try it as often as you like."
+msgstr ""
+"અઢાર રાઉન્ડ, દરેક મોડ્યુલમાંથી બે, દરેક અલગ રીતે: સેટિંગ્સ સુધારો, કૌભાંડો ઓળખો, પુરાવા વર્ગીકૃત "
+"કરો, જોડો, ક્રમ ગોઠવો, સંખ્યા પસંદ કરો અને ઘણું બધું. આ ફક્ત અભ્યાસ છે, જેટલી વાર ગમે તેટલી વાર "
+"અજમાવો."
+
+#: templates/learn/catalogue.html:91
+msgid "Practice mock: coming soon"
+msgstr ""
+
+#: templates/learn/module.html:12
+msgid "of 9"
+msgstr ""
+
+#: templates/learn/module.html:15 templates/learn/unit.html:16
+msgid "Draft translation"
+msgstr ""
+
+#: templates/learn/module.html:17
+msgid "theory"
+msgstr ""
+
+#: templates/learn/module.html:17
+msgid "practical"
+msgstr ""
+
+# draft: needs review
+#: templates/learn/module.html:19
+msgid "1 film"
+msgstr "1 ફિલ્મ"
+
+#: templates/learn/module.html:24 templates/learn/module.html:37
+msgid "Assessments"
+msgstr ""
+
+#: templates/learn/module.html:27
+msgid "of this module complete"
+msgstr ""
+
+#: templates/learn/module.html:27
+msgid "units"
+msgstr ""
+
+# draft: needs review
+#: templates/learn/module.html:34
+msgid "Module sections"
+msgstr "મોડ્યુલના વિભાગો"
+
+#: templates/learn/module.html:35
+msgid "Overview"
+msgstr ""
+
+#: templates/learn/module.html:36
+msgid "Course content"
+msgstr ""
+
+# draft: needs review
+#: templates/learn/module.html:41
+msgid "What is it?"
+msgstr "આ શું છે?"
+
+# draft: needs review
+#: templates/learn/module.html:42
+msgid "By the end of this module you can"
+msgstr "આ મોડ્યુલ પછી તમે આ કરી શકશો"
+
+# draft: needs review
+#: templates/learn/module.html:43
+msgid "Key rule"
+msgstr "મુખ્ય નિયમ"
+
+# draft: needs review
+#: templates/learn/module.html:44
+msgid "Topics in this module"
+msgstr "આ મોડ્યુલના વિષયો"
+
+#: templates/learn/module.html:46
+msgid "The reading topics for this module are being prepared."
+msgstr ""
+
+# draft: needs review
+#: templates/learn/module.html:47
+msgid "Stop · Save · Report"
+msgstr "રોકો · સાચવો · ફરિયાદ કરો"
+
+#: templates/learn/module.html:52
+msgid "Topic"
+msgstr ""
+
+#: templates/learn/module.html:58
+msgid ""
+"Your module score is <strong>Part A (50 marks) + Part B (50 marks)</strong>, using your best "
+"attempt at each. You see your score, which questions to revisit and a hint for each, but never the"
+" correct option."
+msgstr ""
+
+#: templates/learn/module.html:62
+msgid "Attempted"
+msgstr ""
+
+#: templates/learn/module.html:63
+msgid "of 100"
+msgstr ""
+
+#: templates/learn/module.html:63
+#, python-format
+msgid "%(used)s of %(limit)s used"
+msgstr ""
+
+# draft: needs review
+#: templates/learn/module.html:63
+msgid "Unlimited · best counts"
+msgstr "અમર્યાદિત · શ્રેષ્ઠ ગણાય"
+
+#: templates/learn/module.html:64
+msgid "No attempts left · see results"
+msgstr ""
+
+# draft: needs review
+#: templates/learn/module.html:64 templates/progress/dashboard.html:55
+msgid "Retake"
+msgstr "ફરી આપો"
+
+#: templates/learn/module.html:64
+#, python-format
+msgid "Pass mark 50%%. Answer every question so it counts towards unlocking the final."
+msgstr ""
+
+#: templates/learn/module.html:67
+msgid ""
+"This module's multiple-choice and interactive parts will appear here when the content team has "
+"approved the questions. The lessons are open now."
+msgstr ""
+
+# draft: needs review
+#: templates/learn/module.html:71
+msgid "Other modules"
+msgstr "અન્ય મોડ્યુલ"
+
+#: templates/learn/unit.html:21
+msgid "Mark as complete"
+msgstr ""
+
+# draft: needs review
+#: templates/learn/unit.html:23
+msgid "Lesson navigation"
+msgstr "પાઠ નેવિગેશન"
+
+#: templates/mentors/batch_detail.html:8
+msgid "Mentor dashboard"
+msgstr ""
+
+# draft: needs review
+#: templates/mentors/batch_detail.html:10
+msgid "You can see your own batches only. Every action here is logged."
+msgstr "તમે ફક્ત તમારી બૅચ જોઈ શકો છો. અહીં દરેક ક્રિયા નોંધાય છે."
+
+#: templates/mentors/batch_detail.html:12 templates/mentors/home.html:18
+msgid "Registration open"
+msgstr ""
+
+# draft: needs review
+#: templates/mentors/batch_detail.html:12 templates/mentors/home.html:18
+#: templates/registration/closed.html:3
+msgid "Registration closed"
+msgstr "નોંધણી બંધ"
+
+#: templates/mentors/batch_detail.html:19
+msgid "Learners"
+msgstr ""
+
+# draft: needs review
+#: templates/mentors/batch_detail.html:20
+msgid "Eligible for a certificate"
+msgstr "પ્રમાણપત્ર માટે પાત્ર"
+
+# draft: needs review
+#: templates/mentors/batch_detail.html:21
+msgid "Need a nudge"
+msgstr "થોડું પ્રોત્સાહન જોઈએ"
+
+# draft: needs review
+#: templates/mentors/batch_detail.html:22
+msgid "New sign-ups this week"
+msgstr "આ અઠવાડિયે નવી નોંધણી"
+
+#: templates/mentors/batch_detail.html:26 templates/staff/report.html:17
+msgid "Registration"
+msgstr ""
+
+#: templates/mentors/batch_detail.html:45
+msgid "email not verified"
+msgstr ""
+
+#: templates/mentors/batch_detail.html:46
+msgid "waiting for guardian"
+msgstr ""
+
+#: templates/mentors/batch_detail.html:55
+msgid "Certificates"
+msgstr ""
+
+#: templates/mentors/batch_detail.html:57
+msgid "Issue certificates automatically when a learner is eligible"
+msgstr ""
+
+#: templates/mentors/batch_detail.html:60
+msgid ""
+"Turning this on does not issue certificates to learners already waiting. Approve those below."
+msgstr ""
+
+#: templates/mentors/batch_detail.html:63
+msgid "Not ready for real certificates yet"
+msgstr ""
+
+#: templates/mentors/batch_detail.html:65
+msgid ""
+"Each certificate is fixed when it is issued and its PDF never changes. Do not approve real "
+"learners until this warning is gone."
+msgstr ""
+
+# draft: needs review
+#: templates/mentors/batch_detail.html:72
+msgid "Awaiting approval"
+msgstr "મંજૂરીની રાહ"
+
+#: templates/mentors/batch_detail.html:73
+#, python-format
+msgid "Approve %(n)s certificate?"
+msgid_plural "Approve %(n)s certificates?"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/mentors/batch_detail.html:73
+msgid ""
+"Check that each printed name is spelled correctly. Certificates are issued immediately and cannot "
+"be changed."
+msgstr ""
+
+# draft: needs review
+#: templates/mentors/batch_detail.html:73
+msgid "Approve all"
+msgstr "બધાને મંજૂર કરો"
+
+#: templates/mentors/batch_detail.html:74
+#, python-format
+msgid "Approve all %(n)s"
+msgstr ""
+
+#: templates/mentors/batch_detail.html:78
+#, python-format
+msgid "Overall %(overall)s%% · check the printed name"
+msgstr ""
+
+#: templates/mentors/batch_detail.html:78
+msgid "Correct the name first: it must be in English letters."
+msgstr ""
+
+#: templates/mentors/batch_detail.html:79
+#, python-format
+msgid "Approve the certificate for %(name)s"
+msgstr ""
+
+# draft: needs review
+#: templates/mentors/batch_detail.html:79
+msgid "Approve"
+msgstr "મંજૂર કરો"
+
+#: templates/mentors/batch_detail.html:80
+msgid "Correct name"
+msgstr ""
+
+#: templates/mentors/batch_detail.html:82
+msgid "No one is waiting."
+msgstr ""
+
+# draft: needs review
+#: templates/mentors/batch_detail.html:87
+msgid "Issued this week"
+msgstr "આ અઠવાડિયે જારી"
+
+#: templates/mentors/batch_detail.html:92
+msgid "None this week."
+msgstr ""
+
+# draft: needs review
+#: templates/mentors/batch_detail.html:100
+msgid "Learners who may be stuck"
+msgstr "જે શીખનારા અટવાયા હોઈ શકે"
+
+#: templates/mentors/batch_detail.html:101
+#, python-format
+msgid "Inactive 7+ days, or below 50%% after 3 attempts"
+msgstr ""
+
+#: templates/mentors/batch_detail.html:107
+msgid "Roster"
+msgstr ""
+
+#: templates/mentors/batch_detail.html:108
+msgid "Download CSV"
+msgstr ""
+
+#: templates/mentors/batch_detail.html:109
+msgid "Results by learner"
+msgstr ""
+
+# draft: needs review
+#: templates/mentors/batch_detail.html:111
+msgid "Learner"
+msgstr "શીખનાર"
+
+# draft: needs review
+#: templates/mentors/batch_detail.html:111
+msgid "Final"
+msgstr "અંતિમ"
+
+# draft: needs review
+#: templates/mentors/batch_detail.html:111
+msgid "Overall"
+msgstr "કુલ"
+
+#: templates/mentors/batch_detail.html:116
+msgid "below 50"
+msgstr ""
+
+#: templates/mentors/batch_detail.html:125
+#, python-format
+msgid "Red cells are below 50%%."
+msgstr ""
+
+#: templates/mentors/batch_detail.html:125
+#, python-format
+msgid "Green cells are 75%% or more."
+msgstr ""
+
+#: templates/mentors/batch_new.html:3
+msgid "New batch"
+msgstr ""
+
+#: templates/mentors/batch_new.html:5 templates/mentors/home.html:11
+msgid "Create a batch"
+msgstr ""
+
+#: templates/mentors/batch_new.html:10
+msgid "Create batch"
+msgstr ""
+
+# draft: needs review
+#: templates/mentors/home.html:8
+msgid "Mentor"
+msgstr "મેન્ટર"
+
+#: templates/mentors/home.html:25
+msgid "You do not have any batches yet."
+msgstr ""
+
+#: templates/mentors/learner.html:17
+msgid "Change name"
+msgstr ""
+
+#: templates/mentors/learner.html:26
+msgid "Move"
+msgstr ""
+
+#: templates/mentors/learner.html:36
+msgid "Create a reset link?"
+msgstr ""
+
+#: templates/mentors/learner.html:36
+msgid "The link works once, for 1 hour. Hand it over in person."
+msgstr ""
+
+# draft: needs review
+#: templates/mentors/learner.html:36 templates/mentors/learner.html:37
+msgid "Create link"
+msgstr "લિંક બનાવો"
+
+# draft: needs review
+#: templates/mentors/reset_link.html:3
+msgid "Reset link"
+msgstr "રીસેટ લિંક"
+
+#: templates/progress/dashboard.html:10
+#, python-format
+msgid "Hello, %(name)s"
+msgstr ""
+
+#: templates/progress/dashboard.html:11
+#, python-format
+msgid "Congratulations! You are a certified %(PROGRAMME_NAME)s."
+msgstr ""
+
+#: templates/progress/dashboard.html:11
+msgid "You have met every requirement. Your certificate is next."
+msgstr ""
+
+#: templates/progress/dashboard.html:11
+msgid "Welcome. Start with the pre-test, then work through the modules at your own pace."
+msgstr ""
+
+#: templates/progress/dashboard.html:11
+msgid ""
+"Welcome. Work through the modules at your own pace. Your pre-test opens once your batch has its "
+"exam set."
+msgstr ""
+
+#: templates/progress/dashboard.html:11
+msgid "Here is where you are, and what is left before your final."
+msgstr ""
+
+#: templates/progress/dashboard.html:14
+msgid "overall"
+msgstr ""
+
+#: templates/progress/dashboard.html:17
+msgid "Your journey"
+msgstr ""
+
+# draft: needs review
+#: templates/progress/dashboard.html:18
+msgid "Done"
+msgstr "પૂર્ણ"
+
+#: templates/progress/dashboard.html:18
+msgid "Optional practice"
+msgstr ""
+
+#: templates/progress/dashboard.html:23
+msgid "Next: the short pre-test"
+msgstr ""
+
+#: templates/progress/dashboard.html:24
+msgid ""
+"It shows what you already know before you start. You do it once, and the final stays locked until "
+"it is done."
+msgstr ""
+
+# draft: needs review
+#: templates/progress/dashboard.html:25
+msgid "Take the pre-test"
+msgstr "પ્રી-ટેસ્ટ આપો"
+
+#: templates/progress/dashboard.html:31
+msgid "Pre-test not available yet"
+msgstr ""
+
+#: templates/progress/dashboard.html:37
+msgid "What's left before your final"
+msgstr ""
+
+# draft: needs review
+#: templates/progress/dashboard.html:39 templates/progress/dashboard.html:43
+msgid "Open"
+msgstr "ખુલ્લી"
+
+#: templates/progress/dashboard.html:40
+msgid "Nothing left: the final is unlocked."
+msgstr ""
+
+#: templates/progress/dashboard.html:41
+msgid "Nothing left for you to do right now. The final card explains what is still blocking it."
+msgstr ""
+
+#: templates/progress/dashboard.html:42
+#, python-format
+msgid "%(n)s finished"
+msgid_plural "%(n)s finished"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/progress/dashboard.html:47
+msgid "Your modules"
+msgstr ""
+
+#: templates/progress/dashboard.html:53
+msgid "Pass"
+msgstr ""
+
+#: templates/progress/dashboard.html:55
+msgid "Assessments are being prepared."
+msgstr ""
+
+#: templates/progress/dashboard.html:66
+#, python-format
+msgid "Your best: <strong>%(best)s%%</strong>. You need %(pass)s%%."
+msgstr ""
+
+#: templates/progress/dashboard.html:66
+msgid "The final is unlocked."
+msgstr ""
+
+#: templates/progress/dashboard.html:69
+#, python-format
+msgid "You can try again after %(when)s."
+msgstr ""
+
+#: templates/progress/dashboard.html:71
+msgid "Try the final again"
+msgstr ""
+
+# draft: needs review
+#: templates/progress/dashboard.html:71
+msgid "Start the final"
+msgstr "અંતિમ પરીક્ષા શરૂ કરો"
+
+#: templates/progress/dashboard.html:74
+msgid "Locked."
+msgstr ""
+
+#: templates/progress/dashboard.html:80
+msgid "What is stopping your certificate"
+msgstr ""
+
+#: templates/progress/dashboard.html:84
+msgid "Topics to revisit"
+msgstr ""
+
+#: templates/progress/dashboard.html:86
+msgid "Complete a multiple-choice part to see your weakest topics."
+msgstr ""
+
+#: templates/progress/dashboard.html:88
+msgid "Hours"
+msgstr ""
+
+#: templates/progress/dashboard.html:89
+msgid "minutes"
+msgstr ""
+
+#: templates/progress/dashboard.html:89
+msgid "engaged time, estimated"
+msgstr ""
+
+#: templates/progress/dashboard.html:89
+msgid "from the lessons you completed"
+msgstr ""
+
+# draft: needs review
+#: templates/progress/dashboard.html:93
+msgid "Download it from the site. Anyone can check it with the QR code."
+msgstr "તેને સાઇટ પરથી ડાઉનલોડ કરો. કોઈ પણ QR કોડથી તેને ચકાસી શકે છે."
+
+# draft: needs review
+#: templates/progress/dashboard.html:94
+msgid "View and download"
+msgstr "જુઓ અને ડાઉનલોડ કરો"
+
+# draft: needs review
+#: templates/progress/dashboard.html:95
+msgid "Awaiting mentor approval"
+msgstr "મેન્ટરની મંજૂરીની રાહ"
+
+#: templates/progress/dashboard.html:96
+msgid "You are eligible. Your mentor approves certificates for your batch."
+msgstr ""
+
+# draft: needs review
+#: templates/progress/dashboard.html:97
+msgid "View status"
+msgstr "સ્થિતિ જુઓ"
+
+# draft: needs review
+#: templates/progress/dashboard.html:99
+msgid "Contact the programme team if you have questions."
+msgstr "પ્રશ્ન હોય તો કાર્યક્રમ ટીમનો સંપર્ક કરો."
+
+#: templates/progress/dashboard.html:100
+msgid "Your certificate was issued. Its details were removed at your request."
+msgstr ""
+
+#: templates/registration/check_inbox.html:3 templates/registration/check_inbox.html:7
+msgid "Check your inbox"
+msgstr ""
+
+#: templates/registration/check_inbox.html:8
+msgid ""
+"We have sent an email to the address you entered. Open the link in it to verify your email, then "
+"sign in."
+msgstr ""
+
+#: templates/registration/check_inbox.html:9
+msgid "If you are 16 or 17, your guardian will also get an email. You can start once they confirm."
+msgstr ""
+
+#: templates/registration/check_inbox.html:10
+msgid "Nothing arrived after a few minutes? Check your spam folder."
+msgstr ""
+
+#: templates/registration/closed.html:7
+msgid "Registrations are closed right now"
+msgstr ""
+
+#: templates/registration/closed.html:8
+msgid "Ask your trainer to open registration."
+msgstr ""
+
+#: templates/registration/closed.html:9
+msgid "Already registered? Sign in"
+msgstr ""
+
+#: templates/registration/guardian_confirm.html:3 templates/registration/guardian_confirm.html:7
+msgid "Guardian consent"
+msgstr ""
+
+# draft: needs review
+#: templates/registration/guardian_confirm.html:11
+msgid "What we collect, and why"
+msgstr "અમે શું એકત્ર કરીએ છીએ, અને શા માટે"
+
+#: templates/registration/guardian_confirm.html:24
+msgid "I consent"
+msgstr ""
+
+#: templates/registration/guardian_done.html:3 templates/registration/guardian_done.html:7
+msgid "Thank you"
+msgstr ""
+
+#: templates/registration/guardian_done.html:8
+msgid "Your consent is recorded. The learner can now sign in and start."
+msgstr ""
+
+#: templates/registration/guardian_invalid.html:8
+msgid ""
+"It may have expired, or already been used. Ask the learner to request a new email from their "
+"waiting page."
+msgstr ""
+
+#: templates/registration/register.html:3
+msgid "Register"
+msgstr ""
+
+# draft: needs review
+#: templates/registration/register.html:9
+msgid "Become a Community Cyber"
+msgstr "સામુદાયિક સાયબર"
+
+# draft: needs review
+#: templates/registration/register.html:9
+msgid "First Responder."
+msgstr "ફર્સ્ટ રિસ્પોન્ડર બનો."
+
+# draft: needs review
+#: templates/registration/register.html:10
+msgid ""
+"Nine modules and a capstone, with practical challenges along the way and a certificate anyone can "
+"verify."
+msgstr "નવ મોડ્યુલ અને એક કૅપસ્ટોન, રસ્તામાં વ્યવહારુ પડકારો અને કોઈ પણ ચકાસી શકે તેવું પ્રમાણપત્ર."
+
+#: templates/registration/register.html:12
+#, python-format
+msgid "Pass every module and the final with 50%% or more."
+msgstr ""
+
+# draft: needs review
+#: templates/registration/register.html:13
+msgid "All marking happens on the server, so it is fair for everyone."
+msgstr "બધું મૂલ્યાંકન સર્વર પર થાય છે, તેથી તે સૌ માટે ન્યાયી છે."
+
+# draft: needs review
+#: templates/registration/register.html:14
+msgid "Your certificate is downloaded from the site, never emailed."
+msgstr "તમારું પ્રમાણપત્ર સાઇટ પરથી ડાઉનલોડ થાય છે, ક્યારેય ઈમેલ થતું નથી."
+
+# draft: needs review
+#: templates/registration/register.html:21
+msgid "Free to join"
+msgstr "જોડાવું નિઃશુલ્ક"
+
+#: templates/registration/register.html:22
+msgid "Join the programme"
+msgstr ""
+
+# draft: needs review
+#: templates/registration/register.html:23
+msgid "Already have an account?"
+msgstr "પહેલેથી ખાતું છે?"
+
+#: templates/registration/register.html:30
+msgid "Your certificate name"
+msgstr ""
+
+#: templates/registration/register.html:32
+msgid "Your certificate will read:"
+msgstr ""
+
+# draft: needs review
+#: templates/registration/register.html:33
+msgid "After you register, only your mentor or an admin can change this name."
+msgstr "નોંધણી પછી આ નામ ફક્ત તમારા મેન્ટર કે એડમિન બદલી શકે છે."
+
+#: templates/registration/register.html:37
+msgid "Your account"
+msgstr ""
+
+#: templates/registration/register.html:42
+msgid "Too short"
+msgstr ""
+
+#: templates/registration/register.html:42
+msgid "Too simple"
+msgstr ""
+
+# draft: needs review
+#: templates/registration/register.html:42
+msgid "Getting there"
+msgstr "સુધરી રહ્યો છે"
+
+# draft: needs review
+#: templates/registration/register.html:42
+msgid "Good"
+msgstr "સારો"
+
+#: templates/registration/register.html:42
+msgid "At least 10 characters. A short sentence works well."
+msgstr ""
+
+#: templates/registration/register.html:46
+msgid "Preferred language"
+msgstr ""
+
+#: templates/registration/register.html:48
+msgid "You must be 16 or older. If you are 16 or 17, your guardian must agree."
+msgstr ""
+
+#: templates/registration/register.html:52
+msgid "Parent or guardian"
+msgstr ""
+
+#: templates/registration/register.html:53
+msgid ""
+"Because you are 16 or 17, a parent or guardian needs to confirm by email before your account "
+"starts. We don't track time-on-task for learners under 18."
+msgstr ""
+
+#: templates/registration/register.html:59
+msgid "Your batch"
+msgstr ""
+
+#: templates/registration/register.html:61
+msgid ""
+"Only batches accepting registrations are listed. Seats and dates come from the batch your mentor "
+"opened."
+msgstr ""
+
+#: templates/registration/register.html:65
+msgid "Consent"
+msgstr ""
+
+#: templates/registration/register.html:68
+msgid "I have read and accept the"
+msgstr ""
+
+# draft: needs review
+#: templates/registration/register.html:68
+msgid "privacy notice"
+msgstr "ગોપનીયતા સૂચના"
+
+# draft: needs review
+#: templates/registration/register.html:74
+msgid "Create my account"
+msgstr "મારું ખાતું બનાવો"
+
+#: templates/registration/too_many.html:3 templates/registration/too_many.html:7
+msgid "Too many attempts"
+msgstr ""
+
+#: templates/registration/too_many.html:8
+msgid ""
+"Many people are registering for this batch right now. Please wait a few minutes and try again."
+msgstr ""
+
+#: templates/staff/attempts.html:3 templates/staff/attempts.html:6
+msgid "Attempt limits"
+msgstr ""
+
+#: templates/staff/attempts.html:6 templates/staff/marks_index.html:5 templates/staff/report.html:7
+msgid "Admin"
+msgstr ""
+
+#: templates/staff/attempts.html:6
+msgid ""
+"The most attempts a learner may start on each part and on the final. Leave a box blank for "
+"unlimited. Every started attempt counts; an attempt in progress can always be finished. The pre-"
+"test is once only and takes no limit. Changes are audited."
+msgstr ""
+
+#: templates/staff/attempts.html:7 templates/staff/marks_edit.html:8
+msgid "Please fix this"
+msgstr ""
+
+#: templates/staff/attempts.html:7
+msgid "Some limits were not saved."
+msgstr ""
+
+#: templates/staff/attempts.html:9
+msgid "Assessment"
+msgstr ""
+
+#: templates/staff/attempts.html:9
+msgid "Maximum attempts"
+msgstr ""
+
+#: templates/staff/attempts.html:10
+msgid "Unlimited"
+msgstr ""
+
+#: templates/staff/attempts.html:10
+msgid "Maximum attempts for"
+msgstr ""
+
+#: templates/staff/attempts.html:10
+msgid "No assessments yet."
+msgstr ""
+
+#: templates/staff/attempts.html:12
+msgid "Save limits"
+msgstr ""
+
+#: templates/staff/marks_edit.html:3 templates/staff/marks_index.html:3
+msgid "Mark split"
+msgstr ""
+
+# draft: needs review
+#: templates/staff/marks_edit.html:6
+msgid "All modules"
+msgstr "બધા મોડ્યુલ"
+
+#: templates/staff/marks_edit.html:10
+msgid "This module counts towards the certificate"
+msgstr ""
+
+#: templates/staff/marks_edit.html:11
+msgid "Part"
+msgstr ""
+
+#: templates/staff/marks_edit.html:11
+msgid "Counted"
+msgstr ""
+
+#: templates/staff/marks_edit.html:11
+msgid "Published"
+msgstr ""
+
+#: templates/staff/marks_edit.html:12
+msgid "Marks for"
+msgstr ""
+
+#: templates/staff/marks_edit.html:12
+msgid "Counted:"
+msgstr ""
+
+#: templates/staff/marks_edit.html:12
+msgid "yes"
+msgstr ""
+
+#: templates/staff/marks_edit.html:12
+msgid "no"
+msgstr ""
+
+#: templates/staff/marks_edit.html:12
+msgid "This module has no assessment parts yet."
+msgstr ""
+
+#: templates/staff/marks_edit.html:14
+msgid "Preview the impact"
+msgstr ""
+
+#: templates/staff/marks_edit.html:19
+msgid "Impact preview"
+msgstr ""
+
+#: templates/staff/marks_edit.html:20
+#, python-format
+msgid ""
+"%(n)s learners: <strong>%(lose)s</strong> lose eligibility, <strong>%(gain)s</strong> gain it."
+msgstr ""
+
+#: templates/staff/marks_edit.html:21
+#, python-format
+msgid ""
+"Eligible now: %(b)s. Eligible after: %(a)s. Overall score changes for %(c)s learners. Issued "
+"certificates never change."
+msgstr ""
+
+#: templates/staff/marks_edit.html:22
+#, python-format
+msgid ""
+"Looking at the marks alone, ignoring course set-up gaps: %(lose)s would lose and %(gain)s would "
+"gain."
+msgstr ""
+
+#: templates/staff/marks_edit.html:23
+msgid ""
+"The final's blueprint would no longer match the counted modules. Released exam sets and learners "
+"already started are not affected, but no new set can be released until the blueprint is updated:"
+msgstr ""
+
+#: templates/staff/marks_edit.html:24
+msgid "After this change the course set-up would still be incomplete:"
+msgstr ""
+
+#: templates/staff/marks_edit.html:25
+msgid "Lose eligibility"
+msgstr ""
+
+#: templates/staff/marks_edit.html:26
+msgid "Gain eligibility"
+msgstr ""
+
+#: templates/staff/marks_edit.html:32
+msgid "Confirm and save"
+msgstr ""
+
+#: templates/staff/marks_index.html:5
+msgid "Mark split by module"
+msgstr ""
+
+#: templates/staff/marks_index.html:5
+msgid ""
+"Change a module's marks or which parts count. You see who would gain or lose eligibility before "
+"anything is saved."
+msgstr ""
+
+#: templates/staff/marks_index.html:6
+msgid "Edit marks"
+msgstr ""
+
+#: templates/staff/question_edit.html:9 templates/staff/question_preview.html:7
+msgid "Preview as learner"
+msgstr ""
+
+#: templates/staff/question_edit.html:11
+#, python-format
+msgid ""
+"This question %(locked)s, so it is fixed and cannot be edited here. A correction goes in a new "
+"draft set."
+msgstr ""
+
+#: templates/staff/question_edit.html:12
+msgid "This question is fixed"
+msgstr ""
+
+#: templates/staff/question_edit.html:14
+msgid "This could not be saved"
+msgstr ""
+
+#: templates/staff/question_edit.html:17
+msgid "Question (the form follows the format's schema and is checked again when you save)"
+msgstr ""
+
+#: templates/staff/question_edit.html:25
+msgid "Save as a new version"
+msgstr ""
+
+#: templates/staff/question_edit.html:29
+msgid "Publishing"
+msgstr ""
+
+#: templates/staff/question_edit.html:30
+msgid "It cannot go live yet:"
+msgstr ""
+
+#: templates/staff/question_edit.html:31
+msgid "Publish"
+msgstr ""
+
+#: templates/staff/question_list.html:7
+msgid "Staff"
+msgstr ""
+
+#: templates/staff/question_list.html:8
+msgid ""
+"You can edit module-quiz and practice questions. Edits go back to draft until an admin publishes "
+"them."
+msgstr ""
+
+#: templates/staff/question_list.html:13
+msgid "Filter"
+msgstr ""
+
+#: templates/staff/question_list.html:16
+msgid "Format"
+msgstr ""
+
+#: templates/staff/question_list.html:17
+msgid "Edit"
+msgstr ""
+
+#: templates/staff/question_list.html:17 templates/staff/question_preview.html:3
+msgid "Preview"
+msgstr ""
+
+#: templates/staff/question_list.html:17
+msgid "No questions match."
+msgstr ""
+
+#: templates/staff/question_preview.html:7
+msgid ""
+"Nothing is saved and nothing is scored. This is exactly what a learner's browser receives: no "
+"answers."
+msgstr ""
+
+#: templates/staff/question_preview.html:19
+msgid "Staff only: hint and explanation"
+msgstr ""
+
+# draft: needs review
+#: templates/staff/question_preview.html:19
+msgid "Why"
+msgstr "શા માટે"
+
+#: templates/staff/report.html:8 templates/staff/report.html:9
+msgid "Batches"
+msgstr ""
+
+#: templates/staff/report.html:9
+msgid "Registered"
+msgstr ""
+
+# draft: needs review
+#: templates/staff/report.html:9
+msgid "Active"
+msgstr "સક્રિય"
+
+#: templates/staff/report.html:9
+msgid "Eligible"
+msgstr ""
+
+#: templates/staff/report.html:9
+msgid "Knowledge gain"
+msgstr ""
+
+#: templates/staff/report.html:9
+msgid "target"
+msgstr ""
+
+#: templates/staff/report.html:10
+msgid "learners"
+msgstr ""
+
+#: templates/staff/report.html:12
+msgid "Item statistics (hardest first)"
+msgstr ""
+
+#: templates/staff/report.html:13
+msgid "Item statistics"
+msgstr ""
+
+#: templates/staff/report.html:13
+#, python-format
+msgid "%% correct"
+msgstr ""
+
+#: templates/staff/report.html:13
+msgid "Answers"
+msgstr ""
+
+#: templates/staff/report.html:13
+msgid "By language"
+msgstr ""
+
+#: templates/staff/report.html:14
+msgid "No counted attempts yet."
+msgstr ""
+
+#: templates/staff/report.html:16
+msgid "Email budget today"
+msgstr ""
+
+#: templates/staff/report.html:17
+msgid "Reset and guardian"
+msgstr ""
+
+#: templates/staff/report.html:17
+msgid "Reserve"
+msgstr ""
+
+# draft: needs review
+#: templates/staff/report.html:17
+msgid "Total"
+msgstr "કુલ"
