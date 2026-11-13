@@ -1,6 +1,6 @@
 # Project status: read this first
 
-**Updated:** 13 Nov 2026 (Stage 7 PR). Every Claude session starts here, then reads `CLAUDE.md`, `docs/decisions.md` and the current stage in `docs/build-stages.md`.
+**Updated:** 13 Nov 2026 (rate-limit fix PR). Every Claude session starts here, then reads `CLAUDE.md`, `docs/decisions.md` and the current stage in `docs/build-stages.md`.
 At the end of every stage, Claude updates this file in the same PR. Dated review results live in [`docs/history/`](history/) (one file per stage), not here.
 
 ## Order of authority (when two documents disagree)
@@ -29,7 +29,8 @@ If two of these still disagree, or something is missing, **stop and ask in chat*
 | Decisions D32–D35 | ✅ Merged (PR #10, `30ac2db`): attempt limit (D32), lessons need sign-in (D34), films served by Caddy with range requests (D35) | — |
 | Deploy fix: Caddy reload | ✅ Merged (PR #11, `fcce8b6`): `deploy/caddy/` is mounted as a directory and `deploy.sh` validates then reloads Caddy on every deploy. Deployed to staging 13 Nov 2026; the reload ran and the config was valid. | — |
 | 6. Staff tools | ✅ Merged (PR #13, `5a25aac`) | [stage-6.md](history/stage-6.md) |
-| 7. Certificates | 🟡 PR from `stage-7`. Not merged. Built to D36 with the **placeholder** design; no real certificate may be approved until the signature images, final design and emblem are in (see below). | [stage-7.md](history/stage-7.md) |
+| 7. Certificates | ✅ Merged (PR #14, `ccb7ec6`). Built to D36 with the **placeholder** design; no real certificate may be approved until the signature images, final design and emblem are in (see below). | [stage-7.md](history/stage-7.md) |
+| Fix: per-client rate limits | 🟡 PR from `fix-ratelimit-keys`. Not merged. `/learn/check` and the block endpoint are limited per signed-in user, the mentor reset link per client IP (X-Forwarded-For). Before this, Caddy's address made each limit one site-wide bucket. Caddy 2.11 was checked: it replaces a client-sent X-Forwarded-For, so the left-most entry is the real client. This holds only while nothing else (a CDN, another proxy) sits in front of the edge Caddy; if that changes, set `trusted_proxies` and revisit `client_ip`. | — |
 | 8–10 | ⬜ In order. One stage = one branch = one PR. | — |
 
 Earlier table and open items: [status-2026-11-12.md](history/status-2026-11-12.md).

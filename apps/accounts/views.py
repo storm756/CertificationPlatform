@@ -9,7 +9,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django_ratelimit.decorators import ratelimit
 
-from apps.audit.services import audit
+from apps.audit.services import audit, client_ip
 from apps.batches.rules import accepting_batches
 
 from . import guardian
@@ -134,7 +134,12 @@ def _valid_reset_link(raw_token):
     return link
 
 
-@ratelimit(key="ip", rate="30/h", method="POST", block=True)
+def _client_key(group, request):
+    # Behind Caddy REMOTE_ADDR is Caddy's own address, so key on the real client (X-Forwarded-For).
+    return client_ip(request) or "unknown"
+
+
+@ratelimit(key=_client_key, rate="30/h", method="POST", block=True)
 def mentor_reset_view(request, token):
     """A mentor-generated one-time link (architecture 7.4). Valid 1 hour, single use."""
     link = _valid_reset_link(token)
