@@ -27,8 +27,6 @@ TEMPLATE = "certificates/pdf/certificate.html"
 STATIC = Path(settings.BASE_DIR) / "static"
 FONTS = [
     "baloo2-latin.woff2",
-    "baloo2-devanagari.woff2",  # only requested when the name is written in Devanagari
-    "baloobhai2-gujarati-500-800.woff2",  # only when it is written in Gujarati
     "hind-latin-400.woff2",
     "hind-latin-600.woff2",
 ]
@@ -83,14 +81,6 @@ class AllowlistFetcher(URLFetcher):
         return URLFetcherResponse(url, body, {"Content-Type": mime})
 
 
-def scripts_in(text: str) -> dict:
-    """Which extra scripts a name needs fonts for. Everything else on the page is English."""
-    return {
-        "devanagari": any("ऀ" <= ch <= "ॿ" for ch in text),
-        "gujarati": any("઀" <= ch <= "૿" for ch in text),
-    }
-
-
 def long_date(iso: str) -> str:
     """'2026-11-13' -> '13 November 2026' (English, no leading zero)."""
     day = date.fromisoformat(iso)
@@ -137,7 +127,6 @@ def render(
                 "completed_on": long_date(snapshot["completed_on"]),
                 "verify_text": verify_url(verify_code).split("://", 1)[1].rstrip("/"),
                 "signatories": signatories,
-                "scripts": scripts_in(snapshot.get("certificate_name", "")),
                 "asset": SCHEME,
             },
         )

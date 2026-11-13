@@ -9,7 +9,14 @@ from apps.batches.models import Batch, BatchStatus
 from apps.batches.rules import accepting_batches
 
 from .models import Language, normalise_email
-from .rules import AGE_GUARDIAN, AGE_REFUSE, MIN_AGE, age_band
+from .rules import (
+    AGE_GUARDIAN,
+    AGE_REFUSE,
+    CERTIFICATE_NAME_RULE,
+    MIN_AGE,
+    age_band,
+    certificate_name_ok,
+)
 
 _CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f<>]")
 
@@ -21,11 +28,20 @@ def clean_person_name(value: str) -> str:
     return value
 
 
+def clean_certificate_name(value: str) -> str:
+    """A person's name that also passes the certificate rule: English letters only (D37)."""
+    value = clean_person_name(value)
+    if not certificate_name_ok(value):
+        raise forms.ValidationError(CERTIFICATE_NAME_RULE)
+    return value
+
+
 class RegistrationForm(forms.Form):
     certificate_name = forms.CharField(
         max_length=120,
         label="Full name for your certificate",
-        help_text="This exact name will be printed on your certificate. Check the spelling now.",
+        help_text="In English letters. This exact name will be printed on your certificate. "
+        "Check the spelling now.",
     )
     email = forms.EmailField(label="Email")
     password = forms.CharField(widget=forms.PasswordInput, label="Password")
@@ -59,7 +75,7 @@ class RegistrationForm(forms.Form):
             ]
 
     def clean_certificate_name(self):
-        return clean_person_name(self.cleaned_data["certificate_name"])
+        return clean_certificate_name(self.cleaned_data["certificate_name"])
 
     def clean_guardian_name(self):
         value = self.cleaned_data["guardian_name"]

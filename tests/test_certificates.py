@@ -611,3 +611,90 @@ def test_the_report_counts_issued_certificates(admin_client, learner, course):
     rows = admin_client.get(reverse("staff_report")).context["batches"]
     assert next(r for r in rows if r["batch"] == learner.enrolment.batch)["issued"] == 1
     assert cert.snapshot["overall"] == str(compute_results([learner.pk])[learner.pk].overall_shown)
+
+
+# --- D37: certificate names in English letters only ----------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "name,ok",
+    [
+        ("Asha R. Desai", True),
+        ("Zoë D'Souza-Rao", True),
+        ("Anne-Marie O’Brien", True),
+        ("आशा राव", False),
+        ("આશા રાવ", False),
+        ("Asha राव", False),
+        ("Learner 1", False),
+        ("A", False),
+        ("-Asha", False),
+        ("Ash@ Rao", False),
+    ],
+)
+def test_the_certificate_name_rule(name, ok):
+    from apps.accounts.rules import certificate_name_ok
+
+    assert certificate_name_ok(name) is ok
+
+
+def test_registration_refuses_a_name_not_in_english_letters():
+    from apps.accounts.forms import RegistrationForm
+
+    form = RegistrationForm({"certificate_name": "आशा राव"})
+    form.is_valid()
+    assert "English letters" in str(form.errors["certificate_name"])
+
+
+def test_a_mentor_cannot_set_a_name_in_another_script(batch_mentor_client, learner):
+    before = learner.profile.certificate_name
+    batch_mentor_client.post(
+        reverse("mentor_learner_name", args=[learner.pk]), {"certificate_name": "आशा राव"}
+    )
+    learner.profile.refresh_from_db()
+    assert learner.profile.certificate_name == before
+
+
+def test_a_name_to_correct_is_held_back_and_shown_to_the_mentor(
+    batch_mentor_client, learner, course
+):
+    eligible(learner, course)
+    learner.profile.certificate_name = "आशा राव"  # e.g. typed before the rule existed
+    learner.profile.save()
+    with pytest.raises(services.NameNotPrintable):
+        services.issue(learner)
+    batch = learner.enrolment.batch
+    html = batch_mentor_client.get(reverse("mentor_batch", args=[batch.pk])).content.decode()
+    assert "Correct the name first" in html and "Approve all" not in html
+    response = batch_mentor_client.post(
+        reverse("mentor_batch_approve", args=[batch.pk]), follow=True
+    )
+    assert "held back" in response.content.decode() and not Certificate.objects.exists()
+    batch.auto_issue = True
+    batch.save()
+    assert services.auto_issue_after_submit(learner) is None and not Certificate.objects.exists()
+    batch_mentor_client.post(
+        reverse("mentor_learner_name", args=[learner.pk]), {"certificate_name": "Asha Rao"}
+    )
+    batch_mentor_client.post(reverse("mentor_batch_approve", args=[batch.pk]))
+    assert Certificate.objects.get(user=learner).snapshot["certificate_name"] == "Asha Rao"
+
+
+def test_the_learner_is_told_when_their_name_needs_correcting(client, learner, course):
+    eligible(learner, course)
+    learner.profile.certificate_name = "આશા રાવ"
+    learner.profile.save()
+    client.force_login(learner)
+    assert "must be in English letters" in client.get(reverse("my_certificate")).content.decode()
+
+
+def test_the_pdf_asks_only_for_latin_fonts(learner, course):
+    _, fetcher = pdf.render(
+        {**services.build_snapshot(learner, compute_results([learner.pk])[learner.pk], learner.enrolment.batch, timezone.localtime()), "completed_on": "2026-11-13"},
+        certificate_no="N", verify_code="K7QM2XR9TD",
+    )  # fmt: skip
+    fonts = {u for u in fetcher.requested if "/font/" in u or u.startswith("ccfr-asset:font/")}
+    assert fonts == {
+        "ccfr-asset:font/baloo2-latin.woff2",
+        "ccfr-asset:font/hind-latin-400.woff2",
+        "ccfr-asset:font/hind-latin-600.woff2",
+    }

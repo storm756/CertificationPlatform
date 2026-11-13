@@ -10,6 +10,7 @@ from allauth.account.models import EmailAddress
 from django.db.models import Max
 from django.utils import timezone
 
+from apps.accounts.rules import certificate_name_ok
 from apps.assessments.models import Attempt
 from apps.batches.models import Enrolment
 from apps.certificates import services as certificates
@@ -101,6 +102,7 @@ def batch_overview(batch, now=None) -> dict:
             "overall": r.overall_shown,
             "status": status_label(e, r, e.user_id in verified),
             "eligible": r.eligible,
+            "name_ok": certificate_name_ok(e.user.profile.certificate_name),
             "last_activity": last,
         }
         rows.append(row)
@@ -113,5 +115,6 @@ def batch_overview(batch, now=None) -> dict:
         "modules": modules,
         "stuck": stuck,
         "awaiting": awaiting,  # eligible and holding no certificate (§12)
+        "approvable": sum(1 for row in awaiting if row["name_ok"]),
         "issued_this_week": list(certificates.issued_recently(batch, now)),
     }

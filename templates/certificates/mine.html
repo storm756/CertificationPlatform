@@ -30,6 +30,7 @@
     <div class="state-panel tone--mustard"><span class="big-icon">{% icon "clock" %}</span>
       <h2>{% translate "You are eligible" %}</h2>
       <p class="muted">{% blocktranslate with overall=result.overall_shown grade=result.grade %}Overall {{ overall }}% · Grade {{ grade }}. Your mentor will approve your certificate. There is nothing more you need to do.{% endblocktranslate %}</p>
+      {% if not name_ok %}<p>{% translate "Your certificate name must be in English letters. Your mentor will correct it before approving; tell them how you want it spelled." %}</p>{% endif %}
     </div>
   {% elif state == "revoked" %}
     <div class="state-panel tone--danger"><span class="big-icon">{% icon "x" %}</span>

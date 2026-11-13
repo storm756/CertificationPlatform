@@ -53,6 +53,11 @@ def make_batch(db):
     return make
 
 
+def letters(n: int) -> str:
+    """1 -> "Aab": a fixed-width, letters-only tag, since certificate names allow no digits (D37)."""
+    return "".join(chr(97 + (n // 26**i) % 26) for i in (2, 1, 0)).capitalize()
+
+
 @pytest.fixture
 def make_user(db):
     counter = {"n": 0}
@@ -64,7 +69,7 @@ def make_user(db):
         EmailAddress.objects.create(user=user, email=email, primary=True, verified=verified)
         if role == Role.LEARNER:
             Profile.objects.create(
-                user=user, certificate_name=f"Learner {counter['n']}", date_of_birth=dob
+                user=user, certificate_name=f"Learner {letters(counter['n'])}", date_of_birth=dob
             )
         if batch is not None:
             Enrolment.objects.create(user=user, batch=batch)

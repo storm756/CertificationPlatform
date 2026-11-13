@@ -225,6 +225,11 @@ def batch_approve(request, pk):
     outcome = certificates.approve(request.user, batch, ids, request)
     if outcome["issued"]:
         messages.success(request, f"{outcome['issued']} certificate(s) issued.")
+    if outcome["held"]:
+        messages.warning(
+            request,
+            f"{outcome['held']} learner(s) held back: their certificate name is not in English letters. Correct the name on the learner's page, then approve.",
+        )
     if outcome["failed"]:
         messages.error(
             request,
@@ -235,7 +240,7 @@ def batch_approve(request, pk):
             request,
             f"{outcome['remaining']} learner(s) still waiting. Click Approve all again to continue.",
         )
-    if not outcome["issued"] and not outcome["failed"]:
+    if not outcome["issued"] and not outcome["failed"] and not outcome["held"]:
         messages.info(request, "Nobody was waiting for approval.")
     return redirect(f"{reverse('mentor_batch', args=[batch.pk])}#certificates")
 

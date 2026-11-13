@@ -17,6 +17,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.accounts.models import Role, User
+from apps.accounts.rules import certificate_name_ok
 from apps.audit.services import audit
 from apps.batches.models import Batch, Enrolment
 from apps.batches.scoping import batches_for
@@ -40,6 +41,10 @@ class NotEligible(CertificateError):
     def __init__(self, reasons):
         super().__init__("Not eligible")
         self.reasons = reasons
+
+
+class NameNotPrintable(CertificateError):
+    """The certificate name is not in English letters (D37): a mentor corrects it first."""
 
 
 class AlreadyIssued(CertificateError):
@@ -165,6 +170,8 @@ def issue(user, *, actor=None, auto=False, request=None, now=None) -> Certificat
                 raise NotEligible(result.blockers)
             batch = Enrolment.objects.select_related("batch").get(user_id=user.pk).batch
             learner = User.objects.select_related("profile").get(pk=user.pk)
+            if not certificate_name_ok(learner.profile.certificate_name):
+                raise NameNotPrintable  # before a serial is taken
             local = timezone.localtime(now)
             serial = codes.next_serial()
             number = codes.certificate_number(settings.CERTIFICATE_PREFIX, local.year, batch.centre_code, serial)  # fmt: skip
@@ -211,8 +218,8 @@ def auto_issue_after_submit(user, request=None) -> Certificate | None:
         return None
     try:
         return issue(user, auto=True, request=request)
-    except (NotEligible, AlreadyIssued):
-        return None
+    except (NotEligible, AlreadyIssued, NameNotPrintable):
+        return None  # a name to correct waits in "Awaiting approval" with a note for the mentor
     except Exception:
         logger.exception("certificate auto-issue failed for user %s", user.pk)
         audit("certificate.issue_failed", target=user, request=request, auto=True)
@@ -265,12 +272,14 @@ def approve(actor, batch, user_ids=None, request=None) -> dict:
     if user_ids is not None:
         wanted = {int(u) for u in user_ids}
         waiting = [uid for uid in waiting if uid in wanted]
+    held = set(names_to_correct(waiting))
+    waiting = [uid for uid in waiting if uid not in held]
     issued, failed = 0, 0
     for uid in waiting[: settings.CERTIFICATE_APPROVE_PER_REQUEST]:
         try:
             issue(User.objects.get(pk=uid), actor=actor, request=request)
             issued += 1
-        except (NotEligible, AlreadyIssued):
+        except (NotEligible, AlreadyIssued, NameNotPrintable):
             continue
         except Exception:
             logger.exception("certificate issue failed for user %s", uid)
@@ -278,8 +287,24 @@ def approve(actor, batch, user_ids=None, request=None) -> dict:
                 "certificate.issue_failed", actor=actor, request=request, user=uid, batch=batch.pk
             )
             failed += 1
-    audit("certificate.approved", actor=actor, target=batch, request=request, issued=issued, failed=failed, asked=len(waiting))  # fmt: skip
-    return {"issued": issued, "failed": failed, "remaining": max(len(waiting) - issued, 0)}
+    audit("certificate.approved", actor=actor, target=batch, request=request, issued=issued, failed=failed, held=len(held), asked=len(waiting))  # fmt: skip
+    return {
+        "issued": issued,
+        "failed": failed,
+        "held": len(held),
+        "remaining": max(len(waiting) - issued, 0),
+    }
+
+
+def names_to_correct(user_ids) -> list[int]:
+    """Learners whose certificate name is not in English letters (D37). They are held back
+    until a mentor or admin corrects the name."""
+    from apps.accounts.models import Profile
+
+    rows = Profile.objects.filter(user_id__in=list(user_ids)).values_list(
+        "user_id", "certificate_name"
+    )
+    return [uid for uid, name in rows if not certificate_name_ok(name)]
 
 
 def issued_recently(batch, now=None):

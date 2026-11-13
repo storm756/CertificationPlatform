@@ -14,3 +14,4 @@
 .code-form input { text-transform: uppercase; letter-spacing: .12em; }
 .print-name { font-family: var(--font-display); letter-spacing: .02em; text-transform: uppercase; overflow-wrap: anywhere; }
 .verify-note { max-width: 36rem; margin-inline: auto; text-align: center; font-size: .92rem; }
+.name-hold { color: var(--terracotta-ink); font-weight: 600; }

@@ -15,19 +15,14 @@ Rules for whoever edits it:
 <meta charset="utf-8">
 <title>Certificate {{ certificate_no }}</title>
 <style>
-  /* One @font-face per weight: WeasyPrint ignores weight ranges. Devanagari and Gujarati faces are
-     added only when the name uses those scripts, which keeps rendering fast. */
+  /* One @font-face per weight: WeasyPrint ignores weight ranges. Latin fonts only: certificate
+     names are in English letters (D37). */
   @font-face { font-family: "Baloo 2"; src: url("{{ asset }}font/baloo2-latin.woff2"); font-weight: 600; }
   @font-face { font-family: "Baloo 2"; src: url("{{ asset }}font/baloo2-latin.woff2"); font-weight: 700; }
   @font-face { font-family: "Baloo 2"; src: url("{{ asset }}font/baloo2-latin.woff2"); font-weight: 800; }
   @font-face { font-family: "Hind"; src: url("{{ asset }}font/hind-latin-400.woff2"); font-weight: 400; }
   @font-face { font-family: "Hind"; src: url("{{ asset }}font/hind-latin-600.woff2"); font-weight: 600; }
   @font-face { font-family: "Hind"; src: url("{{ asset }}font/hind-latin-600.woff2"); font-weight: 700; }
-  {% if scripts.devanagari %}
-  @font-face { font-family: "Baloo 2 Devanagari"; src: url("{{ asset }}font/baloo2-devanagari.woff2"); font-weight: 700; }
-  {% endif %}{% if scripts.gujarati %}
-  @font-face { font-family: "Baloo Bhai 2"; src: url("{{ asset }}font/baloobhai2-gujarati-500-800.woff2"); font-weight: 700; }
-  {% endif %}
 
   /* Colours are the site tokens (static/css/tokens.css): navy, mustard, ink-muted, mustard-deep. */
   @page { size: A4 landscape; margin: 0; }
@@ -44,7 +39,7 @@ Rules for whoever edits it:
   .corner--br { bottom: 6mm; right: 6mm; }
 
   .content { position: absolute; top: 17mm; left: 24mm; right: 24mm; text-align: center; }
-  .display { font-family: "Baloo 2", "Baloo 2 Devanagari", "Baloo Bhai 2", sans-serif; }
+  .display { font-family: "Baloo 2", sans-serif; }
 
   .logos { height: 21mm; }
   .logos img, .logos .emblem { display: inline-block; vertical-align: middle; margin: 0 9mm; }

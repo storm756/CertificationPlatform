@@ -17,6 +17,7 @@ from django.shortcuts import redirect, render
 from django_ratelimit.decorators import ratelimit
 
 from apps.accounts.models import Role
+from apps.accounts.rules import certificate_name_ok
 from apps.audit.services import client_ip
 from apps.results.policy import compute_results
 
@@ -48,7 +49,12 @@ def my_certificate(request):
     return render(
         request,
         "certificates/mine.html",
-        {"cert": cert, "result": result, "state": state},
+        {
+            "cert": cert,
+            "result": result,
+            "state": state,
+            "name_ok": certificate_name_ok(user.profile.certificate_name),
+        },
     )
 
 

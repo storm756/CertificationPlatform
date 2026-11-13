@@ -70,13 +70,14 @@
   <div class="grid-2 align-top">
     <section class="card stack" aria-labelledby="awaiting-title">
       <div class="section-title"><h2 id="awaiting-title">{% translate "Awaiting approval" %}</h2>
-        {% if overview.awaiting %}<form method="post" action="{% url 'mentor_batch_approve' batch.pk %}" data-confirm="{% blocktranslate count n=overview.awaiting|length %}Approve {{ n }} certificate?{% plural %}Approve {{ n }} certificates?{% endblocktranslate %}" data-confirm-body="{% translate 'Check that each printed name is spelled correctly. Certificates are issued immediately and cannot be changed.' %}" data-confirm-yes="{% translate 'Approve all' %}">{% csrf_token %}
-          <button class="btn btn-sm btn-primary" type="submit">{% icon "check" %}{% blocktranslate with n=overview.awaiting|length %}Approve all {{ n }}{% endblocktranslate %}</button></form>{% endif %}</div>
+        {% if overview.approvable %}<form method="post" action="{% url 'mentor_batch_approve' batch.pk %}" data-confirm="{% blocktranslate count n=overview.approvable %}Approve {{ n }} certificate?{% plural %}Approve {{ n }} certificates?{% endblocktranslate %}" data-confirm-body="{% translate 'Check that each printed name is spelled correctly. Certificates are issued immediately and cannot be changed.' %}" data-confirm-yes="{% translate 'Approve all' %}">{% csrf_token %}
+          <button class="btn btn-sm btn-primary" type="submit">{% icon "check" %}{% blocktranslate with n=overview.approvable %}Approve all {{ n }}{% endblocktranslate %}</button></form>{% endif %}</div>
       <ul class="result-list">
         {% for r in overview.awaiting %}
           <li class="result-item"><span class="avatar" aria-hidden="true">{{ r.name|initials }}</span>
-            <span><strong class="print-name">{{ r.name }}</strong><br><small class="muted">{% blocktranslate with overall=r.overall %}Overall {{ overall }}% · check the printed name{% endblocktranslate %}</small></span>
-            <form method="post" action="{% url 'mentor_batch_approve' batch.pk %}">{% csrf_token %}<input type="hidden" name="learner" value="{{ r.user.pk }}"><button class="btn btn-sm btn-outline" type="submit" aria-label="{% blocktranslate with name=r.name %}Approve the certificate for {{ name }}{% endblocktranslate %}">{% translate "Approve" %}</button></form></li>
+            <span><strong class="print-name">{{ r.name }}</strong><br>{% if r.name_ok %}<small class="muted">{% blocktranslate with overall=r.overall %}Overall {{ overall }}% · check the printed name{% endblocktranslate %}</small>{% else %}<small class="name-hold">{% icon "alert-triangle" "sm" %} {% translate "Correct the name first: it must be in English letters." %}</small>{% endif %}</span>
+            {% if r.name_ok %}<form method="post" action="{% url 'mentor_batch_approve' batch.pk %}">{% csrf_token %}<input type="hidden" name="learner" value="{{ r.user.pk }}"><button class="btn btn-sm btn-outline" type="submit" aria-label="{% blocktranslate with name=r.name %}Approve the certificate for {{ name }}{% endblocktranslate %}">{% translate "Approve" %}</button></form>
+            {% else %}<a class="btn btn-sm btn-outline" href="{% url 'mentor_learner' r.user.pk %}">{% translate "Correct name" %}</a>{% endif %}</li>
         {% empty %}
           <li class="muted">{% translate "No one is waiting." %}</li>
         {% endfor %}

@@ -36,7 +36,7 @@ if user is None:
     user = User.objects.create_user(EMAIL, PASSWORD, role="learner")
     EmailAddress.objects.create(user=user, email=EMAIL, primary=True, verified=True)
     Profile.objects.create(
-        user=user, certificate_name="E2E Learner", date_of_birth=date(2000, 1, 1)
+        user=user, certificate_name="Endtoend Learner", date_of_birth=date(2000, 1, 1)
     )
     batch, _ = Batch.objects.get_or_create(
         code="E2E", defaults={"name": "E2E batch", "accepting": True, "seat_limit": 40}
