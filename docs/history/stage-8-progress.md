@@ -32,7 +32,7 @@ Design notes: `docs/architecture.md` §30.
 | 8 | Engine labels translated (json_script table) | done |
 | 9 | Checks | done: ruff, 847 tests, `check --deploy`, `makemigrations --check` |
 | 10 | Docs: architecture §30, CHANGELOG, STATUS | done |
-| 11 | `import_draft_translations --apply` on the local DB (needs the user's OK), screenshots 390/1366 + 360 in hi/mr/gu, PR | next |
+| 11 | Draft import applied on the local DB (user approved, 3,604 lines); screenshots 390/1366 in 4 languages + 360 in hi/mr/gu (axe clean, no sideways scroll, kept in `screenshots/stage-8/`); PR opened | done |
 
 ## Decisions so far
 
