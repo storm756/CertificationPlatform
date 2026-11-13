@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-13: Rate limits are per user or per client, not one site-wide bucket
+
+- `/learn/check/` and the block endpoint (`/learn/m<n>/<unit>/block/<i>/`) are now limited per signed-in user (`key="user"`, still 120 an hour); the mentor reset link (`/reset/<token>/`) is limited per client IP through `apps.audit.services.client_ip` (still 30 an hour). Why: they used `key="ip"`, which reads `REMOTE_ADDR`, and behind Caddy that is always Caddy's own address, so every learner on the site shared each limit. The certificate verify page and registration already keyed correctly.
+- Tests prove two users, or two client IPs behind the same proxy address, get separate buckets (`tests/test_ratelimit_keys.py`).
+- Checked, no change: Caddy 2.11 with no `trusted_proxies` replaces a client-sent `X-Forwarded-For` with the real client address, so the left-most entry cannot be spoofed. This assumes nothing else sits in front of the edge Caddy.
+
 ## 2026-11-13: Stage 7, certificates (D36)
 
 - D36 records the lead's certificate decisions (answers D28): the title "Community Cyber First Responder (CCFR)", the one-page wording with the grade only (no percentages or hours), the three signatories in settings, the number `CCFR-<year>-<centre code>-<serial>`, NSQF wording and auto-issue off by default. Why: D28 left these to the lead before Stage 7.

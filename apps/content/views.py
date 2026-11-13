@@ -252,7 +252,7 @@ def complete(request, number, slug):
 
 @signin_required
 @require_POST
-@ratelimit(key="ip", rate="120/h", method="POST", block=True)
+@ratelimit(key="user", rate="120/h", method="POST", block=True)
 def block_action(request, number, slug, index):
     """Reveal an answer, or give a myth-or-fact verdict. The server holds the answer until asked."""
     unit = get_object_or_404(Unit, module__number=number, slug=slug)
@@ -275,7 +275,7 @@ def block_action(request, number, slug, index):
 
 @signin_required
 @require_POST
-@ratelimit(key="ip", rate="120/h", method="POST", block=True)
+@ratelimit(key="user", rate="120/h", method="POST", block=True)
 def check(request):
     """POST /learn/check: practice-pool questions only (§8.4)."""
     unit = _posted_unit(request)
