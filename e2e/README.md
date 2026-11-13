@@ -41,7 +41,9 @@ module 1 mark split for a few seconds and puts it back.
 
 1. On the server, add the invented data with the owner helper from `docs/runbook.md` (top of the file, `MANAGE=…`):
    ```bash
-   "${MANAGE[@]}" e2e_clean; "${MANAGE[@]}" e2e_seed 2>/dev/null > /tmp/e2e-manifest.json
+   "${MANAGE[@]}" e2e_clean
+   MANAGE_T=("${MANAGE[@]:0:5}" -T "${MANAGE[@]:5}")   # the same helper without a terminal, so the JSON can be redirected
+   "${MANAGE_T[@]}" e2e_seed 2>/dev/null > /tmp/e2e-manifest.json
    ```
    The command refuses any settings but dev and staging, so it cannot run on production. Copy `/tmp/e2e-manifest.json` to
    `e2e/manifest.json` on your PC (`scp`; it holds only ids and the invented accounts' addresses, no secrets).

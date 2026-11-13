@@ -101,7 +101,9 @@ csfr-platform/                (git repo, cloned to D:\ locally — not OneDrive)
 ├── importers/                one-time import of the existing material (booklet text, 405 MCQs, 90 challenges, films)
 ├── templates/                base.html, components/ (partials), allauth/ (element overrides), one folder per app
 ├── locale/                   our own gettext catalogues (hi, mr, gu; Django ships none for Gujarati)
-├── tests/                    pytest (unit, integration) · Playwright (journeys in §18)
+├── tests/                    pytest (unit, integration)
+├── e2e/                      Playwright journeys (§18), run in CI and by a person on staging
+├── loadtest/                 locust: 60 learners take the final together
 ├── deploy/                   compose.yml (per-env stack), compose.edge.yml (shared Caddy), compose.dev.yml, caddy/Caddyfile, backup/ + restore.sh, server/bootstrap.sh
 ├── static/                   css/ (tokens, fonts, base, app, stage), js/ (ccfr-shell.js, ...), fonts/ (woff2 + OFL licences), img/ (logos, icons.svg sprite)
 ├── design-reference/         the approved frontend prototype: the look only, never code to copy (D20)
@@ -584,7 +586,7 @@ content strings → t(key, lang):  key grammar  q:<question>:<field.path>  ·  b
 
 | Topic | Plan |
 | --- | --- |
-| Pipeline | git push → GitHub Actions (ruff, pytest with Postgres, Playwright) → `deploy/deploy.sh staging`, run **by a person** on the server (D29), → manual check → same script for **prod** (DB dump taken first) |
+| Pipeline | git push → GitHub Actions (ruff, pytest with Postgres, and on pull requests the Playwright journeys against an invented course, §33) → `deploy/deploy.sh staging`, run **by a person** on the server (D29), → manual check → same script for **prod** (DB dump taken first) |
 | Deploy script | `git pull → docker compose build → migrate (as csfr_owner) → collectstatic → restart`. **No content loading. Never touches Caddy**: `deploy.sh edge` installs the edge config (§32). |
 | Stacks | Staging and prod are two separate instances of `deploy/compose.yml` (own project name, `.env`, DB, volumes). One shared Caddy (`deploy/compose.edge.yml`, run from `/srv/csfr/edge/`) owns ports 80/443 and routes by host name over the `csfr-edge` network. See `docs/server-setup.md` and `docs/runbook.md`. |
 | One-time import | `importers/` loads the existing material once. It refuses to run if any content version was edited in the app. |
@@ -592,7 +594,7 @@ content strings → t(key, lang):  key grammar  q:<question>:<field.path>  ·  b
 | Restore drill | In a throwaway stack (never staging), before launch and every term; timed steps in `docs/runbook.md` §3 |
 | Monitoring | An uptime pinger (5 min) on `/healthz/`, Sentry (scrubbed), heartbeat pings from the `tasks` loop and both backups, a disk alert at 80%, the email budget alert (`docs/runbook.md` §9) |
 | Rollback | Redeploy the previous git tag. Migrations stay backward-compatible for one release. |
-| Load test | 60 simulated learners taking the final together before launch |
+| Load test | 60 simulated learners taking the final together on **staging** before launch (`loadtest/`, run by a person, §33); pass line p95 under 1 s |
 
 ---
 
@@ -617,6 +619,10 @@ content strings → t(key, lang):  key grammar  q:<question>:<field.path>  ·  b
 | 15 | Admin makes a new part counted | Preview → confirm | Results change, issued certificates don't |
 | 16 | A Marathi learner | Switches language mid-final | Same tokens, same score |
 | 17 | Server lost | Restore from last night's backup | Back within 2 hours, losing ≤1 hour of data |
+
+---
+
+Journeys 1–16 are in `e2e/tests/` (`01-registration`, `02-attempts`, `03-certificates-and-staff`); 17 is the restore drill (`docs/runbook.md` §3.1). How they are seeded and run: §33.
 
 ---
 
@@ -837,3 +843,21 @@ Where the build made a choice the design left open. Each is a one-line change if
 **Monitoring.** Sentry (off without `SENTRY_DSN`) sends no request bodies, cookies, headers, query strings, user, frame variables or email addresses (masked in messages, exception text and breadcrumbs). `apps/core/monitoring.py::ping` sends a bare GET to a heartbeat URL (off when empty; `<url>/fail` on failure; a failing ping never breaks the caller): `TASKS_PING_URL` after every `tasks` wake-up, `BACKUP_DB_PING_URL` and `BACKUP_MEDIA_PING_URL` from the backup scheduler (curl added to the backup image). `deploy/server/disk-check.sh` runs from the host's cron and pings `DISK_PING_URL` (`/fail` at 80%). The uptime pinger on `/healthz/` and the accounts are set up by a person (`docs/runbook.md` §9).
 
 **Runbook.** `docs/runbook.md`: deploy (with the edge step and its one-time move), the Stage 8 deploy steps, smoke test, roll back, the timed restore drill and a real restore, rotating every secret, a personal-data breach (DPDP: the Board and each person without delay, a detailed report within 72 hours), adding admins and mentors, loading the course onto a server from the private inputs, and monitoring.
+
+---
+
+## 33. Stage 10b implementation notes (journeys and load test)
+
+**Invented data, one marker.** `manage.py e2e_seed`, `e2e_clean` and `loadtest_seed` (`apps/core/e2e_data.py`) add and remove invented rows only. They refuse any settings module but `dev` and `staging`. Everything carries a marker: addresses ending `@e2e.example.com` or `@load.example.com`, batches `E2E-*` and `LT-01`, parts `E2E-J *`, questions `E2EJ-*`, the exam set `E2EJ` and sandbox module 91. They never edit an existing batch, learner, question, part or module, so they are safe on a database that holds the real course.
+
+**A complete course for the journeys.** The seed makes a released exam set `E2EJ` that follows the final's blueprint, batches with the set assigned, learners whose course parts are marked submitted (80%, results fall back to the stored score when an attempt has no items) with the final locked, open or done, staff with TOTP (an invented secret in the manifest; the tests compute the code), a sandbox module for the multiple-choice and the interactive gate parts, and one uncounted extra part in module 1 for journey 15. On an empty database (CI) a counted module with no published part gets one invented 100-mark part, so the course is complete; a real course is left alone. The invented questions say `RIGHT` in the right option's wording because the browser never gets a key.
+
+**Released papers are fixed by triggers.** The exam set and question versions cannot be deleted normally (D31). `e2e_clean` switches those triggers off for one transaction, which needs the table owner (development, and the owner helper on staging). If the app's own role runs it, the invented set and questions stay, harmlessly, and the output says so. The PDFs of removed certificates are deleted with their rows.
+
+**Journeys.** `e2e/` (`@playwright/test`, `BASE_URL` from the environment, one worker, in order). Staff sessions are made once in `global-setup.ts` because an authenticator code works once. Journeys 2 and 3 read the verification and guardian e-mails from Mailpit (`MAILPIT_URL`) and are skipped where there is none (staging sends real mail). Journeys 1–16 and one extra check (the `/admin/` 403) run at 1366px, or at 390px with `E2E_MOBILE=1`. Journey 1 shows the "closed" page only when no other batch is open on that database.
+
+**CI.** A separate `e2e` job on pull requests: Postgres and Mailpit services, `migrate`, `e2e_seed`, the dev server, Chromium, `npx playwright test`; the report is kept on failure.
+
+**Load test.** `loadtest/locustfile.py`: 60 learners sign in, wait for each other, then take the whole final at once (page, answer, review, submit, result). The verdict (exit code 0 or 1) is p95 of the exam requests under 1 s with no failures; sign-in is reported but not counted. A person runs it on staging (`loadtest/README.md`); Claude ran only a 5-learner smoke test on a local stack.
+
+**`/admin/` for someone who may not use it** (found in 10a): `/admin/login/` answers 403 (logged as `access.denied`) to a signed-in learner or mentor, and sends a signed-out visitor to the real sign-in page with `next`. Before, the sign-in page sent them straight back and the browser looped.
