@@ -393,7 +393,10 @@ def test_interactive_pages_have_no_inline_script_or_style_and_load_the_bundle(
 ):
     attempt = start(learner_client, interactive_part())
     html = learner_client.get(reverse("attempt_page", args=[attempt.pk])).content.decode()
-    assert not re.search(r"<script(?![^>]*\bsrc=)", html) and not re.search(r"\sstyle=", html)
+    # The only inline <script> allowed is a JSON data block (the engine labels, json_script): the
+    # browser never runs it, so the CSP stays script-src self.
+    executable = r'<script(?![^>]*\bsrc=)(?![^>]*type="application/json")'
+    assert not re.search(executable, html) and not re.search(r"\sstyle=", html)
     assert "js/engine.js" in html and "css/engine.css" in html and "data-engine" in html
     assert "noscript" in html  # a message for browsers without JavaScript
 
@@ -780,7 +783,7 @@ def test_the_engine_bundle_is_built_from_the_current_source_and_registers_all_fo
 def test_the_colour_triage_buttons_carry_a_name_and_a_shape_not_just_a_colour():
     bundle = (ROOT / "static" / "js" / "engine.js").read_text(encoding="utf-8")
     for name, shape in (("Red", "■"), ("Amber", "▲"), ("Yellow", "◆"), ("Green", "●")):
-        assert f'name: "{name}"' in bundle and shape in bundle
+        assert f'name: t("{name}")' in bundle and shape in bundle  # translated (Stage 8)
     css = (ROOT / "static" / "css" / "engine.css").read_text(encoding="utf-8")
     for tone in ("red", "amber", "yellow", "green"):
         assert f".tri--{tone}" in css

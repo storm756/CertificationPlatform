@@ -1,5 +1,6 @@
 /* mc (with the four colour-triage buttons), cards, spot, hotspot, pick. */
 
+import { t } from "../i18n";
 import { TONES, clear, el, nodes, svg } from "../dom";
 import type { Base, Ctx, Tokened } from "../types";
 import { asList, asMap, counter, doneToggle, note } from "./shared";
@@ -12,7 +13,7 @@ interface MCQ extends Base {
 export function renderMC(ctx: Ctx<MCQ>): void {
   const { q } = ctx;
   let chosen = (q.response.choice as string) ?? "";
-  const group = el("div", { class: q.triage ? "tri" : "opts", role: "radiogroup", "aria-label": "Choose one answer" });
+  const group = el("div", { class: q.triage ? "tri" : "opts", role: "radiogroup", "aria-label": t("Choose one answer") });
   const buttons: [string, HTMLButtonElement][] = [];
   for (const option of q.options) {
     const tone = option.tone ? TONES[option.tone] : null;
@@ -50,14 +51,14 @@ export function renderCards(ctx: Ctx<CardsQ>): void {
     clear(stage);
     if (index >= q.items.length) {
       stage.append(
-        note("All cards are answered. Use Previous to change one."),
-        el("button", { type: "button", class: "btn btn-outline", onclick: () => { index = q.items.length - 1; draw(); } }, "Previous"),
+        note(t("All cards are answered. Use Previous to change one.")),
+        el("button", { type: "button", class: "btn btn-outline", onclick: () => { index = q.items.length - 1; draw(); } }, t("Previous")),
       );
       return;
     }
     const item = q.items[index];
     stage.append(counter(`Card ${index + 1} of ${q.items.length}`), el("div", { class: "eng-card", "aria-live": "polite" }, item.text));
-    const row = el("div", { class: "tri", role: "group", "aria-label": "Your verdict" });
+    const row = el("div", { class: "tri", role: "group", "aria-label": t("Your verdict") });
     for (const label of q.labels) {
       const tone = label.tone ? TONES[label.tone] : null;
       const picked = answers[item.token] === label.token;
@@ -76,7 +77,7 @@ export function renderCards(ctx: Ctx<CardsQ>): void {
       row.append(button);
     }
     stage.append(row);
-    if (index > 0) stage.append(el("button", { type: "button", class: "btn btn-ghost", onclick: () => { index -= 1; draw(); } }, "Previous"));
+    if (index > 0) stage.append(el("button", { type: "button", class: "btn btn-ghost", onclick: () => { index -= 1; draw(); } }, t("Previous")));
   };
   draw();
 }
@@ -141,7 +142,7 @@ export function renderHotspot(ctx: Ctx<HotspotQ>): void {
     status.textContent = `${picked.size} selected`;
   };
   if (!q.image.available || !ctx.imageUrl) {
-    ctx.root.append(note("The picture for this question is not available yet."));
+    ctx.root.append(note(t("The picture for this question is not available yet.")));
     return;
   }
   // The picture is an uploaded, re-encoded raster image. The tappable regions are drawn here as SVG

@@ -184,7 +184,8 @@ def test_attempt_pages_have_no_inline_scripts_or_styles(learner_client, make_par
         reverse("attempt_review", args=[attempt.pk]),
     ):
         html = learner_client.get(url).content.decode()
-        assert not re.search(r"<script(?![^>]*\bsrc=)", html), url
+        # a JSON data block (json_script) is never executed, so it is allowed
+        assert not re.search(r'<script(?![^>]*\bsrc=)(?![^>]*type="application/json")', html), url
         assert not re.search(r"\sstyle=", html) and not re.search(r"\son[a-z]+=", html), url
 
 

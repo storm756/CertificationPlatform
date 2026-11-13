@@ -1,6 +1,29 @@
 /* CCFR interactive engine. Built from engine/src with tools/build_engine.mjs; do not edit. */
 "use strict";
 (() => {
+  // ../engine/src/i18n.ts
+  var table = null;
+  function load() {
+    var _a2;
+    if (table === null) {
+      table = {};
+      const node = document.getElementById("engine-labels");
+      try {
+        const parsed = node ? JSON.parse((_a2 = node.textContent) != null ? _a2 : "{}") : {};
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) table = parsed;
+      } catch {
+        table = {};
+      }
+    }
+    return table;
+  }
+  function t(text, vars) {
+    const found = load()[text];
+    let out = typeof found === "string" && found ? found : text;
+    if (vars) for (const [key, value] of Object.entries(vars)) out = out.split(`{${key}}`).join(String(value));
+    return out;
+  }
+
   // ../engine/src/dom.ts
   var SVG_NS = "http://www.w3.org/2000/svg";
   function apply(node, attrs) {
@@ -35,21 +58,21 @@
     while (node.firstChild) node.removeChild(node.firstChild);
   }
   var TONES = {
-    red: { name: "Red", shape: "■" },
-    amber: { name: "Amber", shape: "▲" },
-    yellow: { name: "Yellow", shape: "◆" },
-    green: { name: "Green", shape: "●" }
+    red: { name: t("Red"), shape: "■" },
+    amber: { name: t("Amber"), shape: "▲" },
+    yellow: { name: t("Yellow"), shape: "◆" },
+    green: { name: t("Green"), shape: "●" }
   };
 
   // ../engine/src/formats/shared.ts
-  var FINISHED = "I have finished this question";
-  var MARKED = "✓ Marked as finished";
+  var FINISHED = () => t("I have finished this question");
+  var MARKED = () => t("✓ Marked as finished");
   function doneToggle(_ctx, done, onChange) {
-    const button = el("button", { type: "button", class: "btn btn-outline eng-done", "aria-pressed": String(done) }, done ? MARKED : FINISHED);
+    const button = el("button", { type: "button", class: "btn btn-outline eng-done", "aria-pressed": String(done) }, done ? MARKED() : FINISHED());
     button.addEventListener("click", () => {
       const next = button.getAttribute("aria-pressed") !== "true";
       button.setAttribute("aria-pressed", String(next));
-      button.textContent = next ? MARKED : FINISHED;
+      button.textContent = next ? MARKED() : FINISHED();
       onChange(next);
     });
     return button;
@@ -75,12 +98,12 @@
       const log = el("div", { class: "eng-log", "aria-live": "polite" });
       for (const step of q.steps) {
         log.append(el("div", { class: "eng-bub eng-bub--them" }, el("span", { class: "eng-who" }, q.who), step.say));
-        if (step.chosen !== void 0) log.append(el("div", { class: "eng-bub eng-bub--me" }, el("span", { class: "eng-who" }, "You"), (_a2 = step.text) != null ? _a2 : ""));
+        if (step.chosen !== void 0) log.append(el("div", { class: "eng-bub eng-bub--me" }, el("span", { class: "eng-who" }, t("You")), (_a2 = step.text) != null ? _a2 : ""));
       }
       stage.append(log);
       const last = q.steps[q.steps.length - 1];
       if (last && last.replies) {
-        const box = el("div", { class: "eng-replies", role: "group", "aria-label": "What do you say or do?" });
+        const box = el("div", { class: "eng-replies", role: "group", "aria-label": t("What do you say or do?") });
         for (const reply of last.replies) {
           const button = el("button", { type: "button", class: "eng-reply" }, reply.text);
           button.addEventListener("click", async () => {
@@ -99,7 +122,7 @@
         }
         stage.append(box);
       } else {
-        stage.append(el("p", { class: "eng-note" }, "That is the end of the conversation. Your replies are saved."));
+        stage.append(el("p", { class: "eng-note" }, t("That is the end of the conversation. Your replies are saved.")));
       }
       stage.append(el("p", { class: "eng-count" }, `Step ${Math.min(replies.length + 1, q.total_steps)} of ${q.total_steps}`));
     };
@@ -111,7 +134,7 @@
     var _a2;
     const { q } = ctx;
     let chosen = (_a2 = q.response.choice) != null ? _a2 : "";
-    const group = el("div", { class: q.triage ? "tri" : "opts", role: "radiogroup", "aria-label": "Choose one answer" });
+    const group = el("div", { class: q.triage ? "tri" : "opts", role: "radiogroup", "aria-label": t("Choose one answer") });
     const buttons = [];
     for (const option of q.options) {
       const tone = option.tone ? TONES[option.tone] : null;
@@ -143,17 +166,17 @@
       clear(stage);
       if (index >= q.items.length) {
         stage.append(
-          note("All cards are answered. Use Previous to change one."),
+          note(t("All cards are answered. Use Previous to change one.")),
           el("button", { type: "button", class: "btn btn-outline", onclick: () => {
             index = q.items.length - 1;
             draw();
-          } }, "Previous")
+          } }, t("Previous"))
         );
         return;
       }
       const item = q.items[index];
       stage.append(counter(`Card ${index + 1} of ${q.items.length}`), el("div", { class: "eng-card", "aria-live": "polite" }, item.text));
-      const row = el("div", { class: "tri", role: "group", "aria-label": "Your verdict" });
+      const row = el("div", { class: "tri", role: "group", "aria-label": t("Your verdict") });
       for (const label of q.labels) {
         const tone = label.tone ? TONES[label.tone] : null;
         const picked = answers[item.token] === label.token;
@@ -175,7 +198,7 @@
       if (index > 0) stage.append(el("button", { type: "button", class: "btn btn-ghost", onclick: () => {
         index -= 1;
         draw();
-      } }, "Previous"));
+      } }, t("Previous")));
     };
     draw();
   }
@@ -228,7 +251,7 @@
       status.textContent = `${picked.size} selected`;
     };
     if (!q.image.available || !ctx.imageUrl) {
-      ctx.root.append(note("The picture for this question is not available yet."));
+      ctx.root.append(note(t("The picture for this question is not available yet.")));
       return;
     }
     const image = el("img", { class: "eng-hot__img", src: ctx.imageUrl, alt: q.image.alt });
@@ -394,7 +417,7 @@
         column.append(el("button", { type: "button", class: "eng-xclue", onclick: () => {
           var _a2;
           word = i;
-          cell = (_a2 = w.cells.find((t) => !letters[t])) != null ? _a2 : w.cells[0];
+          cell = (_a2 = w.cells.find((t2) => !letters[t2])) != null ? _a2 : w.cells[0];
           paint();
         } }, el("span", { class: "eng-xn" }, String(w.number)), el("span", {}, w.clue)));
       });
@@ -432,7 +455,7 @@
     const draw = () => {
       clear(stage);
       const left = q.items.filter((it) => !placed[it.token]);
-      stage.append(counter(left.length ? `Tap a card, then tap where it belongs (${left.length} left)` : "All placed. Tap a card to move it."));
+      stage.append(counter(left.length ? t("Tap a card, then tap where it belongs ({n} left)", { n: left.length }) : t("All placed. Tap a card to move it.")));
       const chip = (item) => el("button", { type: "button", class: "eng-chip", "aria-pressed": String(selected === item.token), onclick: () => {
         selected = selected === item.token ? null : item.token;
         draw();
@@ -473,9 +496,9 @@
     const owner = (right) => Object.keys(links).find((l) => links[l] === right);
     const draw = () => {
       clear(stage);
-      stage.append(counter("Tap an item on the left, then its partner on the right. Tap again to change a pair."));
-      const left = el("div", { class: "eng-col" }, el("p", { class: "eng-label" }, q.left_label || "Situation"));
-      const right = el("div", { class: "eng-col" }, el("p", { class: "eng-label" }, q.right_label || "Goes with"));
+      stage.append(counter(t("Tap an item on the left, then its partner on the right. Tap again to change a pair.")));
+      const left = el("div", { class: "eng-col" }, el("p", { class: "eng-label" }, q.left_label || t("Situation")));
+      const right = el("div", { class: "eng-col" }, el("p", { class: "eng-label" }, q.right_label || t("Goes with")));
       q.lefts.forEach((l, i) => {
         left.append(
           el("button", { type: "button", class: "eng-pair", "aria-pressed": String(selected === l.token), onclick: () => {
@@ -524,12 +547,12 @@
     ctx.root.append(stage);
     const draw = () => {
       clear(stage);
-      stage.append(el("p", { class: "eng-label" }, "Your order"));
+      stage.append(el("p", { class: "eng-label" }, t("Your order")));
       const list = el("ol", { class: "eng-seq" });
-      if (!sequence.length) list.append(el("li", { class: "eng-empty" }, "Tap the steps below in the order you would do them."));
+      if (!sequence.length) list.append(el("li", { class: "eng-empty" }, t("Tap the steps below in the order you would do them.")));
       sequence.forEach((token, position) => {
         list.append(
-          el("li", {}, el("button", { type: "button", title: "Tap to remove", onclick: () => {
+          el("li", {}, el("button", { type: "button", title: t("Tap to remove"), onclick: () => {
             sequence.splice(position, 1);
             ctx.save({ sequence });
             draw();
@@ -539,7 +562,7 @@
       stage.append(list);
       const rest = q.items.filter((i) => !sequence.includes(i.token));
       if (rest.length) {
-        stage.append(el("p", { class: "eng-label" }, "Steps to place"));
+        stage.append(el("p", { class: "eng-label" }, t("Steps to place")));
         stage.append(el("div", { class: "eng-chips" }, ...rest.map((i) => el("button", { type: "button", class: "eng-chip", onclick: () => {
           sequence.push(i.token);
           ctx.save({ sequence });
@@ -592,7 +615,7 @@
       }
       stage.append(slots);
       const slot = q.slots.find((s) => s.token === current);
-      stage.append(el("p", { class: "eng-label" }, slot ? `Cards for: ${slot.label}` : "Tap a slot to change it"));
+      stage.append(el("p", { class: "eng-label" }, slot ? t("Cards for: {label}", { label: slot.label }) : t("Tap a slot to change it")));
       const used = new Set(Object.values(filled));
       const pool = el("div", { class: "eng-chips" });
       for (const chip of q.chips) {
@@ -621,7 +644,7 @@
     let done = Boolean(q.response.done);
     const current = (row) => row.token in values ? values[row.token] : row.start;
     const push = () => ctx.save({ values, done });
-    const device = el("div", { class: "eng-device" }, el("div", { class: "eng-device__bar" }, el("span", {}, q.screen || "Settings"), el("small", {}, q.device)));
+    const device = el("div", { class: "eng-device" }, el("div", { class: "eng-device__bar" }, el("span", {}, q.screen || t("Settings")), el("small", {}, q.device)));
     for (const row of q.rows) {
       const line = el("div", { class: "eng-setrow" }, el("span", { class: "eng-setrow__label" }, row.text));
       if (row.kind === "switch") {
@@ -738,7 +761,7 @@
     const q = JSON.parse((_b = root.dataset.q) != null ? _b : "{}");
     const draw = RENDERERS[q.format];
     if (!draw || !form || !field) {
-      root.textContent = "This question can't be shown.";
+      root.textContent = t("This question can't be shown.");
       return;
     }
     const ctx = {

@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ccfr\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 20:29+0530\n"
+"POT-Creation-Date: 2026-11-13 20:41+0530\n"
 "PO-Revision-Date: 2026-11-13 21:00+0530\n"
 "Language-Team: CCFR translators (drafts pending review)\n"
 "Language: mr\n"
@@ -395,6 +395,154 @@ msgid "Nobody was waiting for approval."
 msgstr "कोणीही मंजुरीच्या प्रतीक्षेत नव्हते."
 
 # draft: needs review
+#: apps/questions/engine_labels.py:11
+#| msgid "Read"
+msgid "Red"
+msgstr "लाल"
+
+# draft: needs review
+#: apps/questions/engine_labels.py:12
+#| msgid "Remember"
+msgid "Amber"
+msgstr "नारिंगी"
+
+# draft: needs review
+#: apps/questions/engine_labels.py:13
+msgid "Yellow"
+msgstr "पिवळा"
+
+# draft: needs review
+#: apps/questions/engine_labels.py:14
+msgid "Green"
+msgstr "हिरवा"
+
+# draft: needs review
+#: apps/questions/engine_labels.py:15
+#, python-brace-format
+msgid "Tap a card, then tap where it belongs ({n} left)"
+msgstr "एका कार्डवर टॅप करा, मग ते जिथे बसते तिथे टॅप करा ({n} बाकी)"
+
+# draft: needs review
+#: apps/questions/engine_labels.py:16
+msgid "All placed. Tap a card to move it."
+msgstr "सर्व ठेवले. कार्ड हलवण्यासाठी त्यावर टॅप करा."
+
+# draft: needs review
+#: apps/questions/engine_labels.py:17
+msgid "Tap an item on the left, then its partner on the right. Tap again to change a pair."
+msgstr ""
+"डावीकडील एखाद्या गोष्टीवर टॅप करा, मग उजवीकडील तिच्या जोडीवर. जोडी बदलण्यासाठी पुन्हा टॅप करा."
+
+# draft: needs review
+#: apps/questions/engine_labels.py:18
+#| msgid "Registration"
+msgid "Situation"
+msgstr "परिस्थिती"
+
+# draft: needs review
+#: apps/questions/engine_labels.py:19
+msgid "Goes with"
+msgstr "कशाशी जुळते"
+
+# draft: needs review
+#: apps/questions/engine_labels.py:20
+#| msgid "Your journey"
+msgid "Your order"
+msgstr "तुमचा क्रम"
+
+# draft: needs review
+#: apps/questions/engine_labels.py:21
+msgid "Tap the steps below in the order you would do them."
+msgstr "खालील टप्पे तुम्ही ज्या क्रमाने कराल त्या क्रमाने टॅप करा."
+
+# draft: needs review
+#: apps/questions/engine_labels.py:22
+#| msgid "Topics to revisit"
+msgid "Tap to remove"
+msgstr "काढण्यासाठी टॅप करा"
+
+# draft: needs review
+#: apps/questions/engine_labels.py:23
+msgid "Steps to place"
+msgstr "ठेवायचे टप्पे"
+
+# draft: needs review
+#: apps/questions/engine_labels.py:24
+#, python-brace-format
+msgid "Cards for: {label}"
+msgstr "यासाठी कार्डे: {label}"
+
+# draft: needs review
+#: apps/questions/engine_labels.py:25
+msgid "Tap a slot to change it"
+msgstr "बदलण्यासाठी एखाद्या जागेवर टॅप करा"
+
+# draft: needs review
+#: apps/questions/engine_labels.py:26
+msgid "You"
+msgstr "तुम्ही"
+
+# draft: needs review
+#: apps/questions/engine_labels.py:27
+msgid "What do you say or do?"
+msgstr "तुम्ही काय बोलाल किंवा कराल?"
+
+# draft: needs review
+#: apps/questions/engine_labels.py:28
+msgid "That is the end of the conversation. Your replies are saved."
+msgstr "संभाषण इथे संपते. तुमची उत्तरे जतन झाली आहेत."
+
+# draft: needs review
+#: apps/questions/engine_labels.py:29
+#| msgid "Choose one answer."
+msgid "Choose one answer"
+msgstr "एक उत्तर निवडा"
+
+# draft: needs review
+#: apps/questions/engine_labels.py:30
+msgid "All cards are answered. Use Previous to change one."
+msgstr "सर्व कार्डांची उत्तरे दिली आहेत. एखादे बदलण्यासाठी 'मागील' वापरा."
+
+# draft: needs review
+#: apps/questions/engine_labels.py:31 templates/assessments/_question_panel.html:39
+#: templates/learn/unit.html:24
+msgid "Previous"
+msgstr "मागील"
+
+# draft: needs review
+#: apps/questions/engine_labels.py:32
+#| msgid "Your certificate"
+msgid "Your verdict"
+msgstr "तुमचा निर्णय"
+
+# draft: needs review
+#: apps/questions/engine_labels.py:33
+#| msgid "The pre-test is not available yet."
+msgid "The picture for this question is not available yet."
+msgstr "या प्रश्नाचे चित्र अजून उपलब्ध नाही."
+
+# draft: needs review
+#: apps/questions/engine_labels.py:34
+msgid "Settings"
+msgstr "सेटिंग्ज"
+
+# draft: needs review
+#: apps/questions/engine_labels.py:35
+msgid "I have finished this question"
+msgstr "मी हा प्रश्न पूर्ण केला आहे"
+
+# draft: needs review
+#: apps/questions/engine_labels.py:36
+msgid "✓ Marked as finished"
+msgstr "✓ पूर्ण म्हणून खूण केली"
+
+# draft: needs review
+#: apps/questions/engine_labels.py:37
+#| msgid "The question must be an object."
+msgid "This question can't be shown."
+msgstr "हा प्रश्न दाखवता येत नाही."
+
+# draft: needs review
 #: apps/questions/models.py:9
 msgid "Multiple choice (part A)"
 msgstr "बहुपर्यायी (भाग A)"
@@ -773,11 +921,6 @@ msgstr "पुनरावलोकनासाठी खूण करा"
 #: templates/assessments/_question_panel.html:36
 msgid "Save answer"
 msgstr "उत्तर जतन करा"
-
-# draft: needs review
-#: templates/assessments/_question_panel.html:39 templates/learn/unit.html:24
-msgid "Previous"
-msgstr "मागील"
 
 # draft: needs review
 #: templates/assessments/_question_panel.html:40 templates/learn/unit.html:25
