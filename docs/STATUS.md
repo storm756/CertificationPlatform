@@ -27,14 +27,14 @@ If two of these still disagree, or something is missing, **stop and ask in chat*
 | 4. Learning content | ✅ Merged (PR #7), content follow-up merged (PR #8) | [stage-4.md](history/stage-4.md), [stage-4-content.md](history/stage-4-content.md) |
 | 5. Results, final exam, pre-test, dashboard | ✅ Merged (PR #9, `505c33f`) | [stage-5.md](history/stage-5.md) |
 | Decisions D32–D35 | 🟡 PR from `decisions-d32-d35`: attempt limit (D32), lessons need sign-in (D34), films served by Caddy with range requests (D35) | — |
-| Deploy fix: Caddy reload | 🟡 PR from `deploy-caddy-reload`: `deploy/caddy/` is mounted as a directory and `deploy.sh` validates then reloads Caddy on every deploy | — |
+| Deploy fix: Caddy reload | ✅ Merged (PR #11, `fcce8b6`): `deploy/caddy/` is mounted as a directory and `deploy.sh` validates then reloads Caddy on every deploy. Deployed to staging 13 Nov 2026; the reload ran and the config was valid. | — |
 | 6. Staff tools | 🟡 On its branch: `stage-6-review` (2 commits on `505c33f`, the last marked "WIP, review not finished"); `stage-6` is the older copy on the old Stage 5 base | — |
 | 7–10 | ⬜ In order. One stage = one branch = one PR. | — |
 
 Earlier table and open items: [status-2026-11-12.md](history/status-2026-11-12.md).
 
 **Live addresses.**
-* Staging `https://staging.cyberfirstresponse.io` **still runs Stage 0** until a person deploys (D29): on 12 Nov `/` and `/healthz/` returned 200, `/register/` and `/learn/` 404. After deploying `main` (now with the Caddyfile, `compose.edge.yml` media mounts and `deploy.sh` volume changes from D34/D35), the person loads the private course inputs (handoff §4c) and checks `/register/`, `/learn/` and a film.
+* Staging `https://staging.cyberfirstresponse.io` was **deployed on 13 Nov 2026 at `fcce8b6`** (Stage 5 code, D32–D35, Caddy validated and reloaded). Checked after: `/healthz/` and `/register/` return 200, `/learn/` goes to sign-in. It is a clean install with **no course loaded**: next the person loads the private course inputs (handoff notes §2–§3), creates an admin with 2FA, and checks a learner flow and a film. The server also reports "System restart required".
 * Production `https://cyberfirstresponse.io` **returns 502 on purpose** until launch.
 
 **Local course database.** The full course (55 readings, 509 live questions with hints, 18 graded parts, 9 films and handouts) exists only in local Docker databases and the private `content-data/`. On the lead's PC it is Compose project `csfr-restore` (restored 13 Nov 2026). Never `down -v` it.
