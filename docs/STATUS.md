@@ -33,8 +33,9 @@ If two of these still disagree, or something is missing, **stop and ask in chat*
 | Fix: per-client rate limits | ✅ Merged (PR #15, `057c67b`). `/learn/check` and the block endpoint are limited per signed-in user, the mentor reset link per client IP (X-Forwarded-For). Before this, Caddy's address made each limit one site-wide bucket. Caddy 2.11 was checked: it replaces a client-sent X-Forwarded-For, so the left-most entry is the real client. This holds only while nothing else (a CDN, another proxy) sits in front of the edge Caddy; if that changes, set `trusted_proxies` and revisit `client_ip`. | — |
 | 8. Multilingual | ✅ Merged (PR #16, `a7d0b93`). UI catalogues and course translations are **drafts** until the team reviews them; assessments show reviewed lines only (D24). | [stage-8-progress.md](history/stage-8-progress.md) |
 | 9. Landing page and public pages | ✅ Merged (PR #17, `ab4e136`). Landing, privacy, terms, grievance, help, 404/500, favicon and social image; draft legal text; people section is a placeholder until consent. | [stage-9-progress.md](history/stage-9-progress.md) |
-| Stage 9 follow-up: sample certificate | 🟡 PR from `stage-9-fixes` (review session). The landing page's certificate image was the old prototype (old name, AICTE and NCSRC logos). Replaced by `static/img/certificate-sample.png`, rendered from the real template by `manage.py certificate_sample`; **re-run it whenever the certificate template changes**. | CHANGELOG 2026-11-14 |
-| 10 | ⬜ Next. One stage = one branch = one PR. | — |
+| Stage 9 follow-up: sample certificate | ✅ Merged (PR #18, `efc611a`). The landing page's certificate image was the old prototype (old name, AICTE and NCSRC logos). Replaced by `static/img/certificate-sample.png`, rendered from the real template by `manage.py certificate_sample`; **re-run it whenever the certificate template changes**. | CHANGELOG 2026-11-14 |
+| 10a. Launch hardening: headers, rate limits, edge Caddy, monitoring, runbook | 🟡 In progress on `stage-10a`. | [stage-10-progress.md](history/stage-10-progress.md) |
+| 10b. Playwright journeys and load test | ⬜ After 10a. | — |
 
 Earlier table and open items: [status-2026-11-12.md](history/status-2026-11-12.md).
 
