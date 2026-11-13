@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Deploy one stack on the VPS.   Usage: deploy/deploy.sh <staging|prod> [git-ref]
+# Deploy one stack on the VPS.   Usage: deploy/deploy.sh <staging|prod|edge> [git-ref]
+#   edge: the shared Caddy for both stacks, from its own fixed place (deploy/edge.sh, default ref main).
+#   staging|prod never touch Caddy any more.
 #   pull -> build -> (prod: DB dump first) -> migrate as csfr_owner -> collectstatic -> restart web + tasks
 # Run as the `deploy` user on the server. See docs/server-setup.md for the directory layout:
 #   /srv/csfr/<env>/src       git checkout (cloned by this script on first run)
@@ -8,7 +10,11 @@
 set -euo pipefail
 
 ENV_NAME="${1:-}"
-case "$ENV_NAME" in staging|prod) ;; *) echo "usage: $0 <staging|prod> [git-ref]" >&2; exit 2 ;; esac
+case "$ENV_NAME" in
+  staging|prod) ;;
+  edge) shift; exec "$(dirname "$0")/edge.sh" "$@" ;;
+  *) echo "usage: $0 <staging|prod|edge> [git-ref]" >&2; exit 2 ;;
+esac
 REF="${2:-main}"
 
 ROOT="${CSFR_ROOT:-/srv/csfr}"
@@ -69,17 +75,12 @@ echo "==> collectstatic"
 
 echo "==> restarting"
 "${COMPOSE[@]}" up -d --remove-orphans
-docker compose -f compose.edge.yml up -d
-# Caddy reads its config only at start, and `up -d` does not recreate it when just the Caddyfile changed.
-# Validate first: a broken file aborts the deploy and Caddy keeps serving the config it already has.
-EDGE=(docker compose -f compose.edge.yml exec -T caddy caddy)
-echo "==> reloading Caddy"
-"${EDGE[@]}" validate --config /etc/caddy/Caddyfile \
-  || { echo "Caddyfile is invalid: Caddy was NOT reloaded and still runs its previous config" >&2; exit 1; }
-"${EDGE[@]}" reload --config /etc/caddy/Caddyfile --force
 "${COMPOSE[@]}" up -d --wait web
 # tasks runs the same image as web; `up -d` recreates it with the new image, so it never runs old code.
 "${COMPOSE[@]}" up -d tasks
 
 echo "==> done: $ENV_NAME is running $(git -C "$SRC" rev-parse --short HEAD)"
 docker image prune -f >/dev/null
+if ! docker ps --filter "label=com.docker.compose.project=csfr-edge" --filter status=running -q | grep -q .; then
+  echo "WARNING: the edge Caddy (csfr-edge) is not running, so the site is unreachable. Run: $0 edge" >&2
+fi
