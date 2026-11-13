@@ -47,8 +47,10 @@ class Command(BaseCommand):
             sources.append(
                 [e for e in drafts.read_sheets(labels) if e.where.startswith("_framework")]
             )
+        plurals: dict[str, dict] = {}
         if extra:
             data = json.loads(Path(extra).read_text("utf-8"))
+            plurals = data.pop("__plural__", {})  # {msgid: {"hi": [one, other], …}}
             sources.insert(0, [drafts.Entry(k, v, "extra", "extra") for k, v in data.items()])
         for entries in sources:
             for entry in entries:
@@ -60,6 +62,16 @@ class Command(BaseCommand):
             po = polib.pofile(str(path), wrapwidth=100)
             filled, skipped, missing = 0, [], 0
             for entry in po:
+                if entry.msgid_plural and not entry.translated() and entry.msgid in plurals:
+                    forms = plurals[entry.msgid].get(code, [])
+                    want = [tokens(entry.msgid), tokens(entry.msgid_plural)]
+                    if len(forms) == 2 and [tokens(f) for f in forms] == want:
+                        entry.msgstr_plural = {0: forms[0], 1: forms[1]}
+                        entry.tcomment = DRAFT_NOTE
+                        filled += 1
+                    else:
+                        skipped.append(entry.msgid[:60])
+                    continue
                 if entry.obsolete or entry.translated() or entry.msgid_plural:
                     continue
                 text = table.get(" ".join(entry.msgid.split()), {}).get(code)
@@ -75,10 +87,10 @@ class Command(BaseCommand):
                 if DRAFT_NOTE not in (entry.tcomment or ""):
                     entry.tcomment = DRAFT_NOTE
                 filled += 1
-            plurals = sum(1 for e in po if e.msgid_plural and not e.translated())
+            empty_plurals = sum(1 for e in po if e.msgid_plural and not e.translated())
             self.stdout.write(
-                f"{code}: filled {filled}, still empty {missing}, plural forms empty {plurals}, "
-                f"skipped {len(skipped)} (placeholders differ)"
+                f"{code}: filled {filled}, still empty {missing}, "
+                f"plural forms empty {empty_plurals}, skipped {len(skipped)} (placeholders differ)"
             )
             for msg in skipped[:10]:
                 self.stdout.write(f"  skipped: {msg}")
