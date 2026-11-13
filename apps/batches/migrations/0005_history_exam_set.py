@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('assessments', '0007_history'),
+        ('assessments', '0008_history'),
         ('batches', '0004_history'),
     ]
 

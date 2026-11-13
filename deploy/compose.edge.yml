@@ -16,11 +16,15 @@ services:
       # Local testing only: set to "http://" to disable HTTPS (never on the server).
       SCHEME: ${SCHEME:-}
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # A directory, not one file: deploy.sh's `git checkout` replaces the file, and a single-file mount would keep the old one.
+      - ./caddy:/etc/caddy:ro
       - caddy-data:/data
       - caddy-config:/config
       - prod-static:/srv/prod/static:ro
       - staging-static:/srv/staging/static:ro
+      # read-only: Caddy sends /learn/media files only after Django answers with X-Accel-Redirect
+      - prod-media:/srv/prod/media:ro
+      - staging-media:/srv/staging/media:ro
     cap_drop: [ALL]
     cap_add: [NET_BIND_SERVICE]
     security_opt: ["no-new-privileges:true"]
@@ -40,3 +44,9 @@ volumes:
   staging-static:
     external: true
     name: csfr-staging_static
+  prod-media:
+    external: true
+    name: csfr-prod_media
+  staging-media:
+    external: true
+    name: csfr-staging_media

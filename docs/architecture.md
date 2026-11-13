@@ -102,7 +102,7 @@ csfr-platform/                (git repo, cloned to D:\ locally — not OneDrive)
 ├── templates/                base.html, components/ (partials), allauth/ (element overrides), one folder per app
 ├── locale/                   our own gettext catalogues (hi, mr, gu; Django ships none for Gujarati)
 ├── tests/                    pytest (unit, integration) · Playwright (journeys in §18)
-├── deploy/                   compose.yml (per-env stack), compose.edge.yml (shared Caddy), compose.dev.yml, Caddyfile, backup/ + restore.sh, server/bootstrap.sh
+├── deploy/                   compose.yml (per-env stack), compose.edge.yml (shared Caddy), compose.dev.yml, caddy/Caddyfile, backup/ + restore.sh, server/bootstrap.sh
 ├── static/                   css/ (tokens, fonts, base, app, stage), js/ (ccfr-shell.js, ...), fonts/ (woff2 + OFL licences), img/ (logos, icons.svg sprite)
 ├── design-reference/         the approved frontend prototype: the look only, never code to copy (D20)
 ├── tools/                    screenshots.mjs (Playwright screenshots + axe), used by every PR
@@ -265,6 +265,8 @@ POST /register  (rate-limited per batch, not per IP — classrooms share Wi-Fi)
 
 ## 8. Learning
 
+**Sign-in (D34).** Every `/learn/` page and endpoint needs a signed-in user. A signed-out GET goes to sign-in and back (`?next=`); a signed-out POST gets 403. Progress and time are recorded for learners only.
+
 ### 8.1 Module page
 
 * Film (YouTube)
@@ -275,6 +277,8 @@ POST /register  (rate-limited per batch, not per IP — classrooms share Wi-Fi)
 Nothing is locked.
 
 ### 8.2 Films on YouTube (D18)
+
+> **For now (D35) the films are uploaded MP4s** with English and Hindi caption tracks, served as described in §16 (Media). YouTube comes later; the rest of this section describes that later step.
 
 * The films are uploaded to a **programme-owned YouTube channel** (CyberPeace or SAKEC, not a personal account) as **Unlisted**.
 * They are embedded with **`youtube-nocookie.com`** (privacy-enhanced mode). The CSP allows only that frame origin.
@@ -320,6 +324,7 @@ Assessment and final questions are refused.
 POST /assess/<part>/start
  lock user row
  in_progress attempt exists? → resume it
+ max_attempts set and attempts started ≥ max_attempts? → refuse ("no attempts left", D32)
  (final only) cooldown_hours > 0 and last final attempt too recent? → "Next attempt available at …"
  draw:
    part.selection = all / all_shuffled → its questions
@@ -444,7 +449,7 @@ Every displayed number and every comparison uses round1(x) = Decimal(x).quantize
 | Timer | Shows "about 60 min", not enforced | Shows a count-up |
 | Exam set | An admin assigns one released set per batch (audited). The learner's set and question versions freeze when their first programme exam starts. No set, or an unreleased one: "not available yet". | Same set |
 | Feedback | Overall % + bands (§9.5) | Score only. **Shared questions are never given feedback anywhere.** |
-| Attempts | Unlimited, cooldown setting (0) | One attempt (resumable) |
+| Attempts | Unlimited by default; optional `max_attempts` (D32); cooldown setting (0) | One attempt (resumable); takes no limit |
 
 **Knowledge gain (CSR ≥25%)** = score on the shared questions in the learner's **first** final attempt − score on the same questions in the pre-test (both from the learner's frozen set). It is reported per batch.
 
@@ -550,7 +555,7 @@ content strings → t(key, lang):  key grammar  q:<question>:<field.path>  ·  b
 | Web | CSP (self + youtube-nocookie frames), HSTS, frame-deny, CSRF, auto-escaping, nh3 sanitising, WeasyPrint url_fetcher allowlist, HTMX eval off |
 | Accounts | allauth, Argon2, staff MFA, rate limits, no account enumeration, mentor-reset safeguards |
 | Server | SSH keys only, ufw 22/80/443, fail2ban, unattended upgrades, non-root containers, separate secrets per environment, two DB roles |
-| Media | `/media` served by Caddy only after a Django `forward_auth` check. Certificates are served only by Django to the owner. |
+| Media | `/learn/media/<id>/` needs sign-in (D34); Django checks the file belongs to a published unit, then answers with `X-Accel-Redirect` and Caddy sends it from the read-only media volume with range requests (D35). `/media` is never served directly. Certificates are served only by Django to the owner. |
 | DPDP | Minimum fields; pseudonymous audit; erasable Profile; guardian consent and no tracking for minors; processors listed in the notice (Brevo, Sentry, YouTube, the backup provider and region); 72-hour incident runbook; a named grievance officer (CyberPeace); retention of 3 years after programme end |
 
 ---
@@ -715,7 +720,7 @@ Where the build made a choice the design left open. Each is a one-line change if
 
 **Completion and hours (`services.py`).** reading: scrolled to the end (or the button); video: 80% (HTML5 or the YouTube IFrame API); handout: opened; check: attempted; practice quiz: submitted. `complete()` refuses a way that does not fit the type. The heartbeat counts 30 s only for adults (`may_track_time`), only if a server interaction happened in the last 5 minutes, at most once per 25 s per unit, capped at twice the unit's nominal minutes and per day. Under-18s write no `TimeLog` rows; their hours are the nominal minutes of completed units (`hours_for`).
 
-**Authoring.** `publish()` and `restore()` need an admin or the `content.publish_unit` permission; restore makes a new version with the old text and publishes it. `docx.py` reads a Word file (size, zip and entity checks, mammoth, nh3) into blocks for a draft; `media.py` stores PDFs (`%PDF-`), MP4s (`ftyp`, 150 MB) and images (Pillow re-encode, EXIF stripped, 5 MB, pixel cap). `/learn/media/<id>/` serves only assets used by a published unit, with `nosniff`.
+**Authoring.** `publish()` and `restore()` need an admin or the `content.publish_unit` permission; restore makes a new version with the old text and publishes it. `docx.py` reads a Word file (size, zip and entity checks, mammoth, nh3) into blocks for a draft; `media.py` stores PDFs (`%PDF-`), MP4s (`ftyp`, 150 MB) and images (Pillow re-encode, EXIF stripped, 5 MB, pixel cap). `/learn/media/<id>/` serves only assets used by a published unit, with `nosniff`. Since D34 it needs sign-in and sends `Cache-Control: private`; behind Caddy (`MEDIA_ACCEL_REDIRECT`) it hands the file to Caddy with `X-Accel-Redirect` (D35). The handout PDFs that `publish_ccfr_course` stores live in `apps/content/data/handouts/`, outside the static files.
 
 **Importer (`legacy.py`).** Create-only; refuses once any unit was edited. A small reader parses `modules.php`; booklet blocks map to the block types; tables that look jumbled are flagged.
 
@@ -731,6 +736,7 @@ Where the build made a choice the design left open. Each is a one-line change if
 
 **Pages.** `/exam/<final|pretest>/` and `/exam/<kind>/start/`; the attempt pages work for programme attempts (`Attempt.title`). `/start/` is the learner's My progress dashboard (`results/views.py`, `templates/progress/dashboard.html`): journey strip, what's left (to do first, finished collapsed), module cards, final state with bands, blockers, weakest PCs, hours, certificate placeholder.
 
+<<<<<<< HEAD
 ## 27. Stage 6 implementation notes (staff tools)
 
 **Access.** `batches_for` still scopes every mentor query. `apps/staff` adds `staff_required` (mentor or admin; a learner gets 403 and an `access.denied` audit) and `admin_required`. `rules.can_access_final_pool` is the single check for the final pool: `visible_questions` excludes it for mentors, the question pages 403 and log, the Django-admin `QuestionAdmin.get_queryset` hides it, and the editor refuses `pool=final` from a mentor.
@@ -742,3 +748,12 @@ Where the build made a choice the design left open. Each is a one-line change if
 **Report.** Per batch: registered, active, eligible, issued (0 until Stage 7), mean knowledge gain against the 25-point target; item statistics (% correct per question, per learner language); the email budget today.
 
 **History.** simple-history records `Batch`, `Enrolment`, `Question` and `AssessmentPart` (`Historical*` tables).
+=======
+## 27. Attempt limit and lesson sign-in (D32–D35)
+
+**Attempt limit (D32).** `AssessmentPart.max_attempts` and `ProgrammeAssessment.max_attempts` (blank = unlimited; a database check allows a value only on the final, never on the pre-test or mock, and never 0). `services.check_attempt_limit()` runs inside `start()` and `start_programme()` after the learner's row lock and after an open attempt has been resumed, so parallel starts at the limit create at most one attempt and an attempt in progress is never cut off. Every started attempt counts as used (`services.attempt_allowance()`). The part intro, the final intro and the module page show "N of M attempts used"; at the limit Start and "Try again" are replaced by "No attempts left". The best counted attempt still counts. The admin audits a change as `assessment.max_attempts_changed` (old and new values).
+
+**Lesson sign-in (D34).** `content.views.signin_required` wraps every `/learn/` view. The public pages are landing, register, sign-in and privacy (help, terms, grievance and certificate verify when they exist).
+
+**Media (D34, D35).** `deploy/compose.yml` sets `MEDIA_ACCEL_REDIRECT=1` for web; `deploy/compose.edge.yml` mounts `csfr-<env>_media` read-only at `/srv/<env>/media` (created by `deploy.sh` like the static volumes); the Caddyfile's `handle_response` for `X-Accel-Redirect` serves the file with `file_server` (range requests, ETag, Last-Modified) and copies `Cache-Control`, `Content-Disposition` and `X-Content-Type-Options`. In development Django streams the file without range support.
+>>>>>>> main

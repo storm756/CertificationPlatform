@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-11-13: Deploy scripts are executable
+
+- `deploy/deploy.sh`, `deploy/restore.sh` and `deploy/server/bootstrap.sh` are now marked executable in git, so `deploy/deploy.sh staging` runs without `bash` in front (it gave "Permission denied" on the server). `docs/STATUS.md` now says staging was deployed at `fcce8b6` on 13 Nov. Why: found during the first staging deploy.
+
+## 2026-11-13: Deploy always runs the current Caddyfile
+
+- The Caddyfile moved to `deploy/caddy/Caddyfile` and `compose.edge.yml` mounts the `deploy/caddy/` directory. `deploy.sh` now runs `caddy validate` and then `caddy reload` after starting the edge stack; an invalid file stops the deploy and Caddy keeps its previous config. Why: `git checkout --force` replaces the file, a single-file mount kept the old one, and `compose up -d` does not recreate Caddy for a Caddyfile-only change, so such a change was silently ignored. CI validates the new path.
+- Recorded in `docs/STATUS.md`, not built: the shared edge Caddy takes its config from whichever env deployed last (fix before Stage 10).
+
+## 2026-11-13: Decisions D32–D35, attempt limit and lesson sign-in
+
+- D31 confirmed by the owner. D32–D35 recorded in `docs/decisions.md`. Why: the owner's decisions after taking over the build.
+- Attempt limit (D32): an optional, audited `max_attempts` on every assessment part and on the final, enforced under the learner's row lock; an attempt in progress always resumes; pages show "N of M attempts used" and replace Start at the limit. Blank stays unlimited (D3); the pre-test stays once. Why: the owner wants a cap available without changing the default.
+- Lessons need sign-in (D34): every `/learn/` page, endpoint and media file now needs a signed-in user (sign-in and back for pages, 403 for POSTs). Handout PDFs moved from `static/handouts/` to `apps/content/data/handouts/`, so Caddy no longer serves them to anyone, and media is sent `Cache-Control: private`. Why: overrides the Stage 4 call that lessons were public.
+- Films served by Caddy (D35): Django checks access, then hands the file to Caddy with `X-Accel-Redirect`; Caddy serves it with range requests, ETag and Last-Modified from a read-only media mount (`compose.edge.yml`, `deploy.sh`, Caddyfile). Why: before this, Django sent whole MP4s without range support, so phones could not seek and each viewer held a web worker. A person must deploy the Caddy and compose changes.
+- `docs/STATUS.md` trimmed to under 12 KB; the dated review results moved verbatim into `docs/history/`.
+
 ## 2026-11-12: Stage 5, exam-set review round (D31)
 
 - A released set is fixed: release stores the approved versions, marks, formats and modules; database triggers and model guards block changes to released membership, the set, its questions and new versions of them. A final question used in an exam cannot change marks, module or pool.

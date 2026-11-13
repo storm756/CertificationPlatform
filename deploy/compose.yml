@@ -22,6 +22,8 @@ services:
       - media:/app/media
     environment:
       MEDIA_ROOT: /app/media
+      # Caddy sends /learn/media files from this volume after Django's sign-in check (D34, D35).
+      MEDIA_ACCEL_REDIRECT: "1"
     depends_on:
       db:
         condition: service_healthy

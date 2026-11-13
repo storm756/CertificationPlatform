@@ -32,6 +32,11 @@ class AssessmentPart(models.Model):
     min_per_tag = models.PositiveSmallIntegerField(default=0)  # per PC tag in a draw
     pool = models.CharField(max_length=12, choices=Pool.choices, default=Pool.MODULE_QUIZ)
     time_display_minutes = models.PositiveSmallIntegerField(null=True, blank=True)  # null: count-up
+    max_attempts = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        help_text="Leave blank for unlimited attempts (D3, D32). Changing it is audited.",
+    )
     # Set by publish_part(), which runs validate_part(). Learners can only start published parts.
     is_published = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -42,6 +47,11 @@ class AssessmentPart(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["module", "name"], name="uniq_part_name_per_module"),
             models.CheckConstraint(condition=Q(marks__lte=100), name="part_marks_at_most_100"),
+            models.CheckConstraint(
+                condition=Q(max_attempts__isnull=True) | Q(max_attempts__gte=1),
+                name="part_max_attempts_at_least_1",
+                violation_error_message="Use at least 1 attempt, or leave blank for unlimited.",
+            ),
         ]
 
     def __str__(self):
@@ -61,9 +71,34 @@ class ProgrammeAssessment(models.Model):
     blueprint = models.JSONField(default=dict, blank=True)
     time_display_minutes = models.PositiveSmallIntegerField(null=True, blank=True)
     cooldown_hours = models.PositiveSmallIntegerField(default=0)
+    max_attempts = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        help_text="Final only. Leave blank for unlimited attempts (D3, D32). The pre-test is "
+        "always once. Changing it is audited.",
+    )
+
+    class Meta:
+        constraints = [
+            # The pre-test stays once only and the mock is ungraded: only the final takes a limit.
+            models.CheckConstraint(
+                condition=Q(max_attempts__isnull=True) | (Q(kind="final") & Q(max_attempts__gte=1)),
+                name="programme_max_attempts_final_only",
+            ),
+        ]
 
     def __str__(self):
         return self.get_kind_display()
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+
+        if self.max_attempts is not None and self.kind != ProgrammeAssessmentKind.FINAL:
+            raise ValidationError(
+                {"max_attempts": "Only the final takes an attempt limit. The pre-test is once."}
+            )
+        if self.max_attempts == 0:
+            raise ValidationError({"max_attempts": "Use at least 1, or leave blank for unlimited."})
 
 
 class AttemptStatus(models.TextChoices):

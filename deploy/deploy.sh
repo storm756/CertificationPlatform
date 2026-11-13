@@ -38,9 +38,9 @@ cd "$SRC/deploy"
 COMPOSE=(docker compose -f compose.yml)
 [ "$ENV_NAME" = "staging" ] && COMPOSE+=(--profile mailpit)
 
-echo "==> shared network and static volumes"
+echo "==> shared network, static and media volumes"
 docker network inspect csfr-edge >/dev/null 2>&1 || docker network create csfr-edge >/dev/null
-for v in csfr-staging_static csfr-prod_static; do
+for v in csfr-staging_static csfr-prod_static csfr-staging_media csfr-prod_media; do
   docker volume inspect "$v" >/dev/null 2>&1 || docker volume create "$v" >/dev/null
 done
 
@@ -70,6 +70,13 @@ echo "==> collectstatic"
 echo "==> restarting"
 "${COMPOSE[@]}" up -d --remove-orphans
 docker compose -f compose.edge.yml up -d
+# Caddy reads its config only at start, and `up -d` does not recreate it when just the Caddyfile changed.
+# Validate first: a broken file aborts the deploy and Caddy keeps serving the config it already has.
+EDGE=(docker compose -f compose.edge.yml exec -T caddy caddy)
+echo "==> reloading Caddy"
+"${EDGE[@]}" validate --config /etc/caddy/Caddyfile \
+  || { echo "Caddyfile is invalid: Caddy was NOT reloaded and still runs its previous config" >&2; exit 1; }
+"${EDGE[@]}" reload --config /etc/caddy/Caddyfile --force
 "${COMPOSE[@]}" up -d --wait web
 # tasks runs the same image as web; `up -d` recreates it with the new image, so it never runs old code.
 "${COMPOSE[@]}" up -d tasks

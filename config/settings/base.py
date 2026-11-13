@@ -182,6 +182,9 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 MEDIA_ROOT = Path(env("MEDIA_ROOT", str(BASE_DIR / "media")))
+# Behind Caddy, /learn/media/<id>/ answers with X-Accel-Redirect and Caddy sends the file with range
+# requests (D35). Off in development and tests, where Django sends the file itself.
+MEDIA_ACCEL_REDIRECT = env_bool("MEDIA_ACCEL_REDIRECT", False)
 
 # --- Unfold admin ---
 UNFOLD = {
