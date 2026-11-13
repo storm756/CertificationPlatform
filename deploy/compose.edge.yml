@@ -16,7 +16,8 @@ services:
       # Local testing only: set to "http://" to disable HTTPS (never on the server).
       SCHEME: ${SCHEME:-}
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # A directory, not one file: deploy.sh's `git checkout` replaces the file, and a single-file mount would keep the old one.
+      - ./caddy:/etc/caddy:ro
       - caddy-data:/data
       - caddy-config:/config
       - prod-static:/srv/prod/static:ro
