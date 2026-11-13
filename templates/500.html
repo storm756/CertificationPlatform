@@ -1,4 +1,4 @@
-{% load static i18n %}<!doctype html>
+{% load static i18n %}{% get_current_language as LANGUAGE_CODE %}<!doctype html>
 {# Standalone on purpose: a server error must not depend on the database, sessions or any context processor. #}
 <html lang="{{ LANGUAGE_CODE|default:'en' }}">
 <head>

@@ -11,16 +11,17 @@ from django.views.i18n import set_language as django_set_language
 from . import people
 from .faq import FAQ
 
-
 PUBLIC_CACHE = "public, max-age=300"
 
 
 def home(request):
-    """The public landing page (Stage 9). Lessons need sign-in (D34), so its calls to action go to
-    registration and sign-in. The module list is the live course, or a short note when none is loaded."""
+    """The public landing page (Stage 9).
+
+    Lessons need sign-in (D34), so its calls to action go to registration and sign-in. The module
+    list is the live course (none shown if no course is loaded).
+    """
     from apps.content.models import Module
     from apps.translations import pages as tpages
-
 
     modules = list(Module.objects.all())
     if modules:
@@ -52,7 +53,7 @@ def terms_view(request):
 
 
 def people_photo(request, slug):
-    """A leader's photo, only while consent is on and the file is in PEOPLE_PHOTO_DIR (never in git)."""
+    """A leader's photo: only while consent is on and the file is in PEOPLE_PHOTO_DIR."""
     path = people.photo_path(slug) if settings.PEOPLE_CONSENT_GIVEN else None
     if path is None:
         raise Http404
