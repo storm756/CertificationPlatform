@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-13: Deploy scripts are executable
+
+- `deploy/deploy.sh`, `deploy/restore.sh` and `deploy/server/bootstrap.sh` are now marked executable in git, so `deploy/deploy.sh staging` runs without `bash` in front (it gave "Permission denied" on the server). `docs/STATUS.md` now says staging was deployed at `fcce8b6` on 13 Nov. Why: found during the first staging deploy.
+
 ## 2026-11-13: Deploy always runs the current Caddyfile
 
 - The Caddyfile moved to `deploy/caddy/Caddyfile` and `compose.edge.yml` mounts the `deploy/caddy/` directory. `deploy.sh` now runs `caddy validate` and then `caddy reload` after starting the edge stack; an invalid file stops the deploy and Caddy keeps its previous config. Why: `git checkout --force` replaces the file, a single-file mount kept the old one, and `compose up -d` does not recreate Caddy for a Caddyfile-only change, so such a change was silently ignored. CI validates the new path.
