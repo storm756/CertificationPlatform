@@ -2,6 +2,7 @@
    the learner's answer back (tokens only). It never scores anything and never sees a key.
    Bundled with esbuild into static/js/engine.js. */
 
+import { t } from "./i18n";
 import { clear } from "./dom";
 import { renderChat } from "./formats/chat";
 import { renderCards, renderHotspot, renderMC, renderPick, renderSpot } from "./formats/choice";
@@ -50,7 +51,7 @@ export function mount(root: HTMLElement): void {
   const q = JSON.parse(root.dataset.q ?? "{}") as Base;
   const draw = RENDERERS[q.format];
   if (!draw || !form || !field) {
-    root.textContent = "This question can't be shown.";
+    root.textContent = t("This question can't be shown.");
     return;
   }
   const ctx: Ctx = {

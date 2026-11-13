@@ -9,17 +9,21 @@ from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 from django_ratelimit.decorators import ratelimit
 
 from apps.accounts.models import Role
 from apps.assessments.models import AssessmentPart
+from apps.translations import pages as tpages
+from apps.translations.keys import unit_prefix
+from apps.translations.service import block_keys, note, translate_blocks
 
 from . import learncheck, services
 from .models import MediaAsset, Module, Unit, UnitType, UnitVersion, VersionStatus
 
 KIND_ICON = {"video": "video", "reading": "book", "handout": "file", "check": "lightbulb", "practice_quiz": "retry"}  # fmt: skip
-GROUPS = [("watch", "Watch", ["video"]), ("read", "Read", ["reading"]), ("handout", "Handout", ["handout"]), ("practise", "Practise", ["check", "practice_quiz"])]  # fmt: skip
+GROUPS = [("watch", _("Watch"), ["video"]), ("read", _("Read"), ["reading"]), ("handout", _("Handout"), ["handout"]), ("practise", _("Practise"), ["check", "practice_quiz"])]  # fmt: skip
 
 
 def _posted_unit(request):
@@ -71,8 +75,15 @@ def _grouped(rows):
 
 
 POSTERS = {n: f"img/films/m{n}.jpg" for n in range(1, 10)}  # the prototype's film posters
-CAPSTONE_TITLE = "Capstone simulation"
-CAPSTONE_TAGLINE = "Bring every module together in one realistic case."
+CAPSTONE_TITLE = _("Capstone simulation")
+CAPSTONE_TAGLINE = _("Bring every module together in one realistic case.")
+COMPLETE_RULE = {
+    "video": _("Completes at 80% watched"),
+    "reading": _("Completes when you reach the end"),
+    "handout": _("Completes when opened"),
+    "check": _("Completes after one try"),
+    "practice_quiz": _("Completes when submitted once"),
+}
 
 
 def _state(pct):
@@ -90,14 +101,16 @@ def _question_counts(module):
     }
 
 
-def _module_card(user, module):
+def _module_card(user, module, lookup=None):
     rows = _rows(user, module)
+    if lookup is not None:
+        tpages.localise_rows(module.number, rows, lookup)
     done = sum(1 for r in rows if r["done"])
     pct = round(100 * done / len(rows)) if rows else 0
     capstone = module.kind == "capstone"
     topics = [r["version"].title for r in rows if r["unit"].type == "reading"]
-    title = module.title or (CAPSTONE_TITLE if capstone else module.display_title)
-    tagline = module.tagline or (CAPSTONE_TAGLINE if capstone else "")
+    title = str(module.title or (CAPSTONE_TITLE if capstone else module.display_title))
+    tagline = str(module.tagline or (CAPSTONE_TAGLINE if capstone else ""))
     counts = _question_counts(module) if not capstone else {"mcq": 0, "interactive": 0}
     return {
         "module": module, "title": title, "tagline": tagline, "capstone": capstone,
@@ -113,7 +126,14 @@ def catalogue(request):
 
     # the pre-test and final are open to a learner whose batch has a released exam set
     exams_ready = _is_learner(request.user) and programme.pretest_available(request.user)
-    cards = [_module_card(request.user, m) for m in Module.objects.all()]
+    modules = list(Module.objects.all())
+    lookup = tpages.learning_lookup(
+        modules,
+        [(m.number, u) for m in modules for u, _v in services.published_units(m)],
+    )
+    for m in modules:
+        tpages.localise_module(m, lookup)
+    cards = [_module_card(request.user, m, lookup) for m in modules]
     learning = [c for c in cards if not c["capstone"]]
     return render(
         request,
@@ -149,6 +169,7 @@ def _part_cards(user, module):
         allowance = attempt_allowance(part.max_attempts, len(tries))
         allowance["reached"] = allowance["reached"] and not any(a.is_open for a in tries)
         out.append({"part": part, "attempts": len(tries), "best": best, "allowance": allowance})
+    tpages.localise_parts([c["part"] for c in out])
     return out
 
 
@@ -158,6 +179,9 @@ def module_page(request, number):
     if module.kind == "capstone":
         return render(request, "learn/capstone.html", {"card": _module_card(request.user, module), "module": module})  # fmt: skip
     rows = _rows(request.user, module)
+    lookup = tpages.learning_lookup([module], [(module.number, r["unit"]) for r in rows])
+    tpages.localise_module(module, lookup)
+    tpages.localise_rows(module.number, rows, lookup)
     done = sum(1 for r in rows if r["done"])
     nxt = next((r for r in rows if not r["done"]), rows[0] if rows else None)
     return render(
@@ -171,6 +195,10 @@ def module_page(request, number):
             "next_module": Module.objects.filter(number=number + 1).first(),
             "parts": _part_cards(request.user, module),
             "poster": POSTERS.get(module.number),
+            "draft_translation": lookup.used_draft,
+            # D33: Module 8's graded crosswords stay English; the note is in the learner's language
+            # once reviewed (D7), English until then.
+            "crossword_note": note("m8-crosswords-english", lookup.lang) if module.number == 8 else "",
         },
     )  # fmt: skip
 
@@ -204,7 +232,16 @@ def unit_page(request, number, slug):
         if unit.type == UnitType.HANDOUT:
             services.complete(request.user, unit, how="opened")
             rows[index]["done"] = True
-    blocks = _prepare(request, unit, version.blocks)
+    prefix = unit_prefix(module.number, unit.slug)
+    lookup = tpages.learning_lookup(
+        [module],
+        [(module.number, r["unit"]) for r in rows],
+        extra_keys=block_keys(prefix, version.blocks),
+    )
+    tpages.localise_module(module, lookup)
+    tpages.localise_rows(module.number, rows, lookup)
+    version.title = lookup.get(f"{prefix}:title", version.title)  # display only, never saved
+    blocks = _prepare(request, unit, translate_blocks(prefix, version.blocks, lookup))
     video = next((b for b in blocks if b["type"] == "video"), None)
     return render(
         request,
@@ -221,13 +258,8 @@ def unit_page(request, number, slug):
             "prev": rows[index - 1] if index else None,
             "next": rows[index + 1] if index + 1 < len(rows) else None,
             "pct": round(100 * sum(1 for r in rows if r["done"]) / len(rows)),
-            "complete_rule": {
-                "video": "Completes at 80% watched",
-                "reading": "Completes when you reach the end",
-                "handout": "Completes when opened",
-                "check": "Completes after one try",
-                "practice_quiz": "Completes when submitted once",
-            }[unit.type],  # fmt: skip
+            "complete_rule": COMPLETE_RULE[unit.type],
+            "draft_translation": lookup.used_draft,
             "learner": _is_learner(request.user),
             "parts": _part_cards(request.user, module),
         },
@@ -259,7 +291,9 @@ def block_action(request, number, slug, index):
     version = unit.published()
     if version is None or not 0 <= index < len(version.blocks):
         raise Http404
-    block = version.blocks[index]
+    prefix = unit_prefix(unit.module.number, unit.slug)
+    lookup = tpages.learning_lookup(extra_keys=block_keys(prefix, version.blocks))
+    block = translate_blocks(prefix, version.blocks, lookup)[index]
     if block["type"] == "reveal":
         return JsonResponse({"answer": block["answer"]})
     if block["type"] == "mythfact":

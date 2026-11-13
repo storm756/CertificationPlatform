@@ -22,6 +22,8 @@ from apps.questions.models import QuestionImage
 from apps.questions.projections import client_projection
 from apps.results import insights
 from apps.results.policy import PASS_MARK
+from apps.translations.assess import display_body, display_hint
+from apps.translations.pages import localise_parts
 
 from . import examsets, programme, services
 from .models import AssessmentPart, Attempt, AttemptStatus
@@ -48,7 +50,7 @@ def _own_attempt(request, pk) -> Attempt:
 
 
 def _items(attempt):
-    return attempt.items.select_related("question_version")
+    return attempt.items.select_related("question_version__question")
 
 
 def _palette(attempt, current):
@@ -74,7 +76,12 @@ def _question_context(attempt, position):
     item = get_object_or_404(_items(attempt), position=position)
     version = item.question_version
     total = attempt.items.count()
-    projection = client_projection(item.format, version.body, item.option_map, item.response)
+    if attempt.part_id:
+        localise_parts([attempt.part])  # display only; the part is not saved here
+    # The learner's language, reviewed wording only (D24). The option map and the stored response
+    # are the same in every language, so a mid-attempt switch only changes the words.
+    shown = display_body(version, item.format)
+    projection = client_projection(item.format, shown, item.option_map, item.response)
     context = {
         "attempt": attempt,
         "position": position,
@@ -106,6 +113,7 @@ def intro(request, part_id):
     attempts = list(Attempt.objects.filter(user=request.user, part=part).order_by("-number"))
     open_attempt = next((a for a in attempts if a.is_open), None)
     best = max((a.score for a in attempts if a.counted and a.score is not None), default=None)
+    localise_parts([part])  # display only; the part is not saved here
     return render(
         request,
         "assessments/intro.html",
@@ -226,7 +234,7 @@ def review(request, pk):
         items.append(
             {
                 "position": item.position,
-                "stem": formats.label(item.question_version.body),
+                "stem": formats.label(display_body(item.question_version, item.format)),
                 "answered": item.answered,
                 "flagged": bool((item.response or {}).get("flag")),
             }
@@ -270,18 +278,19 @@ def result(request, pk):
         return redirect("attempt_page", pk=attempt.pk)
     if attempt.programme_assessment_id:
         return _programme_result(request, attempt)
+    localise_parts([attempt.part])  # display only; the part is not saved here
     rows = []
     for item in _items(attempt):
-        body = item.question_version.body
+        version = item.question_version
         score = item.score if item.score is not None else 0
         rows.append(
             {
                 "position": item.position,
-                "stem": formats.label(body),
+                "stem": formats.label(display_body(version, item.format)),
                 "right": score == 1,
                 "partial": 0 < score < 1,
                 "answered": item.answered,
-                "hint": body.get("hint", ""),
+                "hint": display_hint(version),
                 "gated": item.gate_flag,
             }
         )

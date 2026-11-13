@@ -9,6 +9,7 @@ version. One version per unit is published at a time.
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
 
 
 class ModuleKind(models.TextChoices):
@@ -48,11 +49,11 @@ class Module(models.Model):
 
 
 class UnitType(models.TextChoices):
-    VIDEO = "video", "Film"
-    READING = "reading", "Reading topic"
-    HANDOUT = "handout", "Handout"
-    CHECK = "check", "Practice check"
-    PRACTICE_QUIZ = "practice_quiz", "Practice quiz"
+    VIDEO = "video", _("Film")
+    READING = "reading", _("Reading topic")
+    HANDOUT = "handout", _("Handout")
+    CHECK = "check", _("Practice check")
+    PRACTICE_QUIZ = "practice_quiz", _("Practice quiz")
 
 
 class Unit(models.Model):

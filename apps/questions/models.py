@@ -1,36 +1,37 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 from simple_history.models import HistoricalRecords
 
 
 class Format(models.TextChoices):
     """MCQ is built in Stage 2. The 13 interactive formats arrive in Stage 3."""
 
-    MCQ = "mcq", "Multiple choice (part A)"
-    MC = "mc", "Interactive: multiple choice"
-    SPOT = "spot", "Interactive: spot"
-    CHAT = "chat", "Interactive: chat"
-    PICK = "pick", "Interactive: pick"
-    BUILD = "build", "Interactive: build"
-    CROSSWORD = "crossword", "Interactive: crossword"
-    SETTINGS = "settings", "Interactive: settings"
-    SORT = "sort", "Interactive: sort"
-    MATCH = "match", "Interactive: match"
-    ORDER = "order", "Interactive: order"
-    DIAL = "dial", "Interactive: dial"
-    HOTSPOT = "hotspot", "Interactive: hotspot"
-    CARDS = "cards", "Interactive: cards"
+    MCQ = "mcq", _("Multiple choice (part A)")
+    MC = "mc", _("Interactive: multiple choice")
+    SPOT = "spot", _("Interactive: spot")
+    CHAT = "chat", _("Interactive: chat")
+    PICK = "pick", _("Interactive: pick")
+    BUILD = "build", _("Interactive: build")
+    CROSSWORD = "crossword", _("Interactive: crossword")
+    SETTINGS = "settings", _("Interactive: settings")
+    SORT = "sort", _("Interactive: sort")
+    MATCH = "match", _("Interactive: match")
+    ORDER = "order", _("Interactive: order")
+    DIAL = "dial", _("Interactive: dial")
+    HOTSPOT = "hotspot", _("Interactive: hotspot")
+    CARDS = "cards", _("Interactive: cards")
 
 
 class Pool(models.TextChoices):
-    MODULE_QUIZ = "module_quiz", "Module quiz"
-    FINAL = "final", "Final exam"
-    PRACTICE = "practice", "Practice"
+    MODULE_QUIZ = "module_quiz", _("Module quiz")
+    FINAL = "final", _("Final exam")
+    PRACTICE = "practice", _("Practice")
 
 
 class QuestionStatus(models.TextChoices):
-    DRAFT = "draft", "Draft"
-    LIVE = "live", "Live"
-    RETIRED = "retired", "Retired"
+    DRAFT = "draft", _("Draft")
+    LIVE = "live", _("Live")
+    RETIRED = "retired", _("Retired")
 
 
 class PoolLocked(Exception):

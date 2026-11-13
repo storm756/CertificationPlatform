@@ -50,8 +50,9 @@ export function clear(node: Element): void {
 
 /** The shape cue (not just colour) that goes with each triage colour. */
 export const TONES: Record<string, { name: string; shape: string }> = {
-  red: { name: "Red", shape: "■" },
-  amber: { name: "Amber", shape: "▲" },
-  yellow: { name: "Yellow", shape: "◆" },
-  green: { name: "Green", shape: "●" },
-};
+  red: { name: t("Red"), shape: "■" },
+  amber: { name: t("Amber"), shape: "▲" },
+  yellow: { name: t("Yellow"), shape: "◆" },
+  green: { name: t("Green"), shape: "●" },
+};import { t } from "./i18n";
+

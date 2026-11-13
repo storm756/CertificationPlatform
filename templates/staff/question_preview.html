@@ -18,4 +18,4 @@
   </form>
   <details class="card"><summary>{% translate "Staff only: hint and explanation" %}</summary><p><strong>{% translate "Hint" %}:</strong> {{ staff_hint }}</p>{% if staff_why %}<p><strong>{% translate "Why" %}:</strong> {{ staff_why }}</p>{% endif %}</details>
 {% endblock %}
-{% block scripts %}{% if interactive %}<script src="{% static 'js/engine.js' %}" defer></script>{% endif %}{% endblock %}
+{% block scripts %}{% if interactive %}{% engine_labels %}<script src="{% static 'js/engine.js' %}" defer></script>{% endif %}{% endblock %}

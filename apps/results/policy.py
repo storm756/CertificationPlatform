@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from decimal import ROUND_HALF_UP, Decimal
 
 from django.db.models import DecimalField, ExpressionWrapper, F, Sum
+from django.utils.translation import gettext as _
 
 PASS_MARK = Decimal("50")  # module and final pass mark, D2
 MODULE_PASS = PASS_MARK
@@ -344,31 +345,40 @@ def blockers(r: Result) -> list[str]:
     out = []
     if r.revoked_blocked:
         out.append(
-            "Your certificate was revoked. Contact the programme team if you have questions."
+            _("Your certificate was revoked. Contact the programme team if you have questions.")
         )
     if r.setup_gaps:
         out.append(
-            "Course setup is incomplete, so the final stays locked. " + " ".join(r.setup_gaps)
+            _("Course setup is incomplete, so the final stays locked.")
+            + " "
+            + " ".join(r.setup_gaps)
         )
     if not r.email_verified:
-        out.append("Verify your email address.")
+        out.append(_("Verify your email address."))
     if not r.active:
-        out.append("Your account is waiting for your guardian's consent.")
+        out.append(_("Your account is waiting for your guardian's consent."))
     if not r.pretest_done:
-        out.append("Take the short pre-test. The final stays locked until it is done.")
+        out.append(_("Take the short pre-test. The final stays locked until it is done."))
     for m in r.modules:
         for p in m.parts:
             if not p.answered:
                 out.append(
-                    f"Module {m.number}, {p.name}: submit it once with every question answered."
+                    _("Module %(number)s, %(part)s: submit it once with every question answered.")
+                    % {"number": m.number, "part": p.name}
                 )
     for m in r.modules:
         if m.parts and not m.passed and all(p.answered for p in m.parts):
-            detail = ", ".join(f"your best {p.name} is {round1(p.best)}%" for p in m.parts)
-            out.append(f"Module {m.number} is at {m.shown}%. {detail[0].upper()}{detail[1:]}.")
+            detail = ", ".join(
+                _("your best %(part)s is %(score)s%%") % {"part": p.name, "score": round1(p.best)}
+                for p in m.parts
+            )
+            out.append(
+                _("Module %(number)s is at %(score)s%%.") % {"number": m.number, "score": m.shown}
+                + f" {detail[0].upper()}{detail[1:]}."
+            )
     if r.final_unlocked and not r.final_passed:
         out.append(
-            "Take the final exam." if not r.final_attempts
-            else f"Your best final is {r.final_shown}%. You need {FINAL_PASS}%."
+            _("Take the final exam.") if not r.final_attempts
+            else _("Your best final is %(best)s%%. You need %(need)s%%.") % {"best": r.final_shown, "need": FINAL_PASS}
         )  # fmt: skip
     return out

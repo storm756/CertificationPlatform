@@ -14,6 +14,7 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Max
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from apps.accounts.models import User
 from apps.audit.services import audit
@@ -165,7 +166,7 @@ def start(user, part, rng=None) -> tuple[Attempt, bool]:
     second finds the first's attempt and resumes it. The partial unique index is the backstop.
     """
     if not part.is_published:
-        raise PartNotAvailable("This assessment is not available yet.")
+        raise PartNotAvailable(_("This assessment is not available yet."))
     User.objects.select_for_update().get(pk=user.pk)
     existing = Attempt.objects.filter(
         user=user, part=part, status=AttemptStatus.IN_PROGRESS
@@ -176,7 +177,7 @@ def start(user, part, rng=None) -> tuple[Attempt, bool]:
 
     versions = draw(part, user, rng)
     if not versions:
-        raise PartNotAvailable("This assessment has no questions yet.")
+        raise PartNotAvailable(_("This assessment has no questions yet."))
     number = (Attempt.objects.filter(user=user, part=part).aggregate(n=Max("number"))["n"] or 0) + 1
     attempt = Attempt.objects.create(user=user, part=part, number=number)
     AttemptItem.objects.bulk_create(
@@ -215,7 +216,7 @@ def save_answer(
     """
     attempt = Attempt.objects.select_for_update().get(pk=attempt_id, user=user)
     if not attempt.is_open:
-        raise AttemptClosed("This attempt has already been submitted.")
+        raise AttemptClosed(_("This attempt has already been submitted."))
     try:
         item = (
             attempt.items.select_for_update()
@@ -223,7 +224,7 @@ def save_answer(
             .get(position=position)
         )
     except AttemptItem.DoesNotExist:
-        raise InvalidAnswer("No such question.") from None
+        raise InvalidAnswer(_("No such question.")) from None
     saved = dict(item.response or {})
     body = item.question_version.body
     try:

@@ -8,6 +8,7 @@ reuses `schemas.parse_body` for its errors; `services.add_version` validates aga
 from copy import deepcopy
 
 from django import forms
+from django.utils.translation import gettext_lazy as _
 from django_jsonform.forms.fields import JSONFormField
 from pydantic import ValidationError
 
@@ -96,11 +97,11 @@ class BodyField(JSONFormField):
 class QuestionForm(forms.Form):
     """Body (schema editor), tags and pool for one question."""
 
-    pc = forms.CharField(label="PC tag", required=False)
-    type = forms.CharField(label="Type", required=False)
-    pool = forms.ChoiceField(label="Pool")
+    pc = forms.CharField(label=_("PC tag"), required=False)
+    type = forms.CharField(label=_("Type"), required=False)
+    pool = forms.ChoiceField(label=_("Pool"))
     keep_live = forms.BooleanField(
-        label="Keep it live (publishes this version now)", required=False
+        label=_("Keep it live (publishes this version now)"), required=False
     )
 
     def __init__(self, *args, question, version, pools, is_admin, **kwargs):
@@ -109,7 +110,7 @@ class QuestionForm(forms.Form):
         self.fields = {
             "body": BodyField(
                 schema=form_schema(question.format),
-                label="Question",
+                label=_("Question"),
                 initial=version.body if version else {},
             ),
             **self.fields,
@@ -121,7 +122,7 @@ class QuestionForm(forms.Form):
     def clean_body(self):
         body = self.cleaned_data["body"]
         if not isinstance(body, dict):
-            raise forms.ValidationError("The question must be an object.")
+            raise forms.ValidationError(_("The question must be an object."))
         body = strip_empty(self.question.format, body)
         try:
             schemas.parse_body(self.question.format, body)

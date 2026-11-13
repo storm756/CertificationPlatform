@@ -1,5 +1,6 @@
 /* settings (switches and segmented options) and dial (steppers for times and numbers). */
 
+import { t } from "../i18n";
 import { clear, el } from "../dom";
 import type { Base, Ctx, Tokened } from "../types";
 import { asMap, doneToggle } from "./shared";
@@ -16,7 +17,7 @@ export function renderSettings(ctx: Ctx<SettingsQ>): void {
   let done = Boolean(q.response.done);
   const current = (row: SettingsQ["rows"][number]) => (row.token in values ? values[row.token] : row.start);
   const push = () => ctx.save({ values, done });
-  const device = el("div", { class: "eng-device" }, el("div", { class: "eng-device__bar" }, el("span", {}, q.screen || "Settings"), el("small", {}, q.device)));
+  const device = el("div", { class: "eng-device" }, el("div", { class: "eng-device__bar" }, el("span", {}, q.screen || t("Settings")), el("small", {}, q.device)));
   for (const row of q.rows) {
     const line = el("div", { class: "eng-setrow" }, el("span", { class: "eng-setrow__label" }, row.text));
     if (row.kind === "switch") {

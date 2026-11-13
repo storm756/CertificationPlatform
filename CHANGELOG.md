@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-13: Stage 8, multilingual (Hindi, Marathi, Gujarati)
+
+- UI strings: Python messages, form labels and choice labels are now gettext; complete `hi`, `mr` and `gu` catalogues (658 strings each) are committed with compiled `.mo` files. 167 per language come from the prototype's phrase drafts; the rest were drafted for this PR. **Every entry is a draft marked `draft: needs review`** for the team to check in Rosetta (D7). Why: Stage 8, every page in four languages.
+- Rosetta (`django-rosetta==0.10.3`) at `/rosetta/` for staff translators. The dev image now installs GNU gettext; production uses the committed `.mo` files.
+- New `apps/translations`: the `Translation` table (draft/reviewed, source text and hash, history), stable keys (§14 plus `mod:`, `part:`, `note:`), `t()` with source-hash staleness, a per-language Reviewer permission (never your own upload, never a stale line), the per-module XLSX export/import with validation, coverage, and `import_draft_translations` with an unmatched-lines report kept in `content-data/`. Why: architecture §14; one English edit now makes a line stale instead of silently breaking it.
+- Learning pages (catalogue, module, unit, reveal and myth/fact answers) show translations, with a "Draft translation" tag for drafts. The Module 8 page shows D33's note that its crosswords stay English, in the learner's language once reviewed. Why: Stage 8, D33.
+- Assessments show **reviewed** translations of questions, options, hints and part names (D24), never drafts or stale lines, through a display copy of the stored question; scoring and the per-attempt tokens always use the stored English version, so switching language mid-attempt only changes the words. Lesson practice checks follow the same rule. Crosswords stay English (D33). Why: D24; done on Opus as the reviewer asked.
+- The interactive engine's labels are translated through a `json_script` label table; the attempt-page tests now allow that one JSON data block (it is never executed). Why: the engine had hard-coded English.
+- Found while importing: the team's `_framework-labels-verify.csv` has its columns shifted one to the left. The importer detects it and refuses any line in the wrong script.
+
 ## 2026-11-13: Rate limits are per user or per client, not one site-wide bucket
 
 - `/learn/check/` and the block endpoint (`/learn/m<n>/<unit>/block/<i>/`) are now limited per signed-in user (`key="user"`, still 120 an hour); the mentor reset link (`/reset/<token>/`) is limited per client IP through `apps.audit.services.client_ip` (still 30 an hour). Why: they used `key="ip"`, which reads `REMOTE_ADDR`, and behind Caddy that is always Caddy's own address, so every learner on the site shared each limit. The certificate verify page and registration already keyed correctly.

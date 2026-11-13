@@ -13,7 +13,7 @@
       {% with current=unit %}{% include "learn/_outline.html" %}{% endwith %}
       <article>
         <nav class="crumbs" aria-label="{% translate 'Breadcrumb' %}"><a href="{% url 'learn_catalogue' %}">{% translate "Modules" %}</a>{% icon "chevron-right" %}<a href="{% url 'learn_module' module.number %}">{% translate "Module" %} {{ module.number }}</a>{% icon "chevron-right" %}<span aria-current="page">{{ unit.get_type_display }}</span></nav>
-        <header class="unit-head"><p class="eyebrow">{{ unit.get_type_display }} · {{ unit.nominal_minutes }} {% translate "min" %}</p><h1>{{ version.title }}</h1></header>
+        <header class="unit-head"><p class="eyebrow">{{ unit.get_type_display }} · {{ unit.nominal_minutes }} {% translate "min" %}</p><h1>{{ version.title }}</h1>{% if draft_translation %}{% translate "Draft translation" as draft_label %}{% include "components/badge.html" with text=draft_label colour="mustard" icon="info" %}{% endif %}</header>
         <div class="prose{% if unit.type == 'reading' %} prose--reading{% endif %}">{% include "learn/_blocks.html" with blocks=blocks %}</div>
         <div data-end-sentinel class="sentinel"></div>
         <div class="complete-bar{% if this.done %} is-done{% endif %}" data-complete-bar>

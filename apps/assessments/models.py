@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
 from simple_history.models import HistoricalRecords
 
 from apps.questions.models import Pool
@@ -59,9 +60,9 @@ class AssessmentPart(models.Model):
 
 
 class ProgrammeAssessmentKind(models.TextChoices):
-    FINAL = "final", "Final exam"
-    PRETEST = "pretest", "Pre-test"
-    MOCK = "mock", "Practice mock"
+    FINAL = "final", _("Final exam")
+    PRETEST = "pretest", _("Pre-test")
+    MOCK = "mock", _("Practice mock")
 
 
 class ProgrammeAssessment(models.Model):

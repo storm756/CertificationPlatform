@@ -40,5 +40,6 @@
 {% block scripts %}
   <script src="{% static 'js/htmx.min.js' %}" defer></script>
   <script src="{% static 'js/attempt.js' %}" defer></script>
+  {% engine_labels %}
   <script src="{% static 'js/engine.js' %}" defer></script>
 {% endblock %}

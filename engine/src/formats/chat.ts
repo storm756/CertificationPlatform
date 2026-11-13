@@ -1,6 +1,7 @@
 /* chat: a short branching conversation. The next step is fetched from the server only after the
    learner's reply has been saved, so later steps (and their replies) are never in the browser. */
 
+import { t } from "../i18n";
 import { clear, el } from "../dom";
 import type { Base, Ctx, Tokened } from "../types";
 import { asList } from "./shared";
@@ -21,12 +22,12 @@ export function renderChat(ctx: Ctx<ChatQ>): void {
     const log = el("div", { class: "eng-log", "aria-live": "polite" });
     for (const step of q.steps) {
       log.append(el("div", { class: "eng-bub eng-bub--them" }, el("span", { class: "eng-who" }, q.who), step.say));
-      if (step.chosen !== undefined) log.append(el("div", { class: "eng-bub eng-bub--me" }, el("span", { class: "eng-who" }, "You"), step.text ?? ""));
+      if (step.chosen !== undefined) log.append(el("div", { class: "eng-bub eng-bub--me" }, el("span", { class: "eng-who" }, t("You")), step.text ?? ""));
     }
     stage.append(log);
     const last = q.steps[q.steps.length - 1];
     if (last && last.replies) {
-      const box = el("div", { class: "eng-replies", role: "group", "aria-label": "What do you say or do?" });
+      const box = el("div", { class: "eng-replies", role: "group", "aria-label": t("What do you say or do?") });
       for (const reply of last.replies) {
         const button = el("button", { type: "button", class: "eng-reply" }, reply.text);
         button.addEventListener("click", async () => {
@@ -45,7 +46,7 @@ export function renderChat(ctx: Ctx<ChatQ>): void {
       }
       stage.append(box);
     } else {
-      stage.append(el("p", { class: "eng-note" }, "That is the end of the conversation. Your replies are saved."));
+      stage.append(el("p", { class: "eng-note" }, t("That is the end of the conversation. Your replies are saved.")));
     }
     stage.append(el("p", { class: "eng-count" }, `Step ${Math.min(replies.length + 1, q.total_steps)} of ${q.total_steps}`));
   };

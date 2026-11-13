@@ -12,6 +12,7 @@
         <p class="eyebrow eyebrow--cyan">{% translate "Module" %} {{ module.number }} {% translate "of 9" %}</p>
         <h1>{{ module.display_title }}</h1>
         <p class="lede">{{ module.tagline }}</p>
+        {% if draft_translation %}<p>{% translate "Draft translation" as draft_label %}{% include "components/badge.html" with text=draft_label colour="mustard" icon="info" %}</p>{% endif %}
         <div class="band-meta">
           {% if module.hours %}<span>{% icon "clock" %}≈ {{ module.hours|floatformat:"-1" }} h{% if module.theory_hours %} · {{ module.theory_hours|floatformat:"-1" }} {% translate "theory" %} + {{ module.practical_hours|floatformat:"-1" }} {% translate "practical" %}{% endif %}</span>{% endif %}
           <span>{% icon "book" %}{{ topics|length }} {% translate "topics" %}</span>
@@ -53,6 +54,7 @@
       </section>
 
       <section role="tabpanel" id="panel-assess" aria-labelledby="tab-assess" hidden class="stack-lg">
+        {% if crossword_note %}<div class="notice" data-crossword-note>{% icon "info" %}<p>{{ crossword_note }}</p></div>{% endif %}
         <div class="notice">{% icon "info" %}<p>{% blocktranslate %}Your module score is <strong>Part A (50 marks) + Part B (50 marks)</strong>, using your best attempt at each. You see your score, which questions to revisit and a hint for each, but never the correct option.{% endblocktranslate %}</p></div>
         {% for p in parts %}
           <article class="part-card">

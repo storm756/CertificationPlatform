@@ -15,6 +15,13 @@ RUN apt-get update \
 # requirements.txt for prod images, requirements-dev.txt for the dev/test image
 ARG REQUIREMENTS=requirements.txt
 
+# The dev image gets GNU gettext for makemessages/compilemessages (Stage 8). Production uses the
+# committed .mo files, so it needs no gettext.
+RUN if [ "$REQUIREMENTS" = "requirements-dev.txt" ]; then \
+        apt-get update && apt-get install -y --no-install-recommends gettext \
+        && rm -rf /var/lib/apt/lists/*; \
+    fi
+
 RUN groupadd --system --gid 10001 app \
     && useradd --system --uid 10001 --gid app --home-dir /app --shell /usr/sbin/nologin app
 

@@ -11,6 +11,7 @@ from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Avg, Count
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 from pydantic import ValidationError
 
@@ -201,7 +202,7 @@ def _save_question(request, question, data, is_admin) -> list[str]:
     )  # fmt: skip
     messages.success(
         request,
-        "Saved as a new version."
+        _("Saved as a new version.")
         + (
             " The question is back in draft until an admin publishes it."
             if was_live and not keep_live
@@ -242,7 +243,7 @@ def question_publish(request, pk):
         messages.error(request, f"Cannot publish: {exc}")
     else:
         audit("question.published", actor=request.user, target=question, request=request, pool=question.pool)  # fmt: skip
-        messages.success(request, "The question is live.")
+        messages.success(request, _("The question is live."))
     return redirect("staff_question", pk=question.pk)
 
 
@@ -301,8 +302,10 @@ def marks_edit(request, number):
                     return _apply_marks(request, module, overrides, result)
                 messages.warning(
                     request,
-                    "The impact changed since you previewed it (or it was not previewed). "
-                    "Nothing was saved. Check the new preview and confirm again.",
+                    _(
+                        "The impact changed since you previewed it (or it was not previewed). "
+                        "Nothing was saved. Check the new preview and confirm again."
+                    ),
                 )
     else:
         parts = list(AssessmentPart.objects.filter(module=module).order_by("pk"))
@@ -377,7 +380,7 @@ def _apply_marks(request, module, overrides, result):
         eligible_after - eligible_before
     ) != set(result["gain"]):
         transaction.set_rollback(True)  # the real effect differs from the preview: save nothing
-        messages.error(request, "The real effect differed from the preview, so nothing was saved. Preview again.")  # fmt: skip
+        messages.error(request, _("The real effect differed from the preview, so nothing was saved. Preview again."))  # fmt: skip
         return redirect("staff_marks_edit", number=module.number)
     audit(
         "marks.changed", actor=request.user, target=module, request=request,

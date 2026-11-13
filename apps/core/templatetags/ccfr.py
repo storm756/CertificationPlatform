@@ -96,3 +96,13 @@ def letter(index):
 def elapsed_seconds(since):
     """Whole seconds from `since` until now (the count-up timer starts from this)."""
     return max(0, int((timezone.now() - since).total_seconds()))
+
+
+@register.simple_tag
+def engine_labels():
+    """The interactive engine's labels in the page language, as a json_script element (Stage 8)."""
+    from django.utils.html import json_script
+
+    from apps.questions.engine_labels import engine_labels as labels
+
+    return json_script(labels(), "engine-labels")

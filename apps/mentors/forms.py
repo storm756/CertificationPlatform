@@ -18,12 +18,12 @@ class NewBatchForm(forms.Form):
         data = super().clean()
         start, end = data.get("start_date"), data.get("end_date")
         if start and end and end < start:
-            self.add_error("end_date", "The end date is before the start date.")
+            self.add_error("end_date", _("The end date is before the start date."))
         return data
 
 
 class RegistrationSettingsForm(forms.Form):
-    accepting = forms.BooleanField(required=False, label="Registration is open")
+    accepting = forms.BooleanField(required=False, label=_("Registration is open"))
     opens_at = forms.DateTimeField(
         required=False,
         widget=forms.DateTimeInput(attrs={"type": "datetime-local"}),
@@ -40,7 +40,7 @@ class RegistrationSettingsForm(forms.Form):
         data = super().clean()
         opens, closes = data.get("opens_at"), data.get("closes_at")
         if opens and closes and closes <= opens:
-            self.add_error("closes_at", "Registration must close after it opens.")
+            self.add_error("closes_at", _("Registration must close after it opens."))
         return data
 
     @classmethod
@@ -61,7 +61,7 @@ class MoveLearnerForm(forms.Form):
     batch = forms.ModelChoiceField(
         queryset=Batch.objects.none(),
         empty_label=None,
-        label="Move to",
+        label=_("Move to"),
         error_messages={"required": _("Pick a batch.")},
     )
 
@@ -73,7 +73,7 @@ class MoveLearnerForm(forms.Form):
 
 
 class CertificateNameForm(forms.Form):
-    certificate_name = forms.CharField(max_length=120, label="Certificate name")
+    certificate_name = forms.CharField(max_length=120, label=_("Certificate name"))
 
     def clean_certificate_name(self):
         return clean_certificate_name(self.cleaned_data["certificate_name"])

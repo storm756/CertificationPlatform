@@ -9,6 +9,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
 from apps.accounts.models import Role
@@ -56,7 +57,9 @@ def batch_new(request):
     if request.method == "POST" and form.is_valid():
         batch = services.create_batch(request.user, form.cleaned_data, request)
         messages.success(
-            request, f"Batch {batch.code} created. Registration is closed until you open it."
+            request,
+            _("Batch %(code)s created. Registration is closed until you open it.")
+            % {"code": batch.code},
         )
         return redirect("mentor_batch", pk=batch.pk)
     return render(request, "mentors/batch_new.html", {"form": form})
@@ -101,7 +104,7 @@ def batch_settings(request, pk):
     form = RegistrationSettingsForm(request.POST)
     if form.is_valid():
         services.update_registration(request.user, batch, form.cleaned_data, request)
-        messages.success(request, "Registration settings saved.")
+        messages.success(request, _("Registration settings saved."))
         return redirect("mentor_batch", pk=batch.pk)
     now = timezone.now()
     return render(
@@ -156,7 +159,7 @@ def learner_move(request, learner_id):
     form = MoveLearnerForm(request.POST, mentor=request.user, current_batch=enrolment.batch)
     if form.is_valid():
         services.move_learner(request.user, enrolment, form.cleaned_data["batch"], request)
-        messages.success(request, "Learner moved.")
+        messages.success(request, _("Learner moved."))
         return redirect("mentor_learner", learner_id=learner_id)
     # Any other value is a batch that doesn't exist or isn't this mentor's. Both get the same
     # 403 and the response never says which.
@@ -179,7 +182,7 @@ def learner_name(request, learner_id):
         services.change_certificate_name(
             request.user, enrolment.user, form.cleaned_data["certificate_name"], request
         )
-        messages.success(request, "Certificate name changed.")
+        messages.success(request, _("Certificate name changed."))
         return redirect("mentor_learner", learner_id=learner_id)
     enrolment.refresh_from_db()
     return render(
@@ -211,7 +214,7 @@ def learner_reset_link(request, learner_id):
 def batch_auto_issue(request, pk):
     batch = services.scoped_batch(request.user, pk, request)
     services.set_auto_issue(request.user, batch, request.POST.get("auto_issue") == "on", request)
-    messages.success(request, "Auto-issue updated.")
+    messages.success(request, _("Auto-issue updated."))
     return redirect("mentor_batch", pk=batch.pk)
 
 
@@ -224,24 +227,31 @@ def batch_approve(request, pk):
     ids = [learner] if learner.isdigit() else None
     outcome = certificates.approve(request.user, batch, ids, request)
     if outcome["issued"]:
-        messages.success(request, f"{outcome['issued']} certificate(s) issued.")
+        messages.success(request, _("%(n)s certificate(s) issued.") % {"n": outcome["issued"]})
     if outcome["held"]:
         messages.warning(
             request,
-            f"{outcome['held']} learner(s) held back: their certificate name is not in English letters. Correct the name on the learner's page, then approve.",
+            _(
+                "%(n)s learner(s) held back: their certificate name is not in English letters. Correct the name on the learner's page, then approve."
+            )
+            % {"n": outcome["held"]},  # fmt: skip
         )
     if outcome["failed"]:
         messages.error(
             request,
-            f"{outcome['failed']} certificate(s) could not be issued. They are still waiting; try again or tell an admin.",
+            _(
+                "%(n)s certificate(s) could not be issued. They are still waiting; try again or tell an admin."
+            )
+            % {"n": outcome["failed"]},  # fmt: skip
         )
     elif outcome["remaining"] and ids is None:
         messages.info(
             request,
-            f"{outcome['remaining']} learner(s) still waiting. Click Approve all again to continue.",
+            _("%(n)s learner(s) still waiting. Click Approve all again to continue.")
+            % {"n": outcome["remaining"]},  # fmt: skip
         )
     if not outcome["issued"] and not outcome["failed"] and not outcome["held"]:
-        messages.info(request, "Nobody was waiting for approval.")
+        messages.info(request, _("Nobody was waiting for approval."))
     return redirect(f"{reverse('mentor_batch', args=[batch.pk])}#certificates")
 
 
