@@ -288,6 +288,8 @@ CERTIFICATE_APPROVE_PER_REQUEST = 15  # "Approve all" issues at most this many p
 from datetime import time as _time  # noqa: E402
 
 PERIODIC_RUN_AT = _time(3, 0)
+# Pinged after every wake-up of the `tasks` loop (apps/core/monitoring.py). Empty: off.
+TASKS_PING_URL = env("TASKS_PING_URL", "")
 
 # --- Public pages (Stage 9) ---
 # "Who runs it" shows the three people with photos only after each has agreed to appear. Until then
