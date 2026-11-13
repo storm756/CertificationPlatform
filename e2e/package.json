@@ -1,0 +1,14 @@
+{
+  "name": "ccfr-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Browser journeys (architecture section 18). Dev and staging only; not part of the site.",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.49.1",
+    "@types/node": "^22.10.0"
+  }
+}

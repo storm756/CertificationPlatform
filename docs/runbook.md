@@ -268,8 +268,43 @@ The films and handouts are stored in the env's media volume; `publish_ccfr_cours
 
 ## 8. Automated checks against staging (Stage 10b)
 
-The Playwright journeys and the 60-learner load test are run by a person against staging once the course is loaded. Their
-set-up and commands are in Stage 10b's README (`e2e/README.md`, `loadtest/README.md`).
+Run by a person, after the course is loaded (§7), the exam sets are released and the smoke test (§1.3) passes. Nobody else should be using
+staging: journey 15 changes the module 1 mark split for a few seconds and puts it back, and the load test uses the whole server.
+Both use invented accounts that the app adds and removes (`e2e_seed`, `e2e_clean`, `loadtest_seed`); they refuse to run on prod.
+Use the `MANAGE` helper from the top of this file (it runs as the database owner, which `e2e_clean` needs to remove the released
+test exam set).
+
+### 8.1 The 16 browser journeys (`e2e/`)
+
+```bash
+# on the server
+"${MANAGE[@]}" e2e_clean
+MANAGE_T=("${MANAGE[@]:0:5}" -T "${MANAGE[@]:5}")   # the same helper without a terminal, so the JSON can be redirected
+"${MANAGE_T[@]}" e2e_seed 2>/dev/null > /tmp/e2e-manifest.json
+# copy /tmp/e2e-manifest.json to e2e/manifest.json on your PC (scp), then, on your PC:
+cd e2e && npm ci && npx playwright install chromium
+BASE_URL=https://staging.cyberfirstresponse.io npx playwright test
+# back on the server, remove everything the run added:
+"${MANAGE[@]}" e2e_clean
+```
+
+Journeys 2 and 3 read e-mails from Mailpit and are skipped on staging (real mail is sent): do those two by hand once (register, open
+the verification link, and for a 16 or 17-year-old the guardian link), or set `MAILPIT_URL`. A failed journey leaves a screenshot and a
+trace in `e2e/test-results/`. Record the result in `docs/history/`. Details: `e2e/README.md`.
+
+### 8.2 The 60-learner load test (`loadtest/`)
+
+```bash
+# on the server
+"${MANAGE[@]}" loadtest_seed --count 60
+# on your PC (python -m venv .venv-load; pip install -r loadtest/requirements.txt), one network, all 60 at once:
+locust -f loadtest/locustfile.py --headless --host https://staging.cyberfirstresponse.io -u 60 -r 60 --run-time 20m --csv loadtest/results
+# back on the server:
+"${MANAGE[@]}" loadtest_seed --clean; "${MANAGE[@]}" e2e_clean
+```
+
+Pass: the last line says `VERDICT: PASS` (p95 of the exam requests under 1 s, no failures). Watch `docker stats` on the server while it
+runs. If it fails, do not raise the line: send the numbers back for a fix PR. Details: `loadtest/README.md`.
 
 ---
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-14: Stage 10b, browser journeys and load test
+
+- **`e2e/`:** Playwright journeys 1–16 of architecture §18 (17 is the restore drill), driven through the real pages. They pass at 1366px against a development stack that holds the full course (`csfr-restore`) and on an empty database (what CI uses), and at 390px (`E2E_MOBILE=1`) on the empty database. New commands `manage.py e2e_seed` and `e2e_clean` add and remove invented batches, learners, staff, a released exam set and a sandbox module; they refuse anything but dev and staging and never edit existing rows.
+- **CI:** a new `e2e` job on pull requests (Postgres and Mailpit services, the invented seed, a dev server, Chromium).
+- **`loadtest/`:** a locust file where 60 learners take the final together, with a pass/fail verdict (p95 of the exam requests under 1 s, no failures), `manage.py loadtest_seed`, and a README for a person to run it on staging. Only a 5-learner smoke run was done here (535 requests, 0 failures, p95 260 ms); the real run is a launch-checklist step.
+- **Fix:** a signed-in learner or mentor who opened `/admin/` got an endless redirect (found in 10a). `/admin/login/` now answers 403 and logs `access.denied`.
+- Why: the launch checklist needs the journeys and the load test to be repeatable by a person on staging.
+
 ## 2026-11-14: Stage 10a, launch hardening (headers, rate limits, edge Caddy, monitoring, runbook)
 
 - **CSP from Django** (`apps/core/security.py`): one strict policy on every page (self plus the youtube-nocookie frame). The YouTube player script is allowed only on a lesson that embeds a YouTube film (none yet), and a separate policy covers `/admin/` and `/rosetta/`. Caddy now adds the same headers only where Django set none (static and media files), so nothing is doubled; HSTS is 1 year with subdomains on prod and 300 s on staging. Why: Stage 10, architecture §16; the old Caddy policy allowed `www.youtube.com` scripts on every page and left the admin without a CSP.
