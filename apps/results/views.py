@@ -5,6 +5,7 @@ Everything shown is computed by `compute_results`, so it always agrees with elig
 
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils.translation import gettext as _
 
 from apps.assessments import examsets, programme
 from apps.assessments.models import Attempt, AttemptStatus, ProgrammeAssessmentKind
@@ -12,6 +13,7 @@ from apps.certificates import services as certificates
 from apps.content import services as content
 from apps.results import insights
 from apps.results.policy import FINAL_PASS, compute_results, round1
+from apps.translations.pages import learning_lookup
 
 
 def _final_bands(user):
@@ -27,11 +29,11 @@ def _final_bands(user):
 def journey(result, final_state) -> list[dict]:
     """The strip: pre-test, modules, mock, final, certificate, each done / next / waiting."""
     steps = [
-        ("Pre-test", result.pretest_done),
-        ("Modules", result.parts_all_answered),
-        ("Practice mock", None),
-        ("Final", result.final_passed),
-        ("Certificate", result.already_issued),
+        (_("Pre-test"), result.pretest_done),
+        (_("Modules"), result.parts_all_answered),
+        (_("Practice mock"), None),
+        (_("Final"), result.final_passed),
+        (_("Certificate"), result.already_issued),
     ]
     out, marked_next = [], False
     for label, done in steps:
@@ -46,27 +48,40 @@ def whats_left(result, user, pretest_ready=True) -> dict:
     """Things still to do first, finished ones after (collapsed in the page)."""
     todo, done = [], []
     pre = {
-        "text": "Take the short pre-test",
+        "text": _("Take the short pre-test"),
         "href": reverse("programme_intro", args=["pretest"]) if pretest_ready else None,
-        "detail": None if pretest_ready else "not available yet",
+        "detail": None if pretest_ready else _("not available yet"),
         "done": result.pretest_done,
     }
     (done if pre["done"] else todo).append(pre)
     for module in result.modules:
         for part in module.parts:
             item = {
-                "text": f"Module {module.number}: {part.name}",
+                "text": _("Module %(number)s: %(part)s")
+                % {"number": module.number, "part": part.name},
                 "href": reverse("assess_intro", args=[part.part_id]),
                 "done": part.answered,
-                "detail": f"best {round1(part.best)}%" if part.attempts else "not started",
+                "detail": _("best %(score)s%%") % {"score": round1(part.best)}
+                if part.attempts
+                else _("not started"),
             }
             (done if item["done"] else todo).append(item)
     return {"todo": todo, "done": done}
 
 
+def _localise_titles(result) -> None:
+    """Module titles in the page language (drafts allowed: learning text). Display only: the
+    result is not stored. Part names are assessment text and stay as they are (D24)."""
+    lookup = learning_lookup(extra_keys=[f"mod:{m.number}:title" for m in result.modules])
+    for m in result.modules:
+        if m.title:
+            m.title = lookup.get(f"mod:{m.number}:title", m.title)
+
+
 def dashboard(request):
     user = request.user
     result = compute_results([user.pk])[user.pk]
+    _localise_titles(result)
     pretest_ready = programme.pretest_available(user)
     # the same rules start_programme applies: course setup, pre-test, every part answered
     final_reasons = programme.final_locked_reasons(user)

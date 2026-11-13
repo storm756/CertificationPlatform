@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ccfr\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 20:41+0530\n"
+"POT-Creation-Date: 2026-11-13 20:58+0530\n"
 "PO-Revision-Date: 2026-11-13 21:00+0530\n"
 "Language-Team: CCFR translators (drafts pending review)\n"
 "Language: mr\n"
@@ -138,6 +138,25 @@ msgstr "तुमच्या बॅचला अजून अंतिम प�
 #: apps/assessments/examsets.py:247 apps/assessments/examsets.py:262
 msgid "Your batch's final exam set is not ready yet."
 msgstr "तुमच्या बॅचचा अंतिम परीक्षा संच अजून तयार नाही."
+
+# draft: needs review
+#: apps/assessments/models.py:63 apps/questions/models.py:27
+#: templates/assessments/programme_intro.html:3 templates/assessments/programme_intro.html:7
+#: templates/learn/catalogue.html:30 templates/progress/dashboard.html:64
+msgid "Final exam"
+msgstr "अंतिम परीक्षा"
+
+# draft: needs review
+#: apps/assessments/models.py:64 apps/results/views.py:31
+#: templates/assessments/programme_intro.html:3 templates/assessments/programme_intro.html:7
+#: templates/learn/catalogue.html:26
+msgid "Pre-test"
+msgstr "पूर्व-चाचणी"
+
+# draft: needs review
+#: apps/assessments/models.py:65 apps/results/views.py:33 templates/learn/catalogue.html:29
+msgid "Practice mock"
+msgstr "सराव चाचणी"
 
 # draft: needs review
 #: apps/assessments/programme.py:101
@@ -396,13 +415,11 @@ msgstr "कोणीही मंजुरीच्या प्रतीक्�
 
 # draft: needs review
 #: apps/questions/engine_labels.py:11
-#| msgid "Read"
 msgid "Red"
 msgstr "लाल"
 
 # draft: needs review
 #: apps/questions/engine_labels.py:12
-#| msgid "Remember"
 msgid "Amber"
 msgstr "नारिंगी"
 
@@ -428,117 +445,110 @@ msgid "All placed. Tap a card to move it."
 msgstr "सर्व ठेवले. कार्ड हलवण्यासाठी त्यावर टॅप करा."
 
 # draft: needs review
-#: apps/questions/engine_labels.py:17
+#: apps/questions/engine_labels.py:18
 msgid "Tap an item on the left, then its partner on the right. Tap again to change a pair."
 msgstr ""
 "डावीकडील एखाद्या गोष्टीवर टॅप करा, मग उजवीकडील तिच्या जोडीवर. जोडी बदलण्यासाठी पुन्हा टॅप करा."
 
 # draft: needs review
-#: apps/questions/engine_labels.py:18
-#| msgid "Registration"
+#: apps/questions/engine_labels.py:20
 msgid "Situation"
 msgstr "परिस्थिती"
 
 # draft: needs review
-#: apps/questions/engine_labels.py:19
+#: apps/questions/engine_labels.py:21
 msgid "Goes with"
 msgstr "कशाशी जुळते"
 
 # draft: needs review
-#: apps/questions/engine_labels.py:20
-#| msgid "Your journey"
+#: apps/questions/engine_labels.py:22
 msgid "Your order"
 msgstr "तुमचा क्रम"
 
 # draft: needs review
-#: apps/questions/engine_labels.py:21
+#: apps/questions/engine_labels.py:23
 msgid "Tap the steps below in the order you would do them."
 msgstr "खालील टप्पे तुम्ही ज्या क्रमाने कराल त्या क्रमाने टॅप करा."
 
 # draft: needs review
-#: apps/questions/engine_labels.py:22
-#| msgid "Topics to revisit"
+#: apps/questions/engine_labels.py:24
 msgid "Tap to remove"
 msgstr "काढण्यासाठी टॅप करा"
 
 # draft: needs review
-#: apps/questions/engine_labels.py:23
+#: apps/questions/engine_labels.py:25
 msgid "Steps to place"
 msgstr "ठेवायचे टप्पे"
 
 # draft: needs review
-#: apps/questions/engine_labels.py:24
+#: apps/questions/engine_labels.py:26
 #, python-brace-format
 msgid "Cards for: {label}"
 msgstr "यासाठी कार्डे: {label}"
 
 # draft: needs review
-#: apps/questions/engine_labels.py:25
+#: apps/questions/engine_labels.py:27
 msgid "Tap a slot to change it"
 msgstr "बदलण्यासाठी एखाद्या जागेवर टॅप करा"
 
 # draft: needs review
-#: apps/questions/engine_labels.py:26
+#: apps/questions/engine_labels.py:28
 msgid "You"
 msgstr "तुम्ही"
 
 # draft: needs review
-#: apps/questions/engine_labels.py:27
+#: apps/questions/engine_labels.py:29
 msgid "What do you say or do?"
 msgstr "तुम्ही काय बोलाल किंवा कराल?"
 
 # draft: needs review
-#: apps/questions/engine_labels.py:28
+#: apps/questions/engine_labels.py:30
 msgid "That is the end of the conversation. Your replies are saved."
 msgstr "संभाषण इथे संपते. तुमची उत्तरे जतन झाली आहेत."
 
 # draft: needs review
-#: apps/questions/engine_labels.py:29
-#| msgid "Choose one answer."
+#: apps/questions/engine_labels.py:31
 msgid "Choose one answer"
 msgstr "एक उत्तर निवडा"
 
 # draft: needs review
-#: apps/questions/engine_labels.py:30
+#: apps/questions/engine_labels.py:32
 msgid "All cards are answered. Use Previous to change one."
 msgstr "सर्व कार्डांची उत्तरे दिली आहेत. एखादे बदलण्यासाठी 'मागील' वापरा."
 
 # draft: needs review
-#: apps/questions/engine_labels.py:31 templates/assessments/_question_panel.html:39
+#: apps/questions/engine_labels.py:33 templates/assessments/_question_panel.html:39
 #: templates/learn/unit.html:24
 msgid "Previous"
 msgstr "मागील"
 
 # draft: needs review
-#: apps/questions/engine_labels.py:32
-#| msgid "Your certificate"
+#: apps/questions/engine_labels.py:34
 msgid "Your verdict"
 msgstr "तुमचा निर्णय"
 
 # draft: needs review
-#: apps/questions/engine_labels.py:33
-#| msgid "The pre-test is not available yet."
+#: apps/questions/engine_labels.py:35
 msgid "The picture for this question is not available yet."
 msgstr "या प्रश्नाचे चित्र अजून उपलब्ध नाही."
 
 # draft: needs review
-#: apps/questions/engine_labels.py:34
+#: apps/questions/engine_labels.py:36
 msgid "Settings"
 msgstr "सेटिंग्ज"
 
 # draft: needs review
-#: apps/questions/engine_labels.py:35
+#: apps/questions/engine_labels.py:37
 msgid "I have finished this question"
 msgstr "मी हा प्रश्न पूर्ण केला आहे"
 
 # draft: needs review
-#: apps/questions/engine_labels.py:36
+#: apps/questions/engine_labels.py:38
 msgid "✓ Marked as finished"
 msgstr "✓ पूर्ण म्हणून खूण केली"
 
 # draft: needs review
-#: apps/questions/engine_labels.py:37
-#| msgid "The question must be an object."
+#: apps/questions/engine_labels.py:39
 msgid "This question can't be shown."
 msgstr "हा प्रश्न दाखवता येत नाही."
 
@@ -618,13 +628,6 @@ msgid "Module quiz"
 msgstr "मॉड्यूल क्विझ"
 
 # draft: needs review
-#: apps/questions/models.py:27 templates/assessments/programme_intro.html:3
-#: templates/assessments/programme_intro.html:7 templates/learn/catalogue.html:30
-#: templates/progress/dashboard.html:64
-msgid "Final exam"
-msgstr "अंतिम परीक्षा"
-
-# draft: needs review
 #: apps/questions/models.py:28
 msgid "Practice"
 msgstr "सराव"
@@ -691,6 +694,56 @@ msgstr "अंतिम परीक्षा द्या."
 #, python-format
 msgid "Your best final is %(best)s%%. You need %(need)s%%."
 msgstr "अंतिम परीक्षेत तुमचा सर्वोत्तम %(best)s%% आहे. तुम्हाला %(need)s%% हवेत."
+
+# draft: needs review
+#: apps/results/views.py:32 templates/components/header.html:23 templates/learn/capstone.html:9
+#: templates/learn/catalogue.html:3 templates/learn/catalogue.html:10 templates/learn/module.html:9
+#: templates/learn/unit.html:15
+msgid "Modules"
+msgstr "मॉड्यूल"
+
+# draft: needs review
+#: apps/results/views.py:34 templates/mentors/batch_detail.html:111
+msgid "Final"
+msgstr "अंतिम"
+
+# draft: needs review
+#: apps/results/views.py:35 templates/certificates/mine.html:7 templates/components/header.html:36
+#: templates/progress/dashboard.html:91
+msgid "Certificate"
+msgstr "प्रमाणपत्र"
+
+# draft: needs review
+#: apps/results/views.py:50
+#| msgid "Next: the short pre-test"
+msgid "Take the short pre-test"
+msgstr "छोटी प्री-टेस्ट द्या"
+
+# draft: needs review
+#: apps/results/views.py:52
+#| msgid "Pre-test not available yet"
+msgid "not available yet"
+msgstr "अजून उपलब्ध नाही"
+
+# draft: needs review
+#: apps/results/views.py:59
+#, python-format
+#| msgid "Module %(number)s is at %(score)s%%."
+msgid "Module %(number)s: %(part)s"
+msgstr "मॉड्यूल %(number)s: %(part)s"
+
+# draft: needs review
+#: apps/results/views.py:63
+#, python-format
+#| msgid "your best %(part)s is %(score)s%%"
+msgid "best %(score)s%%"
+msgstr "सर्वोत्तम %(score)s%%"
+
+# draft: needs review
+#: apps/results/views.py:65
+#| msgid "Not started"
+msgid "not started"
+msgstr "सुरू नाही"
 
 # draft: needs review
 #: apps/staff/forms.py:100 templates/staff/question_edit.html:20
@@ -1091,12 +1144,6 @@ msgid "View result"
 msgstr "निकाल पाहा"
 
 # draft: needs review
-#: templates/assessments/programme_intro.html:3 templates/assessments/programme_intro.html:7
-#: templates/learn/catalogue.html:26
-msgid "Pre-test"
-msgstr "पूर्व-चाचणी"
-
-# draft: needs review
 #: templates/assessments/programme_intro.html:8
 #, python-format
 msgid "Half of your overall result. You need 50%% to pass."
@@ -1478,12 +1525,6 @@ msgid "My certificate"
 msgstr "माझे प्रमाणपत्र"
 
 # draft: needs review
-#: templates/certificates/mine.html:7 templates/components/header.html:36
-#: templates/progress/dashboard.html:91
-msgid "Certificate"
-msgstr "प्रमाणपत्र"
-
-# draft: needs review
 #: templates/certificates/mine.html:8
 msgid "Your certificate is ready"
 msgstr "तुमचे प्रमाणपत्र तयार आहे"
@@ -1817,13 +1858,6 @@ msgstr "मेनू"
 #: templates/components/header.html:18
 msgid "Primary"
 msgstr "मुख्य"
-
-# draft: needs review
-#: templates/components/header.html:23 templates/learn/capstone.html:9
-#: templates/learn/catalogue.html:3 templates/learn/catalogue.html:10 templates/learn/module.html:9
-#: templates/learn/unit.html:15
-msgid "Modules"
-msgstr "मॉड्यूल"
 
 # draft: needs review
 #: templates/components/header.html:26 templates/mentors/batch_detail.html:16
@@ -2214,11 +2248,6 @@ msgstr "शिका, सराव करा, मग प्रत्येक �
 #: templates/learn/catalogue.html:28
 msgid "Coming soon. An ungraded case simulation."
 msgstr "लवकरच. गुण नसलेले प्रकरण सिम्युलेशन."
-
-# draft: needs review
-#: templates/learn/catalogue.html:29
-msgid "Practice mock"
-msgstr "सराव चाचणी"
 
 # draft: needs review
 #: templates/learn/catalogue.html:29
@@ -2678,11 +2707,6 @@ msgstr "विद्यार्थीनिहाय निकाल"
 #: templates/mentors/batch_detail.html:111
 msgid "Learner"
 msgstr "विद्यार्थी"
-
-# draft: needs review
-#: templates/mentors/batch_detail.html:111
-msgid "Final"
-msgstr "अंतिम"
 
 # draft: needs review
 #: templates/mentors/batch_detail.html:111
