@@ -2919,8 +2919,10 @@ msgstr "सक्षम प्राधिकरणाच्या मंजु�
 # draft: needs review
 #: templates/landing.html:236
 #, python-format
-msgid "The %(short)s certificate design, with both partner logos, the holder's name and a QR code"
-msgstr "%(short)s प्रमाणपत्राची रचना, ज्यात दोन्ही भागीदारांचे लोगो, धारकाचे नाव आणि एक QR कोड आहे"
+msgid ""
+"A sample %(short)s certificate with an invented name, showing the SAKEC and CyberPeace logos, "
+"the grade, three signatories and a QR code"
+msgstr "काल्पनिक नाव असलेला %(short)s प्रमाणपत्राचा नमुना, ज्यात SAKEC आणि CyberPeace चे लोगो, ग्रेड, तीन स्वाक्षरीकर्ते आणि एक QR कोड दिसतो"
 
 # draft: needs review
 #: templates/landing.html:237

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-14: Stage 9 follow-up, the landing page's sample certificate
+
+- The landing page showed `static/img/cert-front.jpg`, the old prototype certificate: the old name "Certificate in Cyber Incident First Response", an old qualification, the **AICTE and NCSRC logos** (not in D36; they would imply an endorsement nobody has given) and an "Achievement category" badge. It is deleted. The landing page now shows `static/img/certificate-sample.png`, rendered from the real certificate template (Stage 7 placeholder design) with an invented name ("Your Name Here"), number `CCFR-2026-SAKEC-000000`, the public domain on the QR line and no signature images. The alt text and its hi/mr/gu drafts were rewritten to match. Why: the public page must show the certificate learners actually get (D36).
+- New `python manage.py certificate_sample --out <file.png|file.pdf>`: renders that sample. **Re-run it and commit the PNG whenever the certificate template changes** (final design, emblem). It never loads a real signature image, because the output goes into this public repo (D22). PNG output needs `pypdfium2` (now in `requirements-dev.txt`).
+- Tests: `tests/test_certificate_sample.py` (real template, invented details, public domain, no old wording or AICTE, no signature image loaded, the landing page uses the new image and the old file is gone).
+- Done in a separate review session, not by the build session.
+
 ## 2026-11-13: Stage 9, landing page and public pages
 
 - New landing page ported from the prototype (hero with the stage tabs, facts, a first-response check with its own four scenarios, the module list, how certification works, challenge formats, languages, certificate, who runs it, FAQ, call to action). Calls to action go to register and sign-in (D34); night mode, "learning never locked", "unlimited attempts" and "CSFR" wording from the prototype were changed to match D21, D34, D32 and D23/D30.
