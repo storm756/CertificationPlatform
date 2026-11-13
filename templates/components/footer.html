@@ -4,6 +4,9 @@
     <div class="footer-brand"><p><strong>{{ PROGRAMME_NAME }}</strong><br>{% translate "Practical cyber first-response skills for every community." %}</p></div>
     <nav class="footer-nav" aria-label="{% translate 'Policies' %}"><h2>{% translate "Policies" %}</h2>
       <a href="{% url 'privacy' %}">{% translate "Privacy notice" %}</a>
+      <a href="{% url 'terms' %}">{% translate "Terms of use" %}</a>
+      <a href="{% url 'grievance' %}">{% translate "Grievance contact" %}</a>
+      <a href="{% url 'help' %}">{% translate "Help and FAQ" %}</a>
       <a href="mailto:{{ SUPPORT_EMAIL }}">{% icon "mail" "sm" %} {{ SUPPORT_EMAIL }}</a></nav>
     <div class="footer-col"><h2>{% translate "Languages" %}</h2>
       <form method="post" action="{% url 'set_language' %}" class="footer-langs">{% csrf_token %}

@@ -3,7 +3,16 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 
 from apps.accounts import views as account_views
-from apps.core.views import healthz, home, set_language, styleguide
+from apps.core.views import (
+    grievance_view,
+    healthz,
+    help_view,
+    home,
+    people_photo,
+    set_language,
+    styleguide,
+    terms_view,
+)
 
 urlpatterns = [
     path("healthz/", healthz, name="healthz"),
@@ -23,6 +32,10 @@ urlpatterns = [
     path("reset/<str:token>/", account_views.mentor_reset_view, name="mentor_reset"),
     path("notice/dismiss/", account_views.dismiss_reset_notice, name="dismiss_reset_notice"),
     path("privacy/", account_views.privacy_view, name="privacy"),
+    path("terms/", terms_view, name="terms"),
+    path("grievance/", grievance_view, name="grievance"),
+    path("help/", help_view, name="help"),
+    path("people/<slug:slug>/", people_photo, name="people_photo"),
     path("start/", account_views.start, name="start"),
     path("mentor/", include("apps.mentors.urls")),
     path("learn/", include("apps.content.urls")),
@@ -31,3 +44,6 @@ urlpatterns = [
     path("", include("apps.assessments.urls")),
     path("", home, name="home"),
 ]
+
+handler404 = "apps.core.views.not_found"
+handler500 = "apps.core.views.server_error"

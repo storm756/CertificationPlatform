@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load i18n ccfr %}
+{% block head_title %}{% translate "Grievance contact" %}{% endblock %}
+{% block body %}
+  <main id="main" tabindex="-1">
+    {% translate "Policies" as eyebrow %}{% translate "Grievance contact" as title %}{% translate "Raise a concern about your data, your account or the programme." as lede %}
+    {% include "public/_band.html" %}
+    <div class="shell section prose">
+      {% include "public/_draft_notice.html" %}
+      <p>{% translate "The name of the grievance officer, the postal address and the reply times will be added here." %}</p>
+      <p>{% translate "Until then, email us with the word Grievance in the subject line." %}</p>
+      <p><a class="btn btn-primary" href="mailto:{{ SUPPORT_EMAIL }}?subject=Grievance">{% icon "mail" %}{{ SUPPORT_EMAIL }}</a></p>
+    </div>
+  </main>
+{% endblock %}

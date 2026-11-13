@@ -525,3 +525,12 @@ fieldset.form-section { margin: 0; }
 .attempt-head { display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; align-items: flex-end; justify-content: space-between; margin-bottom: 1.25rem; }
 .result-list .result-item--block { display: grid; grid-template-columns: minmax(0, 1fr); gap: .5rem; align-items: start; }
 .result-list .result-item--block .callout { margin: 0; }
+/* ---------- Public pages (Stage 9) ---------- */
+.help-body { max-width: 56rem; }
+.help-cards { margin-top: 2.5rem; }
+.help-cards h2 { font-size: 1.3rem; }
+.help-cards .muted { margin: .4rem 0 1rem; }
+.row--center { justify-content: center; }
+.error-page h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); }
+.error-page .muted { max-width: 32rem; }
+.prose .notice { margin-bottom: 1.5rem; }

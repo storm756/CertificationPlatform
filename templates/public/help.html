@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load i18n ccfr %}
+{% block head_title %}{% translate "Help and FAQ" %}{% endblock %}
+{% block body %}
+  <main id="main" tabindex="-1">
+    {% translate "Help" as eyebrow %}{% translate "How can we help?" as title %}{% translate "Answers to common questions about joining, learning, assessments and certificates." as lede %}
+    {% include "public/_band.html" %}
+    <div class="shell section help-body">
+      <div class="faq-list">
+        {% for question, answer in faq %}
+          <details><summary>{{ question }}{% icon "plus" %}</summary><div><p>{{ answer }}</p></div></details>
+        {% endfor %}
+      </div>
+      <div class="grid-2 help-cards">
+        <div class="card"><h2>{% translate "Still stuck?" %}</h2><p class="muted">{% translate "Talk to your mentor first, since they can see your batch. Or email the support team." %}</p><a class="btn btn-primary" href="mailto:{{ SUPPORT_EMAIL }}">{% icon "mail" %}{{ SUPPORT_EMAIL }}</a></div>
+        <div class="card"><h2>{% translate "Need help right now?" %}</h2><p class="muted">{% blocktranslate %}Money lost to fraud: call <strong>1930</strong> or report at cybercrime.gov.in. Anyone in danger: call <strong>112</strong>.{% endblocktranslate %}</p></div>
+      </div>
+    </div>
+  </main>
+{% endblock %}

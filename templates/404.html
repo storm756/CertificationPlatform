@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% load i18n ccfr %}
+{% block head_title %}{% translate "Page not found" %}{% endblock %}
+{% block body %}
+  <main id="main" tabindex="-1">
+    <section class="error-page"><p class="code" aria-hidden="true">404</p>
+      <h1>{% translate "We can't find that page" %}</h1>
+      <p class="muted">{% translate "The link may be old, or the page may have moved. Nothing you have saved is affected." %}</p>
+      <div class="row row--center"><a class="btn btn-primary" href="{% url 'home' %}">{% translate "Go home" %}</a><a class="btn btn-outline" href="{% url 'help' %}">{% translate "Help and FAQ" %}</a></div>
+    </section>
+  </main>
+{% endblock %}

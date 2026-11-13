@@ -271,3 +271,10 @@ CERTIFICATE_APPROVE_PER_REQUEST = 15  # "Approve all" issues at most this many p
 from datetime import time as _time  # noqa: E402
 
 PERIODIC_RUN_AT = _time(3, 0)
+
+# --- Public pages (Stage 9) ---
+# "Who runs it" shows the three people with photos only after each has agreed to appear. Until then
+# the landing page shows a placeholder card. Photos are never in git (D22): they live in
+# content-data/people/ locally and in PEOPLE_PHOTO_DIR on the server.
+PEOPLE_CONSENT_GIVEN = env_bool("PEOPLE_CONSENT_GIVEN", False)
+PEOPLE_PHOTO_DIR = Path(env("PEOPLE_PHOTO_DIR", str(BASE_DIR / "content-data" / "people")))
