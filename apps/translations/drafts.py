@@ -63,16 +63,46 @@ def read_sheets(folder: Path) -> list[Entry]:
     for path in sorted(folder.glob("*.csv")):
         with path.open(encoding="utf-8-sig", newline="") as handle:
             for number, row in enumerate(csv.DictReader(handle), start=2):
+                english, columns = (row.get("English") or "").strip(), dict(LANG_NAMES)
+                if _shifted(row):
+                    # _framework-labels-verify.csv: the English sits in "id" and every language
+                    # one column to the left (Hindi under "English", Marathi under "Hindi",
+                    # Gujarati under "Marathi").
+                    english = (row.get("id") or "").strip()
+                    columns = {"hi": "English", "mr": "Hindi", "gu": "Marathi"}
                 texts = {}
-                for code, name in LANG_NAMES.items():
+                for code, name in columns.items():
                     value = (row.get(name) or row.get(f"{name} ({_native(code)})") or "").strip()
                     if value:
                         texts[code] = value
-                english = (row.get("English") or "").strip()
                 if english and texts:
                     where = f"{path.name} row {number} ({row.get('id', '')})"
                     out.append(Entry(english, texts, "sheet", where))
     return out
+
+
+def _shifted(row) -> bool:
+    """True for a row whose English is in the id column and whose English column is Indic."""
+    ident, english = row.get("id") or "", row.get("English") or ""
+    return bool(ident.strip()) and _script(english) is not None and _script(ident) is None
+
+
+def _script(text: str) -> str | None:
+    """The Indic script in the text: "deva" (Devanagari), "gujr" (Gujarati) or None."""
+    if any("઀" <= ch <= "૿" for ch in text):
+        return "gujr"
+    if any("ऀ" <= ch <= "ॿ" for ch in text):
+        return "deva"
+    return None
+
+
+def script_problem(code: str, text: str) -> str | None:
+    """A Gujarati line must be in Gujarati script, a Hindi or Marathi line in Devanagari."""
+    found = _script(text)
+    want = "gujr" if code == "gu" else "deva"
+    if found is not None and found != want:
+        return f"the {LANG_NAMES[code]} text is in the wrong script"
+    return None
 
 
 def _native(code):
@@ -191,6 +221,8 @@ def plan(entries: list[Entry]) -> Plan:
                     # if the hint changed since, it is stale rather than wrong.
                     english = entry.english if entry.key else english_of[key]
                     problems = line_errors(english, text)
+                    if script_problem(code, text):
+                        problems.append(script_problem(code, text))
                     if problems:
                         result.refused.append((key, code, "; ".join(problems), entry.where))
                         continue

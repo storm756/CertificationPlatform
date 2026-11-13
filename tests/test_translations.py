@@ -279,3 +279,50 @@ def test_sheets_page_and_rosetta_need_staff(client, unit, make_user, admin_user)
     assert client.get(reverse("admin:translations_sheets")).status_code in (302, 403)
     assert not rules.can_use_rosetta(learner)
     assert rules.can_use_rosetta(admin_user)
+
+
+# --- draft importer ---------------------------------------------------------------------------------
+
+
+def test_draft_import_matches_by_english_and_never_overwrites(unit, tmp_path):
+    from apps.translations import drafts
+
+    sheets = tmp_path / "sheets"
+    sheets.mkdir()
+    (sheets / "module-1.csv").write_text(
+        '"id","English","Hindi","Hindi status","Marathi","Marathi status","Gujarati","Gujarati status"\n'
+        '"m1.t0.0","What  is it?","यह क्या है?","draft - needs review","हे काय आहे?","draft - needs review","આ શું છે?","draft - needs review"\n'
+        '"m1.t9.9","Not in the course","कुछ नहीं","draft - needs review","","","",""\n',
+        encoding="utf-8",
+    )
+    # the team's framework-labels file: English under "id", each language one column left
+    (sheets / "_framework-labels-verify.csv").write_text(
+        '"id","English","Hindi","Hindi status","Marathi","Marathi status","Gujarati","Gujarati status"\n'
+        '"Introduction","परिचय","ओळख","draft - needs review","પરિચય","draft - needs review","","to translate"\n',
+        encoding="utf-8",
+    )
+    entries = drafts.read_sheets(sheets)
+    framework = next(e for e in entries if e.where.startswith("_framework"))
+    assert framework.english == "Introduction"
+    assert framework.texts == {"hi": "परिचय", "mr": "ओळख", "gu": "પરિચય"}
+    row("blk:1.t1:title", "Introduction", "पहले से", lang="hi")  # existing: left alone
+    result = drafts.plan(entries)
+    planned = {(k, c): t for k, c, t, _e, _o in result.rows}
+    assert planned[("blk:1.t1:0:text", "hi")] == "यह क्या है?"  # matched despite spacing
+    assert planned[("blk:1.t1:title", "mr")] == "ओळख"
+    assert ("blk:1.t1:title", "hi") not in planned
+    assert result.skipped_existing == 1
+    assert [e.english for e in result.unmatched] == ["Not in the course"]
+    drafts.apply(result)
+    line = Translation.objects.get(key="blk:1.t1:0:text", language="hi")
+    assert line.status == TranslationStatus.DRAFT and line.source_text == "What is it?"
+    assert Translation.objects.get(key="blk:1.t1:title", language="hi").text == "पहले से"
+
+
+def test_draft_import_refuses_the_wrong_script(unit):
+    from apps.translations import drafts
+
+    entry = drafts.Entry("Introduction", {"gu": "परिचय", "hi": "પરિચય"}, "sheet", "x")
+    result = drafts.plan([entry])
+    assert not result.rows
+    assert len(result.refused) == 2
