@@ -10,6 +10,7 @@
 from datetime import timedelta
 
 from django.conf import settings
+from django.utils.translation import gettext as _
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -69,7 +70,7 @@ class LearnerGateMiddleware:
         ):
             messages.error(
                 request,
-                "Your email can't be changed for 7 days after a password reset by your mentor.",
+                _("Your email can't be changed for 7 days after a password reset by your mentor."),
             )
             return redirect("account_email")
         return self.get_response(request)

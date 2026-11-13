@@ -16,3 +16,4 @@ mammoth==1.13.0
 nh3==0.3.7
 weasyprint==70.0
 segno==1.6.6
+django-rosetta==0.10.2

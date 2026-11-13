@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "simple_history",
     "django_jsonform",
     "import_export",
+    "rosetta",  # UI strings (.po) for staff translators (Stage 8)
     "apps.core",
     "apps.audit",
     "apps.accounts",
@@ -52,6 +53,7 @@ INSTALLED_APPS = [
     "apps.questions",
     "apps.assessments",
     "apps.certificates",
+    "apps.translations",
 ]
 
 MIDDLEWARE = [
@@ -174,6 +176,15 @@ django.conf.locale.LANG_INFO = {
     **django.conf.locale.LANG_INFO,
     "gu": {"bidi": False, "code": "gu", "name": "Gujarati", "name_local": "ગુજરાતી"},
 }
+# Rosetta edits the .po files of this checkout. On a server those edits are not kept across a
+# deploy: download the catalogue from Rosetta and commit it in a PR (architecture §14).
+ROSETTA_ACCESS_CONTROL_FUNCTION = "apps.translations.rules.can_use_rosetta"
+ROSETTA_MESSAGES_SOURCE_LANGUAGE_CODE = "en"
+ROSETTA_MESSAGES_SOURCE_LANGUAGE_NAME = "English"
+ROSETTA_EXCLUDED_APPLICATIONS = ["rosetta", "unfold", "allauth", "simple_history", "import_export"]
+ROSETTA_SHOW_AT_ADMIN_PANEL = True
+ROSETTA_WSGI_AUTO_RELOAD = False
+ROSETTA_UWSGI_AUTO_RELOAD = False
 TIME_ZONE = "Asia/Kolkata"
 USE_I18N = True
 USE_TZ = True

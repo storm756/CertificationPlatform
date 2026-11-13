@@ -8,6 +8,8 @@ learner answers, the server scores it and returns the full answer: practice expl
 
 from decimal import Decimal
 
+from django.utils.translation import gettext as _
+
 from apps.questions import formats
 from apps.questions.models import Pool, Question, QuestionStatus
 
@@ -60,11 +62,11 @@ def answer(user, unit, stable_id: str, choice: str, session) -> dict:
     """Score a practice answer and return the full explanation."""
     question = practice_question(stable_id)
     if question is None or not used_by_published_unit(unit, stable_id):
-        raise CheckRefused("This question is not a practice check.")
+        raise CheckRefused(_("This question is not a practice check."))
     version = question.current_version
     option_map = session.get(_session_key(version.pk))
     if not option_map:
-        raise CheckRefused("Reload the page and try again.")
+        raise CheckRefused(_("Reload the page and try again."))
     try:
         response = formats.clean_response(
             question.format, version.body, option_map, {"choice": choice}

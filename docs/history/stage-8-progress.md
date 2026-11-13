@@ -20,9 +20,9 @@ The assessment part (reviewed translations of questions, options and hints insid
 | # | Step | State |
 | --- | --- | --- |
 | 1 | Branch, this file | done |
-| 2 | gettext locale files (hi, mr, gu) + Rosetta | next |
-| 3 | `Translation` table, `t(key, lang)`, source-hash staleness, reviewer permission per language | |
-| 4 | XLSX export/import per module with validation | |
+| 2 | gettext locale files (hi, mr, gu) + Rosetta | in progress: Python strings wrapped; Rosetta in settings/urls; `.po` files not generated yet (needs Docker) |
+| 3 | `Translation` table, `t(key, lang)`, source-hash staleness, reviewer permission per language | code written (`apps/translations/`), **untested, no migration yet** (Docker was not running) |
+| 4 | XLSX export/import per module with validation | code written (`apps/translations/xlsx.py`, admin sheets page), untested |
 | 5 | Draft importers + unmatched-keys report | |
 | 6 | Header language switch saved to profile, lessons through `t()`, D33 note | |
 | 7 | Assessments (Opus): reviewed translations only, mid-attempt switching, safety tests | |
@@ -30,4 +30,10 @@ The assessment part (reviewed translations of questions, options and hints insid
 
 ## Decisions so far
 
-- None beyond the brief yet.
+- Key grammar extended beyond §14 (documented in `apps/translations/keys.py`): `mod:<n>:<path>`, `part:<id>:name`, `note:<name>`.
+- A paragraph is translated whole (spans joined); a translated paragraph keeps formatting only if it had one span.
+- Crosswords have no translatable text paths (D33). The D33 note is `note:m8-crosswords-english`, shown only when reviewed.
+- XLSX import: a line whose English column differs from the current English is saved against the sheet English, so it is stale (English shown).
+- Admin edit of a line = a new draft by the editor. Review = admin action, per-language permission, never own upload, never stale.
+- Rosetta is for staff with `upload_translations` or superusers; edits on a server are not kept across deploys (download and PR).
+- `django-rosetta==0.10.2` pinned without checking PyPI (no Docker); verify on the next run.

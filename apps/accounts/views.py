@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.utils.translation import gettext as _
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import SetPasswordForm
@@ -110,9 +111,9 @@ def waiting_for_guardian(request):
 @ratelimit(key="user", rate="5/h", method="POST", block=True)
 def resend_guardian(request):
     if request.user.status == UserStatus.PENDING_GUARDIAN and guardian.resend(request.user):
-        messages.success(request, "We have emailed your guardian again.")
+        messages.success(request, _("We have emailed your guardian again."))
     else:
-        messages.error(request, "We could not send the email right now. Please try again later.")
+        messages.error(request, _("We could not send the email right now. Please try again later."))
     return redirect("waiting_for_guardian")
 
 
@@ -161,7 +162,7 @@ def mentor_reset_view(request, token):
                 mentor_reset_at=link.used_at, mentor_reset_notice=True
             )
             audit("password.mentor_reset_used", actor=link.user, target=link.user, request=request)
-        messages.success(request, "Your password is changed. Please sign in.")
+        messages.success(request, _("Your password is changed. Please sign in."))
         return redirect("account_login")
     return render(request, "accounts/reset_link_form.html", {"form": form})
 

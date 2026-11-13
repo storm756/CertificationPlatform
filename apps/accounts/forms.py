@@ -2,6 +2,7 @@ import re
 from datetime import date
 
 from django import forms
+from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.password_validation import validate_password
 from django.utils import timezone
 
@@ -24,7 +25,7 @@ _CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f<>]")
 def clean_person_name(value: str) -> str:
     value = " ".join(value.split())
     if len(value) < 2 or _CONTROL_CHARS.search(value):
-        raise forms.ValidationError("Please enter a valid name.")
+        raise forms.ValidationError(_("Please enter a valid name."))
     return value
 
 
@@ -39,25 +40,25 @@ def clean_certificate_name(value: str) -> str:
 class RegistrationForm(forms.Form):
     certificate_name = forms.CharField(
         max_length=120,
-        label="Full name for your certificate",
-        help_text="In English letters. This exact name will be printed on your certificate. "
+        label=_("Full name for your certificate"),
+        help_text=_("In English letters. This exact name will be printed on your certificate. ")
         "Check the spelling now.",
     )
-    email = forms.EmailField(label="Email")
-    password = forms.CharField(widget=forms.PasswordInput, label="Password")
-    preferred_language = forms.ChoiceField(choices=Language.choices, label="Language")
+    email = forms.EmailField(label=_("Email"))
+    password = forms.CharField(widget=forms.PasswordInput, label=_("Password"))
+    preferred_language = forms.ChoiceField(choices=Language.choices, label=_("Language"))
     date_of_birth = forms.DateField(
-        label="Date of birth", widget=forms.DateInput(attrs={"type": "date"})
+        label=_("Date of birth"), widget=forms.DateInput(attrs={"type": "date"})
     )
     # Validated against every active batch so that "closed meanwhile" reaches the server-side
     # re-check (which gives the proper message). The dropdown only lists open batches.
     batch = forms.ModelChoiceField(
-        queryset=Batch.objects.filter(status=BatchStatus.ACTIVE), label="Batch", empty_label=None
+        queryset=Batch.objects.filter(status=BatchStatus.ACTIVE), label=_("Batch"), empty_label=None
     )
-    guardian_name = forms.CharField(max_length=120, required=False, label="Guardian's full name")
-    guardian_email = forms.EmailField(required=False, label="Guardian's email")
+    guardian_name = forms.CharField(max_length=120, required=False, label=_("Guardian's full name"))
+    guardian_email = forms.EmailField(required=False, label=_("Guardian's email"))
     accept_privacy = forms.BooleanField(
-        required=True, label="I have read and accept the privacy notice."
+        required=True, label=_("I have read and accept the privacy notice.")
     )
 
     def __init__(self, *args, now=None, **kwargs):
@@ -71,7 +72,7 @@ class RegistrationForm(forms.Form):
         if batch and str(batch.pk) not in {str(pk) for pk, _ in self.fields["batch"].choices}:
             self.fields["batch"].choices = [
                 *self.fields["batch"].choices,
-                (batch.pk, f"{batch} (closed)"),
+                (batch.pk, _("%(batch)s (closed)") % {"batch": batch}),
             ]
 
     def clean_certificate_name(self):
@@ -85,9 +86,11 @@ class RegistrationForm(forms.Form):
         dob = self.cleaned_data["date_of_birth"]
         today = timezone.localdate()
         if dob > today or dob < date(today.year - 100, 1, 1):
-            raise forms.ValidationError("Please check the date of birth.")
+            raise forms.ValidationError(_("Please check the date of birth."))
         if age_band(dob, today) == AGE_REFUSE:
-            raise forms.ValidationError(f"You must be {MIN_AGE} or older to join.")
+            raise forms.ValidationError(
+                _("You must be %(age)s or older to join.") % {"age": MIN_AGE}
+            )
         return dob
 
     def clean_password(self):
@@ -101,17 +104,17 @@ class RegistrationForm(forms.Form):
         if dob and age_band(dob, timezone.localdate()) == AGE_GUARDIAN:
             for field in ("guardian_name", "guardian_email"):
                 if not data.get(field):
-                    self.add_error(field, "A guardian is needed if you are 16 or 17.")
+                    self.add_error(field, _("A guardian is needed if you are 16 or 17."))
             email, guardian = data.get("email"), data.get("guardian_email")
             if email and guardian and normalise_email(email) == normalise_email(guardian):
-                self.add_error("guardian_email", "Your guardian needs their own email address.")
+                self.add_error("guardian_email", _("Your guardian needs their own email address."))
         return data
 
 
 class GuardianConfirmForm(forms.Form):
-    guardian_name = forms.CharField(max_length=120, label="Your full name")
+    guardian_name = forms.CharField(max_length=120, label=_("Your full name"))
     declaration = forms.BooleanField(
-        label="I declare that I am the parent or legal guardian of this learner and I consent "
+        label=_("I declare that I am the parent or legal guardian of this learner and I consent ")
         "to the collection and use of their data as described above."
     )
 

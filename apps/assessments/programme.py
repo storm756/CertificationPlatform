@@ -11,6 +11,7 @@ import random
 from datetime import timedelta
 
 from django.db import transaction
+from django.utils.translation import gettext as _
 from django.db.models import Max
 from django.utils import timezone
 
@@ -46,7 +47,7 @@ class AlreadyDone(PartNotAvailable):
 
 
 def get_assessment(kind: str) -> ProgrammeAssessment:
-    assessment, _ = ProgrammeAssessment.objects.get_or_create(
+    assessment, _created = ProgrammeAssessment.objects.get_or_create(
         kind=kind,
         defaults={
             "blueprint": {
@@ -97,24 +98,26 @@ def final_locked_reasons(user) -> list[str]:
     reasons = []
     if result.setup_gaps:
         reasons.append(
-            "Course setup is incomplete, so the final cannot open yet. "
+            _("Course setup is incomplete, so the final cannot open yet.")
+            + " "
             + " ".join(result.setup_gaps)
         )
     if not result.pretest_done:
         from . import examsets
 
         reasons.append(
-            "Do the pre-test first."
+            _("Do the pre-test first.")
             if pretest_available(user)
             else " ".join(
-                ["The pre-test is not available yet.", examsets.unavailable_reason(user) or ""]
+                [_("The pre-test is not available yet."), examsets.unavailable_reason(user) or ""]
             ).strip()
         )
     for module in result.modules:
         for part in module.parts:
             if not part.answered:
                 reasons.append(
-                    f"Module {module.number}, {part.name}: submit it once with every question answered."
+                    _("Module %(number)s, %(part)s: submit it once with every question answered.")
+                    % {"number": module.number, "part": part.name}
                 )
     return reasons
 
@@ -140,7 +143,9 @@ def _cooldown_reason(user, assessment, now):
     if not assessment.cooldown_hours:
         return None
     if cooldown_until(user, now):
-        return f"Please wait {assessment.cooldown_hours} hours between final attempts."
+        return _("Please wait %(hours)s hours between final attempts.") % {
+            "hours": assessment.cooldown_hours
+        }
     return None
 
 
@@ -157,7 +162,7 @@ def draw_programme(choice, kind, rng=None):
     ids = [v for q, v in choice.versions.items() if int(q) in wanted]
     chosen = list(QuestionVersion.objects.filter(pk__in=ids).select_related("question__module"))
     if len(chosen) != len(wanted):
-        raise PartNotAvailable("This exam is not ready yet.")
+        raise PartNotAvailable(_("This exam is not ready yet."))
     rng.shuffle(chosen)
     return chosen
 
@@ -177,7 +182,7 @@ def start_programme(user, kind: str, rng=None, now=None) -> tuple[Attempt, bool]
         if Attempt.objects.filter(
             user=user, programme_assessment=assessment, status__in=SUBMITTED
         ).exists():
-            raise AlreadyDone("You have already done the pre-test.")
+            raise AlreadyDone(_("You have already done the pre-test."))
     elif kind == ProgrammeAssessmentKind.FINAL:
         reasons = final_locked_reasons(user)
         cooldown = _cooldown_reason(user, assessment, now)
@@ -190,7 +195,7 @@ def start_programme(user, kind: str, rng=None, now=None) -> tuple[Attempt, bool]
             Attempt.objects.filter(user=user, programme_assessment=assessment).count(),
         )
     else:
-        raise PartNotAvailable("That assessment is not available.")
+        raise PartNotAvailable(_("That assessment is not available."))
     from . import examsets
 
     try:
@@ -199,7 +204,7 @@ def start_programme(user, kind: str, rng=None, now=None) -> tuple[Attempt, bool]
         raise PartNotAvailable(str(exc)) from None
     versions = draw_programme(choice, kind, rng)
     if not versions:
-        raise PartNotAvailable("This assessment has no questions yet.")
+        raise PartNotAvailable(_("This assessment has no questions yet."))
     number = (
         Attempt.objects.filter(user=user, programme_assessment=assessment).aggregate(
             n=Max("number")
