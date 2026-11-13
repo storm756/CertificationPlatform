@@ -8,8 +8,8 @@
     <div class="stack">
       <p class="eyebrow eyebrow--cyan">{{ PROGRAMME_SHORT }}</p>
       <h1>{% blocktranslate with name=user.profile.certificate_name %}Hello, {{ name }}{% endblocktranslate %}</h1>
-      <p class="lede">{% if state == "eligible" %}{% translate "You have met every requirement. Your certificate is next." %}{% elif state == "new" and pretest_available %}{% translate "Welcome. Start with the pre-test, then work through the modules at your own pace." %}{% elif state == "new" %}{% translate "Welcome. Work through the modules at your own pace. Your pre-test opens once your batch has its exam set." %}{% else %}{% translate "Here is where you are, and what is left before your final." %}{% endif %}</p>
-      {% if result.eligible %}<p>{% include "components/badge.html" with text=result.grade colour="mustard" icon="award" %}</p>{% endif %}
+      <p class="lede">{% if state == "certified" %}{% blocktranslate %}Congratulations! You are a certified {{ PROGRAMME_NAME }}.{% endblocktranslate %}{% elif state == "eligible" %}{% translate "You have met every requirement. Your certificate is next." %}{% elif state == "new" and pretest_available %}{% translate "Welcome. Start with the pre-test, then work through the modules at your own pace." %}{% elif state == "new" %}{% translate "Welcome. Work through the modules at your own pace. Your pre-test opens once your batch has its exam set." %}{% else %}{% translate "Here is where you are, and what is left before your final." %}{% endif %}</p>
+      {% if result.eligible or state == "certified" %}<p>{% include "components/badge.html" with text=result.grade colour="mustard" icon="award" %}</p>{% endif %}
     </div>
     {% include "components/progress_ring.html" with value=result.overall_shown caption=_("overall") %}
   </div></div></section>
@@ -89,7 +89,15 @@
         <p><strong>{{ hours.minutes }}</strong> {% translate "minutes" %} {% if hours.kind == "engaged" %}<small class="muted">({% translate "engaged time, estimated" %})</small>{% else %}<small class="muted">({% translate "from the lessons you completed" %})</small>{% endif %}</p></section>
 
       <section class="card stack" aria-labelledby="cert"><h2 id="cert">{% translate "Certificate" %}</h2>
-        {% if result.eligible %}<p>{% translate "You are eligible. Your certificate will appear here once it is issued." %}</p>
+        {% if cert_state == "issued" %}<p>{% icon "award" %} <strong>{% translate "Certificate issued" %}</strong></p>
+          <p class="muted">{% translate "Download it from the site. Anyone can check it with the QR code." %}</p>
+          <p><a class="btn btn-accent" href="{% url 'my_certificate' %}">{% icon "download" %}{% translate "View and download" %}</a></p>
+        {% elif cert_state == "awaiting" %}<p>{% icon "clock" %} <strong>{% translate "Awaiting mentor approval" %}</strong></p>
+          <p class="muted">{% translate "You are eligible. Your mentor approves certificates for your batch." %}</p>
+          <p><a class="btn btn-outline" href="{% url 'my_certificate' %}">{% translate "View status" %}</a></p>
+        {% elif cert_state == "revoked" %}<p>{% icon "x" %} <strong>{% translate "Certificate revoked" %}</strong></p>
+          <p class="muted">{% translate "Contact the programme team if you have questions." %}</p>
+        {% elif cert_state == "erased" %}<p class="muted">{% translate "Your certificate was issued. Its details were removed at your request." %}</p>
         {% else %}<p class="muted">{% translate "Your certificate appears here when you have passed every module and the final." %}</p>{% endif %}</section>
     </aside>
   </div>

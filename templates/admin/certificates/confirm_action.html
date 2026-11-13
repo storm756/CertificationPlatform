@@ -1,0 +1,14 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+  <form method="post">
+    {% csrf_token %}
+    <p>{{ text }}</p>
+    <ul>{% for cert in certificates %}<li><strong>{{ cert.certificate_no }}</strong> · {{ cert.get_status_display }}</li>{% endfor %}</ul>
+    {{ form.as_p }}
+    <input type="hidden" name="action" value="{{ action }}">
+    {% for cert in certificates %}<input type="hidden" name="_selected_action" value="{{ cert.pk }}">{% endfor %}
+    <input type="hidden" name="apply" value="1">
+    <button type="submit" class="button">{{ button }}</button>
+    <a href="{% url 'admin:certificates_certificate_changelist' %}">Cancel</a>
+  </form>
+{% endblock %}

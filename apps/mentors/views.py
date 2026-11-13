@@ -17,6 +17,7 @@ from apps.batches import services
 from apps.batches.models import Enrolment
 from apps.batches.rules import is_accepting, seats_used
 from apps.batches.scoping import batches_for
+from apps.certificates import services as certificates
 
 from . import dashboard, export
 from .forms import CertificateNameForm, MoveLearnerForm, NewBatchForm, RegistrationSettingsForm
@@ -88,6 +89,7 @@ def batch_detail(request, pk):
             "accepting_now": is_accepting(batch, now),
             "seats": seats_used(batch, now),
             "form": RegistrationSettingsForm.for_batch(batch),
+            "cert_warnings": certificates.issue_warnings(),
         },
     )
 
@@ -113,6 +115,7 @@ def batch_settings(request, pk):
             "accepting_now": is_accepting(batch, now),
             "seats": seats_used(batch, now),
             "form": form,
+            "cert_warnings": certificates.issue_warnings(),
         },
         status=400,
     )
@@ -210,6 +213,31 @@ def batch_auto_issue(request, pk):
     services.set_auto_issue(request.user, batch, request.POST.get("auto_issue") == "on", request)
     messages.success(request, "Auto-issue updated.")
     return redirect("mentor_batch", pk=batch.pk)
+
+
+@mentor_required
+@require_POST
+def batch_approve(request, pk):
+    """Approve certificates (§12): one learner (`learner` in the form) or everyone waiting."""
+    batch = services.scoped_batch(request.user, pk, request)
+    learner = request.POST.get("learner", "").strip()
+    ids = [learner] if learner.isdigit() else None
+    outcome = certificates.approve(request.user, batch, ids, request)
+    if outcome["issued"]:
+        messages.success(request, f"{outcome['issued']} certificate(s) issued.")
+    if outcome["failed"]:
+        messages.error(
+            request,
+            f"{outcome['failed']} certificate(s) could not be issued. They are still waiting; try again or tell an admin.",
+        )
+    elif outcome["remaining"] and ids is None:
+        messages.info(
+            request,
+            f"{outcome['remaining']} learner(s) still waiting. Click Approve all again to continue.",
+        )
+    if not outcome["issued"] and not outcome["failed"]:
+        messages.info(request, "Nobody was waiting for approval.")
+    return redirect(f"{reverse('mentor_batch', args=[batch.pk])}#certificates")
 
 
 @mentor_required

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% load static i18n ccfr %}
+{% block head_title %}{% translate "Verify a certificate" %}{% endblock %}
+{% block extra_head %}<meta name="robots" content="noindex, nofollow"><link rel="stylesheet" href="{% static 'css/certificate.css' %}">{% endblock %}
+{% block content %}
+  <article class="verify-card">
+    <h1>{% translate "Too many checks" %}</h1>
+    {% include "components/alert.html" with tone="mustard" icon="clock" text=_("This device has checked a lot of certificates in a short time. Please wait a few minutes and scan the QR code again.") %}
+  </article>
+{% endblock %}

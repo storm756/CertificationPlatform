@@ -153,7 +153,7 @@ Mentors and admins **must** use 2FA (TOTP). A lost device is reset by an admin, 
 
 | Table | Fields |
 | --- | --- |
-| Batch | name, code ★unique, centre, start/end dates, accepting (on/off), opens_at, closes_at, seat_limit (default 40), is_open_pool ★only one, auto_issue (off), status (active / archived) |
+| Batch | name, code ★unique, centre, **centre_code** (2–6 capitals/digits, default `SAKEC`, printed in certificate numbers, D36), start/end dates, accepting (on/off), opens_at, closes_at, seat_limit (default 40), is_open_pool ★only one, auto_issue (off), status (active / archived) |
 | BatchMentor | batch, mentor ★unique pair |
 | Enrolment | user ★unique, batch, joined_at. **One current batch per learner**; history lives in the audit log. |
 
@@ -198,7 +198,8 @@ Attempt constraints:
 
 | Table | Fields |
 | --- | --- |
-| Certificate | user, certificate_no ★unique (from a DB sequence), verify_code ★unique (random), status (`issued` / `revoked`), snapshot JSONB, pdf_path, pdf_sha256, issued_by (user or "auto"), revoked_reason. ★ **partial unique: one `issued` certificate per user.** |
+| Certificate | user, serial ★unique (global DB sequence `certificate_serial`), certificate_no ★unique, verify_code ★unique (random, Crockford base32), status (`issued` / `revoked`), snapshot JSONB, pdf_path, pdf_sha256, issued_at, issued_by (user, or none with auto_issued), revoked_at / revoked_by / revoked_reason, reissue_allowed, holder_erased_at. ★ **partial unique: one `issued` certificate per user.** |
+| CertificateSettings | one row: nsqf_approved, nsqf_level, nsqf_credits (★ approved needs both) |
 | Translation | key, language ★unique pair, text, source_hash, status (draft / reviewed), uploaded_by, reviewed_by (≠ uploaded_by) |
 | AuditEvent | actor_id, action, target_type, target_id, data JSONB (**IDs, not names**), ip, at. The runtime DB role has INSERT/SELECT only. |
 
@@ -458,24 +459,41 @@ Every displayed number and every comparison uses round1(x) = Decimal(x).quantize
 ## 12. Certificates
 
 ```text
-issue(user)   ← called by auto-issue (on submit) or by the mentor's "Approve batch" action
+issue(user)   ← called by auto-issue (after the learner's own submit) or by a mentor's / admin's approval
   lock user row
-  re-run compute_results; not eligible → stop
-  certificate_no = next value of a DB sequence → <CERTIFICATE_PREFIX from settings, today CCIFR>-<year>-<centre>-<6-digit serial>   (D28)
+  already issued → stop; re-run compute_results; not eligible → stop
+  serial         = nextval('certificate_serial')    (global; never reset per year; a failed issue skips it, never reuses it)
+  certificate_no = <CERTIFICATE_PREFIX>-<issue year>-<batch.centre_code>-<6-digit serial>   e.g. CCFR-2026-SAKEC-000001 (D28, D36)
   verify_code    = 10 random chars (Crockford base32)
-  snapshot = {certificate_name, batch, centre, dates, module %s, final %, overall %, grade, hours, policy_version}
-  PDF = WeasyPrint(template, snapshot)  — url_fetcher allows bundled fonts/logos only; English only
-        QR (segno) → https://<domain>/verify/<verify_code>
-  save PDF (private media), sha256; Certificate(status=issued); audit
-revoke(cert, reason)  ← admin only; verify page then shows "Revoked"
+  snapshot = {certificate_name, qualification, batch, centre_code, completed_on, issued_on, grade, overall/modules/final %,
+              per-module %, hours, the policy constants, NSQF line, signatories (and whether each signature image was in place), design}
+  PDF = WeasyPrint(templates/certificates/pdf/certificate.html, snapshot) — English only; the url_fetcher answers only
+        `ccfr-asset:<name>` for the bundled fonts and logos, the signature images in private storage and the QR code
+        (segno, made in memory) → https://<domain>/verify/<verify_code>/; anything else is refused
+  write the PDF to CERTIFICATE_PRIVATE_ROOT/certificates/<year>/<number>.pdf (never overwritten), sha256; Certificate(issued); audit
+revoke(cert, reason, allow_reissue=False)  ← admin only; verify page then shows "Revoked"
+erase_holder(cert)                          ← admin only (holder's erasure request): blank the name, delete the PDF, keep the rest
 ```
 
-* **Learner:** a "Your certificate" card with a Download button (served through Django to the owner only). There is no email.
-* **Mentor:** an "Awaiting approval" list (eligible learners in batches with auto-issue off) and an "Issued this week" list.
+* **What is printed (D36):** CERTIFICATE OF COMPLETION, the qualification "Community Cyber First Responder (CCFR)", the certificate name, the agreed
+  sentence ending "and is awarded Grade X", a line with Batch, Completed on and Certificate No., the NSQF line, three signature blocks
+  (`CERTIFICATE_SIGNATORIES`, left to right) and the QR code with "Verify at <domain>/verify/<code>". **The grade only:** no percentages, no hours.
+  "Completed on" is the date the result was achieved: the latest of the submissions that give the learner's best scores (normally the passing final).
+* **Signature images** are never in git (D22). They are files in `CERTIFICATE_PRIVATE_ROOT/signatures/` on the server (inside the media volume, so the
+  nightly media backup covers them); a missing one prints the name and designation over a blank line.
+* **Design:** a placeholder until the final design and the CCFR emblem exist. The template is self-contained, so the final design is a template-only PR.
+  While a signature image is missing or `CERTIFICATE_DESIGN_FINAL` is off, mentors (batch page) and admins (certificate admin, batch action) see a
+  warning that certificates issued now are final. Approving still works.
+* **Learner:** `/certificate/` shows not yet / awaiting approval / issued / revoked / details removed. Download is served by Django to the owner only
+  (`Cache-Control: private, no-store`; a file whose sha256 no longer matches is not served). There is no email.
+* **Mentor:** an "Awaiting approval" list (eligible learners holding no certificate, whatever the switch says) with **Approve** per learner and
+  **Approve all** (at most `CERTIFICATE_APPROVE_PER_REQUEST` per click), and an "Issued this week" list.
 * **Switching auto-issue on** for a batch does **not** bulk-issue the people already waiting. The mentor clicks "Approve all" once, deliberately.
-* **The public verify page** (rate-limited) shows name, qualification, grade, issue date and status. There is **no lookup by certificate number**, so no one can walk the list and harvest names.
-  If the holder has requested erasure, it says *"Issued; holder details removed at the holder's request."*
-* **NSQF wording:** *"NSQF level and credits shown after approval by the competent authority"* until an admin turns `nsqf_approved` on, which affects new issues only.
+* **The public verify page** `/verify/<code>/` (rate-limited per client IP, `CERTIFICATE_VERIFY_RATE`; `noindex`) shows name, qualification, grade,
+  issue date and status. A revoked certificate shows "Revoked" without the name. There is **no lookup by certificate number**, so no one can walk the
+  list and harvest names; `/verify/` only takes a typed code. If the holder has requested erasure, it says *"Issued; holder details removed at the holder's request."*
+* **NSQF wording:** *"NSQF level and credits shown after approval by the competent authority"* until an admin turns `nsqf_approved` on (with the level
+  and credits), which affects new issues only.
 
 ---
 
@@ -555,7 +573,7 @@ content strings → t(key, lang):  key grammar  q:<question>:<field.path>  ·  b
 | Web | CSP (self + youtube-nocookie frames), HSTS, frame-deny, CSRF, auto-escaping, nh3 sanitising, WeasyPrint url_fetcher allowlist, HTMX eval off |
 | Accounts | allauth, Argon2, staff MFA, rate limits, no account enumeration, mentor-reset safeguards |
 | Server | SSH keys only, ufw 22/80/443, fail2ban, unattended upgrades, non-root containers, separate secrets per environment, two DB roles |
-| Media | `/learn/media/<id>/` needs sign-in (D34); Django checks the file belongs to a published unit, then answers with `X-Accel-Redirect` and Caddy sends it from the read-only media volume with range requests (D35). `/media` is never served directly. Certificates are served only by Django to the owner. |
+| Media | `/learn/media/<id>/` needs sign-in (D34); Django checks the file belongs to a published unit, then answers with `X-Accel-Redirect` and Caddy sends it from the read-only media volume with range requests (D35). `/media` is never served directly. Certificates are served only by Django to the owner; issued PDFs and signature images live in `media/private/`, which no view ever names. |
 | DPDP | Minimum fields; pseudonymous audit; erasable Profile; guardian consent and no tracking for minors; processors listed in the notice (Brevo, Sentry, YouTube, the backup provider and region); 72-hour incident runbook; a named grievance officer (CyberPeace); retention of 3 years after programme end |
 
 ---
@@ -757,3 +775,15 @@ Where the build made a choice the design left open. Each is a one-line change if
 **History.** simple-history records `Batch`, `Enrolment`, `Question` and `AssessmentPart` (`Historical*` tables).
 
 **Attempt limits (D32).** `/staff/attempts/` (admin only) lists every assessment part and the final with one "maximum attempts" box each; blank is unlimited, 1–100 is accepted, anything else saves nothing. A change is saved under a row lock and audited as `assessment.max_attempts_changed` through `services.audit_limit_change`, like the Django-admin forms. The pre-test and mock have no field. The check at the start of an attempt is unchanged (§27).
+
+## 29. Stage 7 implementation notes (certificates, D36)
+
+**App `apps/certificates`.** `models.py`: `Certificate` (§6) and the one-row `CertificateSettings` (NSQF). `codes.py`: the verify code (Crockford base32, `normalise_code` reads case, spaces, hyphens and O/I/L leniently, and never accepts a certificate number), `next_serial()` (`nextval('certificate_serial')`, created by migration `certificates.0001`; `csfr_app` gets USAGE through the default privileges) and `certificate_number()`. `services.py` holds every rule: `issue`, `auto_issue_after_submit`, `awaiting`, `approve`, `revoke`, `erase_holder`, `issue_warnings` (guard A), `current_certificate` / `certificate_state` (the learner's page and dashboard card). `compute_results` now sets `already_issued` and `revoked_blocked` (a revoked certificate with no re-issue allowed) and records when each best attempt was submitted (`achieved_at`, printed as "Completed on").
+
+**PDF (`pdf.py`).** `AllowlistFetcher` subclasses WeasyPrint's `URLFetcher` and answers only the `ccfr-asset:` names built for that certificate: the Baloo 2 / Hind font files (Devanagari and Gujarati faces are requested only when the name uses them, which keeps a render under a second), the two partner logos, the signature files that exist (a setting can only name a plain file in `signatures/`) and the QR PNG made in memory. Every other URL, including `file:`, `http(s):`, `data:` and relative paths, is refused and logged. `base_url` is `None`; the template is rendered with `translation.override("en")`. WeasyPrint ignores `font-weight` ranges in `@font-face`, so the template declares one face per weight. The `weasyprint` and `fontTools` loggers are set to WARNING.
+
+**Where it runs.** Auto-issue runs in the web request after the learner's own submit, only when `submit()` actually closed the attempt (so a double tap issues once) and the batch has auto-issue on; a failure is logged, audited as `certificate.issue_failed` and leaves the learner in "Awaiting approval". The `tasks` container has no media volume, so a stale auto-submit never issues; those learners also wait for approval. Issuing takes the learner's row lock, and the partial unique index backs it (Journey 13).
+
+**Pages.** `/certificate/` and `/certificate/download/` (learners), `/verify/` and `/verify/<code>/` (public, also during guardian consent), the mentor batch page's certificate section (`/mentor/batches/<pk>/approve/`, scoped by `scoped_batch` and again in `services.approve`), and the admin: Certificates (read-only; actions "Revoke…" with a reason and an optional re-issue, "Remove holder details…"), Certificate settings (NSQF, audited as `certificate.settings_changed`), and the Batch admin's centre code (admin-only) and "Issue certificates to eligible learners" action. Audit events: `certificate.issued`, `certificate.approved`, `certificate.revoked`, `certificate.holder_erased`, `certificate.issue_failed` (IDs only; a revoke reason is kept on the certificate, not in the log).
+
+**Server.** The image installs Pango and HarfBuzz for WeasyPrint and sets `XDG_CACHE_HOME=/tmp/.cache` for the read-only containers. No compose or Caddy change: PDFs and signatures sit in `media/private/` on the existing media volume. To add the signature images, a person copies the three PNG files into `/app/media/private/signatures/` in the web container (`signature-1.png` … `signature-3.png`, as named in `CERTIFICATE_SIGNATORIES`). Never commit them.

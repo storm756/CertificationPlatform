@@ -26,6 +26,13 @@ def _clear_cache():
     cache.clear()  # django-ratelimit counters live here
 
 
+@pytest.fixture(autouse=True)
+def _private_certificates(settings, tmp_path):
+    # Issued PDFs and signature images go to a fresh folder per test, never into media/.
+    settings.CERTIFICATE_PRIVATE_ROOT = tmp_path / "private"
+    return settings.CERTIFICATE_PRIVATE_ROOT
+
+
 @pytest.fixture
 def make_batch(db):
     counter = {"n": 10}

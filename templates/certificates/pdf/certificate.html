@@ -1,0 +1,141 @@
+{% comment %}
+The certificate PDF (Stage 7, D36). PLACEHOLDER DESIGN: a clean A4 landscape page in the look of
+design-reference/frontend-prototype/assets/certificate/cert-front.jpg and the site tokens. The
+final design replaces this one file.
+
+Rules for whoever edits it:
+* Every resource is {{ asset }}<name> and must be on the allowlist in apps/certificates/pdf.py.
+  Nothing else is fetched (no http, no file paths, no data: URLs).
+* Values come from the snapshot `s` and are autoescaped. Never put a value inside <style>, never
+  mark a value safe.
+* English only (D10). Print the grade, never percentages or hours (D36).
+{% endcomment %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Certificate {{ certificate_no }}</title>
+<style>
+  /* One @font-face per weight: WeasyPrint ignores weight ranges. Devanagari and Gujarati faces are
+     added only when the name uses those scripts, which keeps rendering fast. */
+  @font-face { font-family: "Baloo 2"; src: url("{{ asset }}font/baloo2-latin.woff2"); font-weight: 600; }
+  @font-face { font-family: "Baloo 2"; src: url("{{ asset }}font/baloo2-latin.woff2"); font-weight: 700; }
+  @font-face { font-family: "Baloo 2"; src: url("{{ asset }}font/baloo2-latin.woff2"); font-weight: 800; }
+  @font-face { font-family: "Hind"; src: url("{{ asset }}font/hind-latin-400.woff2"); font-weight: 400; }
+  @font-face { font-family: "Hind"; src: url("{{ asset }}font/hind-latin-600.woff2"); font-weight: 600; }
+  @font-face { font-family: "Hind"; src: url("{{ asset }}font/hind-latin-600.woff2"); font-weight: 700; }
+  {% if scripts.devanagari %}
+  @font-face { font-family: "Baloo 2 Devanagari"; src: url("{{ asset }}font/baloo2-devanagari.woff2"); font-weight: 700; }
+  {% endif %}{% if scripts.gujarati %}
+  @font-face { font-family: "Baloo Bhai 2"; src: url("{{ asset }}font/baloobhai2-gujarati-500-800.woff2"); font-weight: 700; }
+  {% endif %}
+
+  /* Colours are the site tokens (static/css/tokens.css): navy, mustard, ink-muted, mustard-deep. */
+  @page { size: A4 landscape; margin: 0; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: "Hind", sans-serif; color: #071a3d; font-size: 10.5pt; line-height: 1.35; }
+  p { margin: 0; }
+  .sheet { position: relative; width: 297mm; height: 210mm; overflow: hidden; background: #fff; }
+  .frame { position: absolute; top: 6mm; left: 6mm; right: 6mm; bottom: 6mm; border: 2.6mm solid #071a3d; }
+  .frame-inner { position: absolute; top: 10.5mm; left: 10.5mm; right: 10.5mm; bottom: 10.5mm; border: .45mm solid #c99412; }
+  .corner { position: absolute; width: 22mm; height: 22mm; }
+  .corner--tl { top: 6mm; left: 6mm; }
+  .corner--tr { top: 6mm; right: 6mm; }
+  .corner--bl { bottom: 6mm; left: 6mm; }
+  .corner--br { bottom: 6mm; right: 6mm; }
+
+  .content { position: absolute; top: 17mm; left: 24mm; right: 24mm; text-align: center; }
+  .display { font-family: "Baloo 2", "Baloo 2 Devanagari", "Baloo Bhai 2", sans-serif; }
+
+  .logos { height: 21mm; }
+  .logos img, .logos .emblem { display: inline-block; vertical-align: middle; margin: 0 9mm; }
+  .logos img { height: 19mm; width: auto; }
+  .emblem { width: 20mm; height: 20mm; border-radius: 50%; background: #071a3d; color: #ffc83d;
+            border: .9mm solid #ffc83d; box-sizing: border-box; line-height: 18.2mm; font-size: 12.5pt;
+            font-weight: 800; letter-spacing: .06em; text-align: center; }
+  .divider { position: relative; height: 4mm; margin: 2.5mm 10mm 0; }
+  .divider .line { position: absolute; left: 0; right: 0; top: 1.9mm; border-top: .35mm solid #c99412; }
+  .divider .gem { position: absolute; left: 50%; top: 0; width: 4mm; height: 4mm; margin-left: -2mm; }
+
+  h1 { margin: 5mm 0 0; font-size: 32pt; font-weight: 600; letter-spacing: .32em; line-height: 1; padding-left: .32em; }
+  .of { margin-top: 1.6mm; color: #8f6508; font-size: 10.5pt; font-weight: 600; letter-spacing: .62em; padding-left: .62em; }
+  .qualification { margin-top: 5mm; color: #12366f; font-size: 17pt; font-weight: 700; line-height: 1.1; }
+  .certify { margin-top: 6mm; color: #4a5873; font-size: 11pt; }
+  .name { display: inline-block; margin-top: 1mm; padding: 0 8mm 1mm; min-width: 120mm; font-size: 29pt;
+          font-weight: 700; line-height: 1.15; border-bottom: .45mm solid #c99412; }
+  .name--long { font-size: 20pt; }
+  .statement { margin: 4.5mm auto 0; max-width: 222mm; font-size: 11pt; line-height: 1.45; }
+  .statement strong { font-weight: 700; }
+  .meta { margin-top: 5mm; font-size: 9.5pt; }
+  .meta .label { color: #8f6508; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; font-size: 7.6pt; margin-right: 1.4mm; }
+  .meta .sep { color: #c99412; margin: 0 3mm; }
+  .nsqf { margin-top: 1.6mm; color: #6b7890; font-size: 8.4pt; }
+
+  .bottom { position: absolute; left: 22mm; right: 22mm; bottom: 15mm; height: 40mm; }
+  .verify { position: absolute; left: 0; bottom: 0; width: 46mm; text-align: center; }
+  .verify img { width: 25mm; height: 25mm; padding: 1.5mm; border: .35mm solid #c99412; }
+  .verify .label { margin-top: 1.4mm; color: #071a3d; font-size: 7pt; font-weight: 600; letter-spacing: .2em; }
+  .verify .url { margin-top: .6mm; color: #4a5873; font-size: 6.6pt; line-height: 1.2; overflow-wrap: anywhere; }
+  .signatures { position: absolute; left: 52mm; right: 46mm; bottom: 0; }
+  .sig { display: inline-block; vertical-align: bottom; width: 32.5%; text-align: center; }
+  .sig .ink { height: 13mm; }
+  .sig .ink img { max-height: 13mm; max-width: 44mm; }
+  .sig .rule { margin: 0 4mm; border-top: .35mm solid #c99412; }
+  .sig .who { margin-top: 1.4mm; font-size: 9pt; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+  .sig .role { margin-top: .4mm; color: #4a5873; font-size: 8pt; line-height: 1.25; }
+  .grade { position: absolute; right: 0; bottom: 3mm; width: 34mm; height: 34mm; text-align: center; }
+  .grade svg { position: absolute; left: 0; top: 0; width: 34mm; height: 34mm; }
+  .grade .inner { position: absolute; left: 0; right: 0; top: 9mm; color: #fff; }
+  .grade .word { font-size: 7pt; font-weight: 600; letter-spacing: .26em; color: #ffc83d; padding-left: .26em; }
+  .grade .letter { font-size: 21pt; font-weight: 800; line-height: 1.05; }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="frame"></div>
+  <div class="frame-inner"></div>
+  <svg class="corner corner--tl" viewBox="0 0 22 22"><polygon points="0,0 22,0 0,22" fill="#071a3d"/><line x1="22" y1="0" x2="0" y2="22" stroke="#c99412" stroke-width="1.3"/></svg>
+  <svg class="corner corner--tr" viewBox="0 0 22 22"><polygon points="0,0 22,0 22,22" fill="#071a3d"/><line x1="0" y1="0" x2="22" y2="22" stroke="#c99412" stroke-width="1.3"/></svg>
+  <svg class="corner corner--bl" viewBox="0 0 22 22"><polygon points="0,0 22,22 0,22" fill="#071a3d"/><line x1="0" y1="0" x2="22" y2="22" stroke="#c99412" stroke-width="1.3"/></svg>
+  <svg class="corner corner--br" viewBox="0 0 22 22"><polygon points="22,0 22,22 0,22" fill="#071a3d"/><line x1="22" y1="0" x2="0" y2="22" stroke="#c99412" stroke-width="1.3"/></svg>
+
+  <div class="content">
+    <div class="logos">
+      <img src="{{ asset }}img/sakec" alt="Shah &amp; Anchor Kutchhi Engineering College">
+      <span class="emblem display" data-emblem>{{ s.programme_short }}</span>
+      <img src="{{ asset }}img/cyberpeace" alt="CyberPeace Foundation">
+    </div>
+    <div class="divider"><div class="line"></div><svg class="gem" viewBox="0 0 10 10"><polygon points="2.5,0.7 7.5,0.7 10,5 7.5,9.3 2.5,9.3 0,5" fill="#c99412"/></svg></div>
+
+    <h1 class="display">CERTIFICATE</h1>
+    <p class="of">OF COMPLETION</p>
+    <p class="qualification display">{{ s.qualification }}</p>
+
+    <p class="certify">This is to certify that</p>
+    <div class="name display{% if s.certificate_name|length > 34 %} name--long{% endif %}">{{ s.certificate_name }}</div>
+    <p class="statement">has successfully completed the {{ s.programme }} programme, conducted by the Department of Cyber Security,
+      Shah&nbsp;&amp;&nbsp;Anchor Kutchhi Engineering College (SAKEC), in collaboration with CyberPeace Foundation,
+      and is awarded <strong>Grade {{ s.grade }}</strong>.</p>
+    <p class="meta"><span class="label">Batch</span>{{ s.batch.name }}<span class="sep">&#9670;</span><span class="label">Completed on</span>{{ completed_on }}<span class="sep">&#9670;</span><span class="label">Certificate No.</span>{{ certificate_no }}</p>
+    <p class="nsqf">{{ s.nsqf.line }}</p>
+  </div>
+
+  <div class="bottom">
+    <div class="verify">
+      <img src="{{ asset }}qr" alt="QR code to verify this certificate">
+      <p class="label">SCAN TO VERIFY</p>
+      <p class="url">Verify at {{ verify_text }}</p>
+    </div>
+    <div class="signatures">{% for sig in signatories %}<div class="sig">
+        <div class="ink">{% if sig.asset %}<img src="{{ asset }}{{ sig.asset }}" alt="Signature of {{ sig.name }}">{% endif %}</div>
+        <div class="rule"></div>
+        <p class="who">{{ sig.name }}</p>
+        <p class="role">{{ sig.designation }}{% if sig.organisation %}<br>{{ sig.organisation }}{% endif %}</p>
+      </div>{% endfor %}</div>
+    <div class="grade">
+      <svg viewBox="0 0 34 34"><polygon points="8.5,1.5 25.5,1.5 33,17 25.5,32.5 8.5,32.5 1,17" fill="#071a3d" stroke="#c99412" stroke-width="1.6"/></svg>
+      <div class="inner display"><div class="word">GRADE</div><div class="letter">{{ s.grade }}</div></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

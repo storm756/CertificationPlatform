@@ -12,6 +12,7 @@ from django.utils import timezone
 
 from apps.assessments.models import Attempt
 from apps.batches.models import Enrolment
+from apps.certificates import services as certificates
 from apps.content.models import UnitProgress
 from apps.results.policy import compute_results, round1
 
@@ -39,6 +40,8 @@ def _last_activity(user_ids):
 
 
 def status_label(enrolment, result, verified) -> str:
+    if result.already_issued:
+        return "certificate issued"
     if not verified:
         return "email not verified"
     if enrolment.user.status == "pending_guardian":
@@ -109,6 +112,6 @@ def batch_overview(batch, now=None) -> dict:
         "rows": rows,
         "modules": modules,
         "stuck": stuck,
-        "awaiting": awaiting,
-        "issued_this_week": 0,  # certificates arrive in Stage 7
+        "awaiting": awaiting,  # eligible and holding no certificate (§12)
+        "issued_this_week": list(certificates.issued_recently(batch, now)),
     }

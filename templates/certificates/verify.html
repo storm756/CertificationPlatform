@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load static i18n ccfr %}
+{% block head_title %}{% translate "Verify a certificate" %}{% endblock %}
+{% block extra_head %}<meta name="robots" content="noindex, nofollow"><link rel="stylesheet" href="{% static 'css/certificate.css' %}">{% endblock %}
+{% block content %}
+  <div class="stack-lg">
+    <article class="verify-card" aria-labelledby="v-title">
+      <div class="verify-logos">
+        <img class="blend" src="{% static 'img/shah-anchor-logo.png' %}" width="245" height="254" alt="Shah &amp; Anchor">
+        <span class="brand-rule" aria-hidden="true"></span>
+        <img src="{% static 'img/cyberpeace-logo.png' %}" width="284" height="284" alt="CyberPeace">
+      </div>
+      <div>
+        <p class="eyebrow">{% translate "Certificate verification" %}</p>
+        <h1 id="v-title">{{ PROGRAMME_NAME }}</h1>
+      </div>
+
+      {% if state == "valid" %}
+        <div class="verify-status tone--teal" role="status">{% icon "check-circle" %}<span>{% translate "Valid" %}</span></div>
+        <dl>
+          <div><dt>{% translate "Name" %}</dt><dd>{{ cert.holder_name }}</dd></div>
+          <div><dt>{% translate "Qualification" %}</dt><dd>{{ cert.snapshot.qualification }}</dd></div>
+          <div><dt>{% translate "Grade" %}</dt><dd>{{ cert.grade }}</dd></div>
+          <div><dt>{% translate "Issued" %}</dt><dd>{{ cert.issued_at|date:"j F Y" }}</dd></div>
+          <div><dt>{% translate "Status" %}</dt><dd>{% translate "Valid" %}</dd></div>
+        </dl>
+        <p class="muted">{% translate "This certificate was issued by the programme and is valid." %}</p>
+      {% elif state == "erased" %}
+        <div class="verify-status tone--blue" role="status">{% icon "info" %}<span>{% translate "Issued" %}</span></div>
+        <dl>
+          <div><dt>{% translate "Qualification" %}</dt><dd>{{ cert.snapshot.qualification }}</dd></div>
+          <div><dt>{% translate "Grade" %}</dt><dd>{{ cert.grade }}</dd></div>
+          <div><dt>{% translate "Issued" %}</dt><dd>{{ cert.issued_at|date:"j F Y" }}</dd></div>
+          <div><dt>{% translate "Holder" %}</dt><dd>{% translate "Holder details removed at the holder's request" %}</dd></div>
+        </dl>
+        <p class="muted">{% translate "Issued; holder details removed at the holder's request." %}</p>
+      {% elif state == "revoked" %}
+        <div class="verify-status tone--danger" role="status">{% icon "x" %}<span>{% translate "Revoked" %}</span></div>
+        <dl>
+          <div><dt>{% translate "Qualification" %}</dt><dd>{{ cert.snapshot.qualification }}</dd></div>
+          <div><dt>{% translate "Issued" %}</dt><dd>{{ cert.issued_at|date:"j F Y" }}</dd></div>
+          <div><dt>{% translate "Status" %}</dt><dd>{% translate "Revoked by the programme" %}</dd></div>
+        </dl>
+        <p class="muted">{% translate "This certificate is no longer valid." %}</p>
+      {% elif state == "none" %}
+        <div class="verify-status tone--muted" role="status">{% icon "search" %}<span>{% translate "Not found" %}</span></div>
+        <p class="muted">{% translate "No certificate has this code. Check the code printed under the QR code and try again." %}</p>
+      {% else %}
+        <p class="muted">{% translate "Scan the QR code on a certificate, or type the code printed under it." %}</p>
+      {% endif %}
+
+      {% if state == "form" or state == "none" %}
+        <form class="code-form" method="get" action="{% url 'verify' %}" novalidate>
+          {% include "components/field.html" with field=form.code %}
+          <button class="btn btn-primary" type="submit">{% icon "search" %}{% translate "Check" %}</button>
+        </form>
+      {% endif %}
+    </article>
+    <p class="muted verify-note">{% translate "Each certificate has its own QR code that opens this page. To protect holders' privacy, there is no search by name or certificate number." %}</p>
+  </div>
+{% endblock %}

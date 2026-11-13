@@ -63,6 +63,7 @@ class PartResult:
     best: Decimal = ZERO  # best counted attempt, 0 if none
     answered: bool = False  # a submitted attempt with every question answered (gated ones count)
     attempts: int = 0
+    best_at: object = None  # when the best counted attempt was submitted (the earliest on a tie)
 
     @property
     def best_shown(self) -> Decimal:
@@ -98,8 +99,19 @@ class Result:
     email_verified: bool = True
     active: bool = True
     already_issued: bool = False
+    revoked_blocked: bool = False  # a revoked certificate with no re-issue allowed (§10.2)
+    final_best_at: object = None
     setup_gaps: list = field(default_factory=list)
     blockers: list = field(default_factory=list)
+
+    @property
+    def achieved_at(self):
+        """When the result was achieved: the latest of the submissions that give the best scores
+        (normally the passing final). Printed as "Completed on" (D36)."""
+        times = [p.best_at for m in self.modules for p in m.parts if p.best_at]
+        if self.final_best_at:
+            times.append(self.final_best_at)
+        return max(times, default=None)
 
     @property
     def modules_raw(self) -> Decimal:
@@ -154,6 +166,7 @@ class Result:
             and self.modules_passed
             and self.final_passed
             and not self.already_issued
+            and not self.revoked_blocked
         )
 
     @property
@@ -225,6 +238,32 @@ def _raw_percent(attempt):
     return attempt.score
 
 
+def _best(attempts):
+    """(best counted percentage, when it was submitted). On a tie the earliest submission wins, so
+    retaking for the same score never moves the completion date. (0, None) with nothing counted."""
+    counted = [
+        (_raw_percent(a), a.submitted_at) for a in attempts if a.counted and a.score is not None
+    ]
+    if not counted:
+        return ZERO, None
+    top = max(score for score, _ in counted)
+    return top, min((at for score, at in counted if score == top and at), default=None)
+
+
+def _certificate_states(user_ids):
+    """(users holding an issued certificate, users blocked by a revoked one with no re-issue)."""
+    from apps.certificates.models import Certificate, CertificateStatus
+
+    rows = Certificate.objects.filter(user_id__in=user_ids).values_list(
+        "user_id", "status", "reissue_allowed"
+    )
+    issued = {uid for uid, status, _ in rows if status == CertificateStatus.ISSUED}
+    blocked = {
+        uid for uid, status, allowed in rows if status == CertificateStatus.REVOKED and not allowed
+    }
+    return issued, blocked - issued
+
+
 def compute_results(user_ids, overrides=None) -> dict:
     """{user_id: Result} for these users, from their attempts. Nothing is read from a stored total."""
     from allauth.account.models import EmailAddress
@@ -252,6 +291,7 @@ def compute_results(user_ids, overrides=None) -> dict:
         )
     )
     statuses = dict(User.objects.filter(pk__in=user_ids).values_list("pk", "status"))
+    issued, blocked = _certificate_states(user_ids)
     out = {}
     for uid in user_ids:
         mine = attempts[uid]
@@ -260,15 +300,16 @@ def compute_results(user_ids, overrides=None) -> dict:
             result = ModuleResult(module.number, module.title or f"Module {module.number}")
             for part in parts_by_module[module.pk]:
                 tries = [a for a in mine if a.part_id == part.pk]
-                counted = [_raw_percent(a) for a in tries if a.counted and a.score is not None]
+                best, best_at = _best(tries)
                 result.parts.append(
                     PartResult(
                         part.pk,
                         part.name,
                         part.marks,
-                        best=max(counted, default=ZERO),
+                        best=best,
                         answered=any(a.all_answered for a in tries),
                         attempts=len(tries),
+                        best_at=best_at,
                     )  # fmt: skip
                 )
             module_results.append(result)
@@ -276,10 +317,14 @@ def compute_results(user_ids, overrides=None) -> dict:
             a for a in mine
             if a.programme_assessment_id and a.programme_assessment.kind == ProgrammeAssessmentKind.FINAL
         ]  # fmt: skip
+        final_best, final_best_at = _best(finals)
         r = Result(
             user_id=uid,
             modules=module_results,
-            final_best=max((_raw_percent(a) for a in finals if a.counted and a.score is not None), default=ZERO),
+            final_best=final_best,
+            final_best_at=final_best_at,
+            already_issued=uid in issued,
+            revoked_blocked=uid in blocked,
             final_attempts=len(finals),
             pretest_done=any(
                 a.programme_assessment_id and a.programme_assessment.kind == ProgrammeAssessmentKind.PRETEST
@@ -297,6 +342,10 @@ def compute_results(user_ids, overrides=None) -> dict:
 def blockers(r: Result) -> list[str]:
     """Plain-language reasons the learner is not eligible yet (§10.2)."""
     out = []
+    if r.revoked_blocked:
+        out.append(
+            "Your certificate was revoked. Contact the programme team if you have questions."
+        )
     if r.setup_gaps:
         out.append(
             "Course setup is incomplete, so the final stays locked. " + " ".join(r.setup_gaps)

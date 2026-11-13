@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "apps.content",
     "apps.questions",
     "apps.assessments",
+    "apps.certificates",
 ]
 
 MIDDLEWARE = [
@@ -198,6 +199,11 @@ LOGGING = {
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "root": {"handlers": ["console"], "level": env("LOG_LEVEL", "INFO")},
+    # WeasyPrint and fontTools log every rendering step at INFO; keep only their warnings.
+    "loggers": {
+        "weasyprint": {"level": "WARNING"},
+        "fontTools": {"level": "WARNING"},
+    },
 }
 
 # --- Registration and email budgets (architecture 7.2, 7.3) ---
@@ -211,6 +217,44 @@ EMAIL_ALERT_AT = 150
 UNVERIFIED_ACCOUNT_DAYS = 7
 # An attempt with no save for this long is submitted with its saved answers (architecture 9.3).
 STALE_ATTEMPT_DAYS = 7
+
+# --- Certificates (architecture §12, D28, D36) ---
+# Number: <prefix>-<issue year>-<batch centre code>-<6-digit serial from one global DB sequence>.
+CERTIFICATE_PREFIX = "CCFR"
+CERTIFICATE_DEFAULT_CENTRE = "SAKEC"  # a new batch's centre code; admins change it per batch
+CERTIFICATE_QUALIFICATION = f"{PROGRAMME_NAME} ({PROGRAMME_SHORT})"
+# Printed left to right. Signature images are never in git (D22, D36): each `image` is a file name
+# in CERTIFICATE_PRIVATE_ROOT/signatures/ on the server. A missing image prints the name and
+# designation over a blank signature line.
+CERTIFICATE_SIGNATORIES = [
+    {
+        "name": "Dr. Nilakshi Jain",
+        "designation": "HOD, Cyber Security Department",
+        "organisation": "SAKEC",
+        "image": "signature-1.png",
+    },
+    {
+        "name": "Dr. Bhavesh Patel",
+        "designation": "Principal",
+        "organisation": "SAKEC",
+        "image": "signature-2.png",
+    },
+    {
+        "name": "Maj. Vineet Kumar",
+        "designation": "Founder",
+        "organisation": "CyberPeace Foundation",
+        "image": "signature-3.png",
+    },
+]
+# Issued PDFs (certificates/) and signature images (signatures/). Inside the media volume, so the
+# nightly media backup covers them; nothing ever serves this folder directly (§16).
+CERTIFICATE_PRIVATE_ROOT = Path(env("CERTIFICATE_PRIVATE_ROOT", str(MEDIA_ROOT / "private")))
+# False while the certificate design and the CCFR emblem are placeholders. Mentors and admins see
+# a warning before approving (each PDF is fixed at issue). A person turns it on with the final
+# design.
+CERTIFICATE_DESIGN_FINAL = False
+CERTIFICATE_VERIFY_RATE = "30/10m"  # per client IP, on the public verify page
+CERTIFICATE_APPROVE_PER_REQUEST = 15  # "Approve all" issues at most this many per click
 
 # Daily jobs run by `manage.py run_periodic` (D27) at this Asia/Kolkata time (after the backup).
 from datetime import time as _time  # noqa: E402

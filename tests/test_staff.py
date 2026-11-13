@@ -250,7 +250,11 @@ def test_the_dashboard_shows_module_percentages_a_red_heatmap_stuck_and_awaiting
     html = mentor_client.get(reverse("mentor_batch", args=[b1.pk])).content.decode()
     assert "80.0" in html and "heat--fail" in html  # the weak learner's 30.0 is red
     assert "below 50% after 3 attempts" in html
-    assert "1 eligible and awaiting approval" in html
+    assert (
+        "Approve all 1" in html
+        and strong.profile.certificate_name
+        in html.split("Awaiting approval")[1].split("Issued this week")[0]
+    )
     assert idle.profile.certificate_name in html.split("may be stuck")[1].split("Roster")[0]
 
 

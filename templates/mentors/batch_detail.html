@@ -2,7 +2,7 @@
 {% load static i18n ccfr %}
 {% block head_title %}{{ batch.code }}{% endblock %}
 {% block page_class %} page--wide{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{% static 'css/staff.css' %}">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/staff.css' %}"><link rel="stylesheet" href="{% static 'css/certificate.css' %}">{% endblock %}
 {% block content %}
   <section class="band"><div class="shell">
     <p class="eyebrow eyebrow--cyan">{% translate "Mentor dashboard" %}</p>
@@ -51,15 +51,48 @@
     {% endif %}
   </section>
 
-  <section class="card stack" aria-labelledby="cert-switch">
+  <section class="card stack" id="certificates" aria-labelledby="cert-switch">
     <h2 id="cert-switch">{% translate "Certificates" %}</h2>
     <form class="row" method="post" action="{% url 'mentor_batch_auto_issue' batch.pk %}">{% csrf_token %}
       <label class="check"><input type="checkbox" name="auto_issue"{% if batch.auto_issue %} checked{% endif %}><span>{% translate "Issue certificates automatically when a learner is eligible" %}</span></label>
       <button class="btn btn-sm btn-outline" type="submit">{% translate "Save" %}</button>
     </form>
-    <p class="muted">{% blocktranslate with n=overview.awaiting|length %}{{ n }} eligible and awaiting approval · 0 issued this week (certificates arrive in a later stage){% endblocktranslate %}</p>
-    {% if overview.awaiting %}<ul class="result-list">{% for r in overview.awaiting %}<li class="result-item"><a class="link" href="{% url 'mentor_learner' r.user.pk %}">{{ r.name }}</a><span>{{ r.overall }}%</span></li>{% endfor %}</ul>{% endif %}
+    <p class="muted">{% translate "Turning this on does not issue certificates to learners already waiting. Approve those below." %}</p>
+    {% if cert_warnings %}
+      <div class="notice notice--mustard" role="note">{% icon "alert-triangle" %}<div>
+        <h3>{% translate "Not ready for real certificates yet" %}</h3>
+        <ul>{% for w in cert_warnings %}<li>{{ w }}</li>{% endfor %}</ul>
+        <p>{% translate "Each certificate is fixed when it is issued and its PDF never changes. Do not approve real learners until this warning is gone." %}</p>
+      </div></div>
+    {% endif %}
   </section>
+
+  <div class="grid-2 align-top">
+    <section class="card stack" aria-labelledby="awaiting-title">
+      <div class="section-title"><h2 id="awaiting-title">{% translate "Awaiting approval" %}</h2>
+        {% if overview.awaiting %}<form method="post" action="{% url 'mentor_batch_approve' batch.pk %}" data-confirm="{% blocktranslate count n=overview.awaiting|length %}Approve {{ n }} certificate?{% plural %}Approve {{ n }} certificates?{% endblocktranslate %}" data-confirm-body="{% translate 'Check that each printed name is spelled correctly. Certificates are issued immediately and cannot be changed.' %}" data-confirm-yes="{% translate 'Approve all' %}">{% csrf_token %}
+          <button class="btn btn-sm btn-primary" type="submit">{% icon "check" %}{% blocktranslate with n=overview.awaiting|length %}Approve all {{ n }}{% endblocktranslate %}</button></form>{% endif %}</div>
+      <ul class="result-list">
+        {% for r in overview.awaiting %}
+          <li class="result-item"><span class="avatar" aria-hidden="true">{{ r.name|initials }}</span>
+            <span><strong class="print-name">{{ r.name }}</strong><br><small class="muted">{% blocktranslate with overall=r.overall %}Overall {{ overall }}% · check the printed name{% endblocktranslate %}</small></span>
+            <form method="post" action="{% url 'mentor_batch_approve' batch.pk %}">{% csrf_token %}<input type="hidden" name="learner" value="{{ r.user.pk }}"><button class="btn btn-sm btn-outline" type="submit" aria-label="{% blocktranslate with name=r.name %}Approve the certificate for {{ name }}{% endblocktranslate %}">{% translate "Approve" %}</button></form></li>
+        {% empty %}
+          <li class="muted">{% translate "No one is waiting." %}</li>
+        {% endfor %}
+      </ul>
+    </section>
+    <section class="card stack" aria-labelledby="issued-title">
+      <h2 id="issued-title">{% translate "Issued this week" %}</h2>
+      <ul class="result-list">
+        {% for c in overview.issued_this_week %}
+          <li class="result-item"><span>{% icon "award" %}</span><span><strong>{{ c.holder_name }}</strong><br><small class="muted">{{ c.certificate_no }} · {{ c.issued_at|date:"d M" }}</small></span>{% include "components/badge.html" with text=_("Issued") colour="teal" %}</li>
+        {% empty %}
+          <li class="muted">{% translate "None this week." %}</li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
 
   {% if overview.stuck %}
     <section class="stack" aria-labelledby="stuck">
