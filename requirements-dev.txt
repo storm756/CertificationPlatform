@@ -3,3 +3,4 @@ pytest==9.2.0
 pytest-django==4.14.0
 ruff==0.17.4
 pypdf==6.21.4  # tests read the certificate PDF text
+pypdfium2==4.30.1  # tools: certificate_sample --out *.png

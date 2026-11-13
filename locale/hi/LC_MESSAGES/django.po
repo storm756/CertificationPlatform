@@ -2910,9 +2910,10 @@ msgstr "सक्षम प्राधिकारी की मंज़ूर
 # draft: needs review
 #: templates/landing.html:236
 #, python-format
-msgid "The %(short)s certificate design, with both partner logos, the holder's name and a QR code"
-msgstr ""
-"%(short)s प्रमाणपत्र का डिज़ाइन, जिसमें दोनों साझेदारों के लोगो, धारक का नाम और एक QR कोड है"
+msgid ""
+"A sample %(short)s certificate with an invented name, showing the SAKEC and CyberPeace logos, "
+"the grade, three signatories and a QR code"
+msgstr "एक काल्पनिक नाम वाले %(short)s प्रमाणपत्र का नमूना, जिसमें SAKEC और CyberPeace के लोगो, ग्रेड, तीन हस्ताक्षरकर्ता और एक QR कोड दिखते हैं"
 
 # draft: needs review
 #: templates/landing.html:237

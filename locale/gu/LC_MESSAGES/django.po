@@ -2898,8 +2898,10 @@ msgstr "સક્ષમ સત્તાધિકારીની મંજૂર�
 # draft: needs review
 #: templates/landing.html:236
 #, python-format
-msgid "The %(short)s certificate design, with both partner logos, the holder's name and a QR code"
-msgstr "%(short)s પ્રમાણપત્રની ડિઝાઇન, જેમાં બંને ભાગીદારોના લોગો, ધારકનું નામ અને એક QR કોડ છે"
+msgid ""
+"A sample %(short)s certificate with an invented name, showing the SAKEC and CyberPeace logos, "
+"the grade, three signatories and a QR code"
+msgstr "કાલ્પનિક નામ સાથેનો %(short)s પ્રમાણપત્રનો નમૂનો, જેમાં SAKEC અને CyberPeace ના લોગો, ગ્રેડ, ત્રણ સહીકર્તાઓ અને એક QR કોડ દેખાય છે"
 
 # draft: needs review
 #: templates/landing.html:237
