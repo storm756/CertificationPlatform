@@ -2,7 +2,6 @@ from datetime import timedelta
 
 from allauth.account.models import EmailAddress
 from django.contrib import messages
-from django.utils.translation import gettext as _
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Exists, OuterRef
@@ -10,6 +9,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
 from apps.accounts.models import Role
@@ -57,7 +57,9 @@ def batch_new(request):
     if request.method == "POST" and form.is_valid():
         batch = services.create_batch(request.user, form.cleaned_data, request)
         messages.success(
-            request, _("Batch %(code)s created. Registration is closed until you open it.") % {"code": batch.code}
+            request,
+            _("Batch %(code)s created. Registration is closed until you open it.")
+            % {"code": batch.code},
         )
         return redirect("mentor_batch", pk=batch.pk)
     return render(request, "mentors/batch_new.html", {"form": form})
@@ -229,17 +231,24 @@ def batch_approve(request, pk):
     if outcome["held"]:
         messages.warning(
             request,
-            _("%(n)s learner(s) held back: their certificate name is not in English letters. Correct the name on the learner's page, then approve.") % {"n": outcome["held"]},  # fmt: skip
+            _(
+                "%(n)s learner(s) held back: their certificate name is not in English letters. Correct the name on the learner's page, then approve."
+            )
+            % {"n": outcome["held"]},  # fmt: skip
         )
     if outcome["failed"]:
         messages.error(
             request,
-            _("%(n)s certificate(s) could not be issued. They are still waiting; try again or tell an admin.") % {"n": outcome["failed"]},  # fmt: skip
+            _(
+                "%(n)s certificate(s) could not be issued. They are still waiting; try again or tell an admin."
+            )
+            % {"n": outcome["failed"]},  # fmt: skip
         )
     elif outcome["remaining"] and ids is None:
         messages.info(
             request,
-            _("%(n)s learner(s) still waiting. Click Approve all again to continue.") % {"n": outcome["remaining"]},  # fmt: skip
+            _("%(n)s learner(s) still waiting. Click Approve all again to continue.")
+            % {"n": outcome["remaining"]},  # fmt: skip
         )
     if not outcome["issued"] and not outcome["failed"] and not outcome["held"]:
         messages.info(request, _("Nobody was waiting for approval."))

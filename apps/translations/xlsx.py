@@ -57,8 +57,7 @@ def _text_cell(cell, value):
 def export_module(module_number: int) -> bytes:
     sources = course_sources(module_number)
     rows = {
-        (r.key, r.language): r
-        for r in Translation.objects.filter(key__in=[s.key for s in sources])
+        (r.key, r.language): r for r in Translation.objects.filter(key__in=[s.key for s in sources])
     }
     book = Workbook()
     sheet = book.active
@@ -131,9 +130,7 @@ def import_module(module_number: int, upload, user, request=None) -> ImportResul
         raise SheetRejected(["The sheet has no Hindi, Marathi or Gujarati column."])
     key_col, en_col = header.index("key"), header.index("English")
     known = {s.key: s for s in course_sources(module_number)}
-    existing = {
-        (r.key, r.language): r for r in Translation.objects.filter(key__in=list(known))
-    }
+    existing = {(r.key, r.language): r for r in Translation.objects.filter(key__in=list(known))}
     errors, plan, seen = [], [], set()
 
     def cell(values, index):

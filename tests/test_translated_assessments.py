@@ -117,7 +117,9 @@ def test_projection_never_carries_a_translated_hint_or_why(case_id, reviewer):
     body["why"] = body.get("why") or "Invented explanation."
     translate_all("M1-X01", fmt, body, reviewer=reviewer)
     shown = translate_question_body("M1-X01", fmt, body, "hi")
-    dumped = json.dumps(client_projection(fmt, shown, formats.make_map(fmt, body)), ensure_ascii=False)
+    dumped = json.dumps(
+        client_projection(fmt, shown, formats.make_map(fmt, body)), ensure_ascii=False
+    )
     assert T + body["hint"] not in dumped
     assert T + body["why"] not in dumped
 

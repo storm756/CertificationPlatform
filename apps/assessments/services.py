@@ -11,10 +11,10 @@ from datetime import timedelta
 from decimal import Decimal
 
 from django.conf import settings
-from django.utils.translation import gettext as _
 from django.db import transaction
 from django.db.models import Max
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from apps.accounts.models import User
 from apps.audit.services import audit

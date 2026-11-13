@@ -10,11 +10,11 @@
 from datetime import timedelta
 
 from django.conf import settings
-from django.utils.translation import gettext as _
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone, translation
+from django.utils.translation import gettext as _
 
 from .models import UserStatus
 from .rules import requires_mfa

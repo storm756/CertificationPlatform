@@ -109,8 +109,8 @@ def _module_card(user, module, lookup=None):
     pct = round(100 * done / len(rows)) if rows else 0
     capstone = module.kind == "capstone"
     topics = [r["version"].title for r in rows if r["unit"].type == "reading"]
-    title = module.title or (CAPSTONE_TITLE if capstone else module.display_title)
-    tagline = module.tagline or (CAPSTONE_TAGLINE if capstone else "")
+    title = str(module.title or (CAPSTONE_TITLE if capstone else module.display_title))
+    tagline = str(module.tagline or (CAPSTONE_TAGLINE if capstone else ""))
     counts = _question_counts(module) if not capstone else {"mcq": 0, "interactive": 0}
     return {
         "module": module, "title": title, "tagline": tagline, "capstone": capstone,

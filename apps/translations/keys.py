@@ -4,14 +4,14 @@ Key grammar (all keys are server-side only; they never reach the browser):
 
     q:<stable id>:<path>             a question's text, e.g. q:M1-04:options.2.text
     blk:<module>.<unit>:title        a unit's title, e.g. blk:1.t3:title
-    blk:<module>.<unit>:<i>:<path>   a block's text, e.g. blk:1.t3:4:items.0
+    blk:<module>.<unit>:<i>:<path>   a block's text (blk:1.t3:4:items.0)
     mod:<module>:<path>              a module's title, tagline and overview
     part:<part id>:name              an assessment part's name
     note:<name>                      a fixed note written in code (NOTES below)
 
 A path is a dotted walk through the JSON body. List positions in a path are fine here: the key is
 never sent to the browser, and a translation is used only while the English at that path still has
-the hash it was translated from (source_hash), so a re-ordered or edited source is never mislabelled.
+the hash it was translated from (source_hash): an edited or moved source is never mislabelled.
 """
 
 import copy

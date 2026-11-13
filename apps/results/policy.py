@@ -349,7 +349,9 @@ def blockers(r: Result) -> list[str]:
         )
     if r.setup_gaps:
         out.append(
-            _("Course setup is incomplete, so the final stays locked.") + " " + " ".join(r.setup_gaps)
+            _("Course setup is incomplete, so the final stays locked.")
+            + " "
+            + " ".join(r.setup_gaps)
         )
     if not r.email_verified:
         out.append(_("Verify your email address."))

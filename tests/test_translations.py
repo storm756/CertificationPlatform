@@ -119,7 +119,9 @@ def test_translate_blocks_keeps_structure_and_tags_drafts(admin_user):
     wanted = [k for k, _ in keys.block_texts("blk:1.t1", BLOCKS)]
     lookup = Lookup.load("hi", wanted, allow_draft=True)
     out = translate_blocks("blk:1.t1", BLOCKS, lookup)
-    assert out[1]["spans"] == [{"text": "अपना फ़ोन लॉक करें।", "bold": False, "italic": False, "href": ""}]
+    assert out[1]["spans"] == [
+        {"text": "अपना फ़ोन लॉक करें।", "bold": False, "italic": False, "href": ""}
+    ]
     assert out[3]["answer"] == "1930 पर कॉल करें।"
     assert out[3]["type"] == "reveal" and len(out) == len(BLOCKS)
     assert BLOCKS[1]["spans"][0]["text"] == "Lock your "  # the stored blocks are untouched
@@ -182,7 +184,9 @@ def test_reviewer_rules(make_user):
     assert line.status == TranslationStatus.REVIEWED and line.reviewed_by == reviewer
     # a changed upload goes back to draft
     line, outcome = rules.save_line(key="k:1", language="hi", text="नमस्कार", english="Hello", user=uploader, origin="test")  # fmt: skip
-    assert outcome == "changed" and line.status == TranslationStatus.DRAFT and line.reviewed_by is None
+    assert (
+        outcome == "changed" and line.status == TranslationStatus.DRAFT and line.reviewed_by is None
+    )
     # the same text again leaves a reviewed line reviewed
     rules.mark_reviewed(reviewer, line, "Hello")
     line, outcome = rules.save_line(key="k:1", language="hi", text="नमस्कार", english="Hello", user=uploader, origin="test")  # fmt: skip
@@ -228,7 +232,10 @@ def test_import_round_trip(unit, admin_user):
         ([("blk:9.zz:title", "Nope", "नहीं")], "unknown key"),
         ([("blk:1.t1:title", "Introduction", "परिचय <b>")], "contains '<'"),
         ([("blk:1.t1:title", "Introduction", "परिचय {name}")], "placeholders"),
-        ([("blk:1.t1:title", "Introduction", "परिचय"), ("blk:1.t1:title", "Introduction", "x")], "twice"),
+        (
+            [("blk:1.t1:title", "Introduction", "परिचय"), ("blk:1.t1:title", "Introduction", "x")],
+            "twice",
+        ),
     ],
 )
 def test_import_refusals(unit, admin_user, rows, needle):
@@ -257,7 +264,7 @@ def test_import_from_older_english_is_stale(unit, admin_user):
 
 
 def test_export_cells_are_never_formulas(unit, admin_user):
-    row("blk:1.t1:title", "Introduction", "=HYPERLINK(\"x\")")
+    row("blk:1.t1:title", "Introduction", '=HYPERLINK("x")')
     ws = load_workbook(BytesIO(xlsx.export_module(1))).active
     cells = [c for r in ws.iter_rows() for c in r if c.value and str(c.value).startswith("=")]
     assert cells and all(c.data_type == "s" for c in cells)

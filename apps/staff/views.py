@@ -5,13 +5,13 @@ import json
 from collections import defaultdict
 
 from django.conf import settings
-from django.utils.translation import gettext as _
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Avg, Count
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 from pydantic import ValidationError
 
@@ -302,8 +302,10 @@ def marks_edit(request, number):
                     return _apply_marks(request, module, overrides, result)
                 messages.warning(
                     request,
-                    _("The impact changed since you previewed it (or it was not previewed). ")
-                    "Nothing was saved. Check the new preview and confirm again.",
+                    _(
+                        "The impact changed since you previewed it (or it was not previewed). "
+                        "Nothing was saved. Check the new preview and confirm again."
+                    ),
                 )
     else:
         parts = list(AssessmentPart.objects.filter(module=module).order_by("pk"))

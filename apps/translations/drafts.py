@@ -85,7 +85,9 @@ def read_tables(path: Path) -> list[Entry]:
     data = json.loads(path.read_text("utf-8"))
     out = []
     for record in data.get("records", []):
-        texts = {c: record[c].strip() for c in TRANSLATED_LANGUAGES if (record.get(c) or "").strip()}
+        texts = {
+            c: record[c].strip() for c in TRANSLATED_LANGUAGES if (record.get(c) or "").strip()
+        }
         if record.get("english") and texts:
             where = f"{path.name} ({', '.join(record.get('locations', [])[:2])})"
             out.append(Entry(record["english"], texts, "tables", where))
@@ -152,7 +154,9 @@ def read_hints(path: Path) -> list[Entry]:
             texts = {c: get.get(f"{n} hint", "") for c, n in LANG_NAMES.items()}
             texts = {c: t for c, t in texts.items() if t}
             if qid and english and texts:
-                out.append(Entry(english, texts, "hints", f"{path.name} {qid}", key=f"q:{qid}:hint"))
+                out.append(
+                    Entry(english, texts, "hints", f"{path.name} {qid}", key=f"q:{qid}:hint")
+                )
     return out
 
 
@@ -200,7 +204,9 @@ def plan(entries: list[Entry]) -> Plan:
 def apply(result: Plan) -> int:
     with transaction.atomic():
         for key, code, text, english, origin in result.rows:
-            rules.save_line(key=key, language=code, text=text, english=english, user=None, origin=origin)  # fmt: skip
+            rules.save_line(
+                key=key, language=code, text=text, english=english, user=None, origin=origin
+            )
     return len(result.rows)
 
 

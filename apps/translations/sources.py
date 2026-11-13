@@ -38,7 +38,8 @@ def course_sources(module_number: int | None = None) -> list[Source]:
             prefix = keys.unit_prefix(module.number, unit.slug)
             out.append(Source(f"{prefix}:title", live.title, module.number, "unit"))
             out += [
-                Source(k, e, module.number, "unit") for k, e in keys.block_texts(prefix, live.blocks)
+                Source(k, e, module.number, "unit")
+                for k, e in keys.block_texts(prefix, live.blocks)
             ]
         for part in AssessmentPart.objects.filter(module=module).order_by("pk"):
             out.append(Source(f"part:{part.pk}:name", part.name, module.number, "part"))

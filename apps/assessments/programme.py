@@ -11,9 +11,9 @@ import random
 from datetime import timedelta
 
 from django.db import transaction
-from django.utils.translation import gettext as _
 from django.db.models import Max
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from apps.accounts.models import User
 from apps.audit.services import audit

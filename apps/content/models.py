@@ -8,8 +8,8 @@ version. One version per unit is published at a time.
 
 from django.conf import settings
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
 
 
 class ModuleKind(models.TextChoices):

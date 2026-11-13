@@ -2,9 +2,9 @@ import re
 from datetime import date
 
 from django import forms
-from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.password_validation import validate_password
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from apps.batches.models import Batch, BatchStatus
 from apps.batches.rules import accepting_batches
@@ -41,8 +41,10 @@ class RegistrationForm(forms.Form):
     certificate_name = forms.CharField(
         max_length=120,
         label=_("Full name for your certificate"),
-        help_text=_("In English letters. This exact name will be printed on your certificate. ")
-        "Check the spelling now.",
+        help_text=_(
+            "In English letters. This exact name will be printed on your certificate. "
+            "Check the spelling now."
+        ),
     )
     email = forms.EmailField(label=_("Email"))
     password = forms.CharField(widget=forms.PasswordInput, label=_("Password"))
@@ -114,8 +116,10 @@ class RegistrationForm(forms.Form):
 class GuardianConfirmForm(forms.Form):
     guardian_name = forms.CharField(max_length=120, label=_("Your full name"))
     declaration = forms.BooleanField(
-        label=_("I declare that I am the parent or legal guardian of this learner and I consent ")
-        "to the collection and use of their data as described above."
+        label=_(
+            "I declare that I am the parent or legal guardian of this learner and I consent "
+            "to the collection and use of their data as described above."
+        )
     )
 
     def clean_guardian_name(self):

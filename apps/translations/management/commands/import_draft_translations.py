@@ -35,7 +35,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, apply, **paths):
         p = {k: BASE / v for k, v in paths.items() if k in DEFAULTS}
-        hint_files = sorted(p["hints"].rglob("*Hints-with-Translations.xlsx")) if p["hints"].is_dir() else [p["hints"]]  # fmt: skip
+        hints = p["hints"]
+        hint_files = (
+            sorted(hints.rglob("*Hints-with-Translations.xlsx")) if hints.is_dir() else [hints]
+        )
         entries = []
         counts = {}
         for name, found in (

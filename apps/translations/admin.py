@@ -134,7 +134,9 @@ class TranslationAdmin(ModelAdmin):
             data,
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
-        response["Content-Disposition"] = f'attachment; filename="translations-module-{number}.xlsx"'
+        response["Content-Disposition"] = (
+            f'attachment; filename="translations-module-{number}.xlsx"'
+        )
         return response
 
     def sheets_view(self, request):
@@ -148,7 +150,10 @@ class TranslationAdmin(ModelAdmin):
             if form.is_valid():
                 try:
                     result = xlsx.import_module(
-                        form.cleaned_data["module"], form.cleaned_data["file"], request.user, request
+                        form.cleaned_data["module"],
+                        form.cleaned_data["file"],
+                        request.user,
+                        request,
                     )
                 except xlsx.SheetRejected as exc:
                     for error in exc.errors[:30]:
@@ -204,4 +209,3 @@ def coverage() -> list[dict]:
             else:
                 entry[code]["draft"] += 1
     return [table[k] for k in sorted(table, key=lambda n: (n is None, n))]
-
