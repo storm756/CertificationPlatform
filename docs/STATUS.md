@@ -31,7 +31,7 @@ If two of these still disagree, or something is missing, **stop and ask in chat*
 | 6. Staff tools | ✅ Merged (PR #13, `5a25aac`) | [stage-6.md](history/stage-6.md) |
 | 7. Certificates | ✅ Merged (PR #14, `ccb7ec6`). Built to D36 with the **placeholder** design; no real certificate may be approved until the signature images, final design and emblem are in (see below). | [stage-7.md](history/stage-7.md) |
 | Fix: per-client rate limits | ✅ Merged (PR #15, `057c67b`). `/learn/check` and the block endpoint are limited per signed-in user, the mentor reset link per client IP (X-Forwarded-For). Before this, Caddy's address made each limit one site-wide bucket. Caddy 2.11 was checked: it replaces a client-sent X-Forwarded-For, so the left-most entry is the real client. This holds only while nothing else (a CDN, another proxy) sits in front of the edge Caddy; if that changes, set `trusted_proxies` and revisit `client_ip`. | — |
-| 8. Multilingual | 🟡 PR from `stage-8` (one PR, 8a and 8b merged at the lead's request). Not merged. UI catalogues and course translations are **drafts** until the team reviews them; assessments show reviewed lines only (D24). | [stage-8-progress.md](history/stage-8-progress.md) |
+| 8. Multilingual | 🟡 PR #16 from `stage-8` (one PR, 8a and 8b merged at the lead's request). Not merged. UI catalogues and course translations are **drafts** until the team reviews them; assessments show reviewed lines only (D24). | [stage-8-progress.md](history/stage-8-progress.md) |
 | 9–10 | ⬜ In order. One stage = one branch = one PR. | — |
 
 Earlier table and open items: [status-2026-11-12.md](history/status-2026-11-12.md).
