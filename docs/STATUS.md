@@ -1,6 +1,6 @@
 # Project status: read this first
 
-**Updated:** 13 Nov 2026 (Stage 9 PR). Every Claude session starts here, then reads `CLAUDE.md`, `docs/decisions.md` and the current stage in `docs/build-stages.md`.
+**Updated:** 14 Nov 2026 (Stage 10a PR). Every Claude session starts here, then reads `CLAUDE.md`, `docs/decisions.md` and the current stage in `docs/build-stages.md`.
 At the end of every stage, Claude updates this file in the same PR. Dated review results live in [`docs/history/`](history/) (one file per stage), not here.
 
 ## Order of authority (when two documents disagree)
@@ -34,7 +34,7 @@ If two of these still disagree, or something is missing, **stop and ask in chat*
 | 8. Multilingual | ✅ Merged (PR #16, `a7d0b93`). UI catalogues and course translations are **drafts** until the team reviews them; assessments show reviewed lines only (D24). | [stage-8-progress.md](history/stage-8-progress.md) |
 | 9. Landing page and public pages | ✅ Merged (PR #17, `ab4e136`). Landing, privacy, terms, grievance, help, 404/500, favicon and social image; draft legal text; people section is a placeholder until consent. | [stage-9-progress.md](history/stage-9-progress.md) |
 | Stage 9 follow-up: sample certificate | ✅ Merged (PR #18, `efc611a`). The landing page's certificate image was the old prototype (old name, AICTE and NCSRC logos). Replaced by `static/img/certificate-sample.png`, rendered from the real template by `manage.py certificate_sample`; **re-run it whenever the certificate template changes**. | CHANGELOG 2026-11-14 |
-| 10a. Launch hardening: headers, rate limits, edge Caddy, monitoring, runbook | 🟡 In progress on `stage-10a`. | [stage-10-progress.md](history/stage-10-progress.md) |
+| 10a. Launch hardening: headers, rate limits, edge Caddy, monitoring, runbook | 🟡 PR from `stage-10a` (not merged, not deployed). CSP from Django, rate limits per real client with the wait shown (allauth had the PR #15 proxy bug too), `deploy.sh edge`, scrubbed Sentry + heartbeat pings + disk check, `docs/runbook.md`. **Needs the person-only steps below before launch.** | [stage-10-progress.md](history/stage-10-progress.md) |
 | 10b. Playwright journeys and load test | ⬜ After 10a. | — |
 
 Earlier table and open items: [status-2026-11-12.md](history/status-2026-11-12.md).
@@ -70,8 +70,24 @@ Earlier table and open items: [status-2026-11-12.md](history/status-2026-11-12.m
 | `_framework-labels-verify.csv` has its columns shifted one to the left (English under `id`). The importer copes, but the team's next copy should be fixed. | Teammate B | Imported correctly. |
 | Lines the importer could not match to the live course: `content-data/outputs/translation-import-report.csv` (private). Mostly the old jumbled booklet tables and framework labels that are UI strings. | Teammate B | Not imported. |
 | YouTube IDs (D18) | Content team | Films stay MP4 for now (D35). |
-| **Fix before Stage 10: staging and prod share one Caddy (the `csfr-edge` stack), and its config comes from whichever checkout deployed last**, so a staging deploy also changes prod's routing (and could break it). Suggested fix: keep one fixed edge config outside both checkouts (e.g. `/srv/csfr/edge/caddy/`, installed from `main` by a separate `deploy/deploy.sh edge` step that validates and reloads), and stop `deploy.sh staging|prod` from touching Caddy. | Lead / next deploy-touching stage | Deploy staging and prod from the same ref, so the Caddyfile is the same. Reload itself is fixed (validated `caddy reload` on every deploy). |
+| **Edge Caddy: one-time move (Stage 10a built the fix).** `deploy.sh staging` and `deploy.sh prod` no longer touch Caddy; `deploy.sh edge` installs one fixed config into `/srv/csfr/edge/` from `main`. Until a person runs it once, the running Caddy still uses the config from whichever checkout deployed last. | A person with server access | `docs/runbook.md` §1.1, after 10a is merged. Until then deploy staging and prod from the same ref. |
 | Staging deploy and course load; branch protection on `main` (PR + green CI, no force pushes) | A person with server / GitHub access | Nothing new is visible on staging. |
+
+## Launch checklist (people only, D29)
+
+Claude prepared these in Stage 10a/10b; a person does them, in this order. Tick them here (in a PR) as they are done.
+
+1. [ ] Review and merge PR 10a. Then on the server: `deploy/deploy.sh edge` once (the one-time move, `docs/runbook.md` §1.1), then `deploy.sh staging`.
+2. [ ] Reboot the VPS ("System restart required") at a quiet time; check both `/healthz/`.
+3. [ ] Branch protection on `main` (PR + green CI, no force pushes).
+4. [ ] Load the course onto staging from the private inputs (`docs/runbook.md` §7), create an admin with 2FA, release the exam sets, open a test batch, run the smoke test (§1.3).
+5. [ ] Stage 8 steps on staging: reviewer permissions and the draft translation import (`docs/runbook.md` §1.2).
+6. [ ] Monitoring accounts: a Sentry project per environment (DSN into `app.env`), an uptime monitor on both `/healthz/`, heartbeat checks (`TASKS_PING_URL`, `BACKUP_DB_PING_URL`, `BACKUP_MEDIA_PING_URL`, `DISK_PING_URL`) and the disk-check cron line (`docs/runbook.md` §9). Keep an offline copy of every `app.env` / `db.env` (§4).
+7. [ ] Merge 10b, then run the Playwright journeys and the 60-learner load test against staging (p95 under 1 s); record the results in `docs/history/`.
+8. [ ] The timed restore drill from a real backup (`docs/runbook.md` §3.1), by a person holding the age key; record the times.
+9. [ ] The content and people items in the open-items table above: the 35 fresh final questions and the Set B/D fillers decision, legal text, reviewed translations, signatures, final certificate design, emblem, photo consent.
+10. [ ] The lead's security audit; fixes come back to Claude as a PR.
+11. [ ] Deploy prod (`deploy.sh prod`, after a green staging), load the course the same way, create the real batches. The lead signs Stage 10 off.
 
 ## Design calls still in force
 
@@ -83,7 +99,7 @@ One line each; the reasoning and check results are in `docs/history/`. Tell the 
 
 **Stage 3.** Legacy markup is flattened to plain text; hotspot art is rasterised to a PNG with numeric regions. · The legacy mixed set (18) is practice and a `ProgrammeAssessment(kind="mock")`; mixed questions with no module go to Module 10. · Crosswords are practice-only except Module 8's graded Part B (D26). · Interactive questions need no PC tag. · A blank answer never triggers a safety gate; an untouched item scores 0 at submission; the result says right / partly right / not quite plus the hint.
 
-**Stage 4.** ~~Lessons are readable without signing in~~: withdrawn by D34. · Inline interactions come from the module's own material; reveal and myth-or-fact answers stay on the server until asked. · `/learn/check` accepts only live practice-pool MCQs used by a published unit. · Minors write no `TimeLog`. · The Caddy CSP allows `script-src https://www.youtube.com` (for the YouTube player later). · Grant `content.publish_unit` in the admin to make a "Content publisher". · Legacy PDF-extraction fragments await the content team's review. · `publish_ccfr_course` loads the course from private inputs (preview without `--apply`); it has no automated test.
+**Stage 4.** ~~Lessons are readable without signing in~~: withdrawn by D34. · Inline interactions come from the module's own material; reveal and myth-or-fact answers stay on the server until asked. · `/learn/check` accepts only live practice-pool MCQs used by a published unit. · Minors write no `TimeLog`. · ~~The Caddy CSP allows `script-src https://www.youtube.com` everywhere~~: since Stage 10a only on a lesson with a YouTube film. · Grant `content.publish_unit` in the admin to make a "Content publisher". · Legacy PDF-extraction fragments await the content team's review. · `publish_ccfr_course` loads the course from private inputs (preview without `--apply`); it has no automated test.
 
 **Stage 5.** Exam sets B and D, one per batch, assigned by an admin and frozen per learner at the first programme exam (D31); released papers are fixed in the app and the database. · Go-live: `import_final_sets --source <xlsx>` (preview), `--apply`, then Admin → Exam sets → Check → Release, then pick the set on each batch. · A counted module with no published counted part keeps the final locked ("Course setup is incomplete"). · Combined results use unrounded question-level marks; the mean uses stored one-decimal attempt scores. · The pre-test prompt shows once after the first sign-in; "Later" goes to My progress. · The final shows overall % and bands; the pre-test the score only. · A question shown in any non-final attempt can't move into the final pool. · ~~`eligible` ignores certificates until Stage 7~~: Stage 7 counts them. · The practice mock (D26) has no page yet.
 
@@ -92,6 +108,8 @@ One line each; the reasoning and check results are in `docs/history/`. Tell the 
 **Stage 8.** UI strings are gettext (.po, Rosetta); course content is the `Translation` table with stable keys (§30). · A line is used only while its English still has the hash it was translated from; otherwise English. · Learning pages show drafts with a tag; assessments, hints, part names and practice checks show reviewed lines only (D24). · Translations are a display copy of the question; scoring and tokens use the stored version. · A reviewer never reviews their own upload or a stale line. · XLSX import is all-or-nothing. · Crosswords and the certificate stay English (D33, D36). · Rosetta edits on a server are lost at deploy: download and PR.
 
 **Stage 7.** Certificate numbers `CCFR-<year>-<batch centre code>-<serial>` from one global sequence; a failed issue skips a serial. · Auto-issue runs after the learner's own submit only; a stale auto-submit never issues (the learner waits for approval). · "Awaiting approval" lists every eligible learner with no certificate, whatever the switch says. · "Approve all" issues at most 15 per click. · "Completed on" is the date the result was achieved. · A revoke blocks a new certificate unless the admin ticks "allow a new certificate". · Revoked verify pages show no name. · The verify page is limited to 30 checks per 10 minutes per client IP. · Signatories live in settings; signature images in `media/private/signatures/`. · Guard A: a warning, not a block. · D37: certificate names in English letters only (sign-up and mentor edits); an older name that breaks it is held back until a mentor corrects it. The test fixtures and `tools/seed_e2e.py` now use letters-only names.
+
+**Stage 10a.** CSP comes from Django; Caddy adds headers only where a response has none. · The YouTube player script only on a lesson that embeds a YouTube film; `/admin/` and `/rosetta/` have their own policy. · Rate limits are per user, per batch (sign-up) or per real client IP, never `key="ip"`; allauth uses `ALLAUTH_TRUSTED_PROXY_COUNT = 1` behind Caddy. · Sign-up 90 per batch per 10 min; sign-ins 90 a minute per network; failed sign-ins 30 a minute per network and 5 per 5 min per email (lead, 14 Nov 2026). · Every limit answers 429 and says how long to wait. · `deploy.sh staging` and `deploy.sh prod` never touch Caddy; `deploy.sh edge` does. · Claude's auto-mode guard blocks `deploy.sh` even locally, so the edge script was tested step by step by hand; a person should run it once against a scratch `CSFR_ROOT` (the PR says how). · Heartbeat URLs, the DSN and the disk check are off until a person sets them.
 
 ## How to work with Claude on this project (the shared account)
 
