@@ -12,6 +12,7 @@ from django.utils.translation import gettext as _
 
 from apps.questions import formats
 from apps.questions.models import Pool, Question, QuestionStatus
+from apps.translations.assess import display_body, display_hint
 
 from .models import LearnCheck, UnitType, UnitVersion, VersionStatus
 from .services import complete
@@ -54,7 +55,8 @@ def prepare(session, stable_id: str):
     session[_session_key(version.pk)] = option_map
     return {
         "stable_id": question.stable_id,
-        "q": formats.project(question.format, version.body, option_map),
+        # reviewed translations only (D24); the option map is made from the stored body
+        "q": formats.project(question.format, display_body(version, question.format), option_map),
     }
 
 
@@ -78,11 +80,11 @@ def answer(user, unit, stable_id: str, choice: str, session) -> dict:
         LearnCheck.objects.create(user=user, question_version=version, unit=unit, score=score)
         if unit.type == UnitType.CHECK:
             complete(user, unit, how="attempted")
-    body = version.body
-    right_text = next(o["text"] for o in body["options"] if o["id"] == body["correct"])
+    shown = display_body(version, question.format)  # display copy: same ids as the stored body
+    right_text = next(o["text"] for o in shown["options"] if o["id"] == version.body["correct"])
     return {
         "right": score == Decimal(1),
         "right_text": right_text,  # practice only: the full answer (§8.4, D13)
-        "hint": body.get("hint", ""),
+        "hint": display_hint(version),
         "stable_id": stable_id,
     }
