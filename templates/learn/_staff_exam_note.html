@@ -1,1 +1,0 @@
-{% load i18n %}{% translate "Learners see the pre-test and final once their batch has a released exam set." %}{% if user.role == 'admin' %} <a href="{% url 'preview_exam' kind %}">{% translate "Preview" %}</a>{% endif %}
