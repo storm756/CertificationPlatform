@@ -148,7 +148,10 @@ jobs:
           docker compose -f deploy/compose.yml config -q
       - name: Caddyfile is valid
         run: |
+          # The staging login's hash is made here for this check only (the real one lives on the server).
+          HASH="$(docker run --rm caddy:2 caddy hash-password --plaintext "ci-$GITHUB_RUN_ID")"
           docker run --rm -e PROD_DOMAIN=example.org -e STAGING_DOMAIN=staging.example.org \
+            -e STAGING_AUTH_USER=ci -e STAGING_AUTH_HASH="$HASH" \
             -v "$PWD/deploy/caddy:/etc/caddy:ro" caddy:2 \
             caddy validate --config /etc/caddy/Caddyfile
       - name: Images build
