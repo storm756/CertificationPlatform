@@ -244,7 +244,7 @@ user has **no sudo**, so never use `sudo chown`. Use a one-off root container in
 use `/srv/csfr/prod/content-data` on prod. The compose file drops all Linux capabilities, so root needs `--cap-add` to change owners):
 
 ```bash
-docker compose -f compose.yml run --rm --user root --cap-add CHOWN --cap-add DAC_OVERRIDE --cap-add FOWNER -v /srv/csfr/staging/content-data:/app/content-data web 
+docker compose -f compose.yml run --rm --user root --cap-add CHOWN --cap-add DAC_OVERRIDE --cap-add FOWNER -v /srv/csfr/staging/content-data:/app/content-data web \
   chown -R 10001 /app/content-data/outputs
 ```
 
@@ -418,8 +418,17 @@ rm /srv/csfr/staging/incoming/*
 ```
 
 Success: `ls` lists three `signature-N.png` and three `.webp` files owned by `10001`. Safe to rerun (it overwrites the same files).
-Prod is the same command with `prod` in the paths and the prod helper exports, but **only the photos**: leave out the signature
-lines (`mkdir … signatures`, the `cp … signature-*.png` and the signatures part of `chown`/`chmod`) and copy only the `.webp` files.
+Prod (**photos only, no signatures**), with the prod helper exports from `/srv/csfr/prod/src/deploy`:
+
+```bash
+docker compose -f compose.yml run --rm --no-deps --user root --cap-add CHOWN --cap-add DAC_OVERRIDE --cap-add FOWNER -v /srv/csfr/prod/incoming:/incoming:ro web sh -c '
+  mkdir -p /app/media/private/people &&
+  cp /incoming/*.webp /app/media/private/people/ &&
+  chown -R 10001 /app/media/private/people &&
+  chmod 640 /app/media/private/people/* &&
+  ls -l /app/media/private/people'
+rm /srv/csfr/prod/incoming/*
+```
 
 Then for each environment that has photos, add these two lines to `/srv/csfr/<env>/app.env` (edit with `nano`; never print the file)
 and restart:

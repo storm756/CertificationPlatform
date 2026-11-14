@@ -246,17 +246,13 @@ def write_report(result: Plan, path: Path) -> Path:
     """Write the unmatched-lines report and return where it went.
 
     The usual path may already exist and belong to another user (a file copied from a PC), so a
-    PermissionError must never stop an import: fall back to a timestamped name beside it, then to
-    the system temp folder."""
-    import tempfile
+    PermissionError must never stop an import: fall back to a timestamped name beside it. There is
+    no /tmp fallback (a one-off container's /tmp is lost when it exits); if neither works the
+    caller prints a warning."""
     from datetime import datetime
 
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    candidates = [
-        path,
-        path.with_name(f"{path.stem}-{stamp}{path.suffix}"),
-        Path(tempfile.gettempdir()) / f"{path.stem}-{stamp}{path.suffix}",
-    ]
+    candidates = [path, path.with_name(f"{path.stem}-{stamp}{path.suffix}")]
     for target in candidates:
         try:
             _write_report_file(result, target)

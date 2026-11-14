@@ -169,9 +169,13 @@ def test_a_mentor_who_is_also_staff_gets_both_a_mentor_and_an_admin_link(client,
     assert 'href="/admin/"' in html and reverse("mentor_home") in html
 
 
-def test_a_plain_mentor_and_a_learner_get_no_admin_link(mentor_c, learner_client):
+def test_a_plain_mentor_and_a_learner_get_no_admin_link(mentor_c, learner):
+    from django.test import Client
+
     assert 'href="/admin/"' not in mentor_c.get(reverse("learn_catalogue")).content.decode()
-    assert 'href="/admin/"' not in learner_client.get(reverse("learn_catalogue")).content.decode()
+    other = Client()  # a separate client: the shared one holds the mentor's session
+    other.force_login(learner)
+    assert 'href="/admin/"' not in other.get(reverse("learn_catalogue")).content.decode()
 
 
 def test_the_admin_dashboard_links_back_to_the_site(admin_client):
@@ -332,3 +336,39 @@ def test_the_people_photos_are_webp_and_have_alt_text(client, tmp_path, settings
     settings.PEOPLE_CONSENT_GIVEN = True
     html = client.get("/").content.decode()
     assert "Photo of Dr. Nilakshi Jain, HOD Cyber Security, SAKEC" in html
+
+
+def test_preview_keeps_the_scene_and_options_of_an_mc_question():
+    from types import SimpleNamespace
+
+    from apps.assessments.preview import _project
+
+    body = {
+        "title": "Verdict",
+        "ask": "Safe or risky?",
+        "scene": "A text arrives from an unknown number.",
+        "options": [{"text": "Safe"}, {"text": "Risky"}],
+        "correct": 1,
+        "keep_order": False,
+    }
+    row = _project(SimpleNamespace(body=body, question=SimpleNamespace(format="mc")))
+    assert row["scene"] == "A text arrives from an unknown number."
+    assert sorted(row["options"]) == ["Risky", "Safe"]
+    assert "correct" not in row and "tone" not in str(row)
+
+
+def test_remove_test_learner_reports_pdfs_it_could_not_delete(make_user, make_batch, monkeypatch):
+    from pathlib import Path
+
+    user = make_user(batch=make_batch(), email="pdf@example.com")
+    issue_certificate(user)
+    stuck = Path("/nowhere/cert.pdf")
+    from apps.accounts.management.commands import remove_test_learner as command
+
+    monkeypatch.setattr(command, "pdf_file", lambda cert: stuck)
+    monkeypatch.setattr(
+        Path, "unlink", lambda self, missing_ok=False: (_ for _ in ()).throw(PermissionError())
+    )
+    text = run("pdf@example.com", "--yes", "--include-certificate")
+    assert "Deleted." in text and "/nowhere/cert.pdf" in text and "could not be removed" in text
+    assert not User.objects.filter(pk=user.pk).exists()

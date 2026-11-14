@@ -76,6 +76,21 @@ class Command(BaseCommand):
                 )
         except ProtectedError as exc:
             raise CommandError(f"Something still depends on this account: {exc}") from exc
+        stuck = []
         for path in files:
-            path.unlink(missing_ok=True)
+            try:
+                path.unlink(missing_ok=True)
+            except OSError:
+                stuck.append(path)
         self.stdout.write(self.style.SUCCESS("Deleted."))
+        if stuck:
+            listing = "\n".join(f"  {p}" for p in stuck)
+            self.stdout.write(
+                self.style.WARNING(
+                    "The account is gone but these certificate PDFs could not be removed:\n"
+                    f"{listing}\n"
+                    "Delete them by hand with a one-off root container on the media volume "
+                    "(docs/runbook.md 10.3). They are private files holding only that test "
+                    "learner's details."
+                )
+            )

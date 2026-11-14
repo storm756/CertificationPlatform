@@ -26,6 +26,7 @@
       <li class="card stack">
         <p class="muted">{% if r.module %}{% blocktranslate with n=r.module %}Module {{ n }}{% endblocktranslate %} · {% endif %}{% if r.format == "mcq" %}{% translate "Multiple choice" %}{% else %}{% translate "Interactive" %} ({{ r.format }}){% endif %}</p>
         <p><strong>{{ r.text }}</strong></p>
+        {% if r.scene %}<p class="muted">{{ r.scene }}</p>{% endif %}
         {% if r.ask %}<p>{{ r.ask }}</p>{% endif %}
         {% if r.options %}<ul>{% for o in r.options %}<li>{{ o }}</li>{% endfor %}</ul>{% endif %}
       </li>
