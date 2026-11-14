@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-15: Staging behind a login
+
+- **The staging site asks for one shared login** (Caddy `basic_auth`) on every page except `/healthz/`; prod is unchanged. The user name and bcrypt hash live only in `/srv/csfr/edge/.env`; `deploy.sh edge` refuses to install without them. The journeys and the load test pass the login from the environment. Why: staging is public with open sign-up and holds the real exam sets, so the final's answer key could be worked out there (security audit H3).
+
 ## 2026-11-15: Security audit fixes (critical and high)
 
 - **Test accounts no longer have public credentials:** `e2e_seed` and `loadtest_seed` give every marked account a new random password and TOTP secret on each run, printed only in the manifest; the load-test admin cannot sign in; `locustfile.py` has no default password. Why: the old fixed values in this public repo opened a staging superuser while the seed data existed (audit H1).

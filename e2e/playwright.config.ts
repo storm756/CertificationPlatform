@@ -16,6 +16,10 @@ export default defineConfig({
   reporter: [["list"], ["html", { open: "never", outputFolder: "report" }]],
   use: {
     baseURL,
+    // Staging sits behind a login (security audit 2026-11): pass it in E2E_HTTP_USER / E2E_HTTP_PASSWORD.
+    httpCredentials: process.env.E2E_HTTP_USER
+      ? { username: process.env.E2E_HTTP_USER, password: process.env.E2E_HTTP_PASSWORD ?? "" }
+      : undefined,
     channel: process.env.E2E_CHANNEL || undefined, // e.g. msedge on a PC without Playwright's Chromium
     viewport: mobile ? { width: 390, height: 844 } : { width: 1366, height: 900 },
     trace: "retain-on-failure",

@@ -28,7 +28,7 @@ but limited impact or harder to reach. **Low** = defence in depth. **Info** = no
 | --- | --- | --- | --- |
 | H1 | **High** (Critical while seeded) | The journey and load-test seeds create a staging **superuser** whose password and TOTP secret are in the public repo | Fixed in PR `security-fixes` |
 | H2 | **High** | Pillow 12.0.0 has 61 published advisories and decodes every uploaded picture | Fixed in PR `security-fixes` |
-| H3 | **High** (conditional) | The final's overall % is an answer oracle with unlimited attempts, and staging's open registration lets anyone farm it | Needs the lead's decision (§3, H3) |
+| H3 | **High** (conditional) | The final's overall % is an answer oracle with unlimited attempts, and staging's open registration lets anyone farm it | Final limit 3 on prod and staging, STG1 closed (lead, 15 Nov); staging login in PR `staging-login` |
 | M1 | Medium | The daily email budget can be drained by strangers, blocking real resets, guardian consent and sign-up verification | Fix proposed for the second PR |
 | M2 | Medium | The sign-up rate limit is keyed on the raw `batch` value, so `01`, `001` … each get a fresh bucket | Fix proposed for the second PR |
 | M3 | Medium | An email change does not notify the old address (architecture §7.4 says it does), and accounts may add unlimited addresses | Fix proposed for the second PR |

@@ -17,6 +17,10 @@ services:
       STAGING_DOMAIN: ${STAGING_DOMAIN:-staging.cyberfirstresponse.io}
       # Local testing only: set to "http://" to disable HTTPS (never on the server).
       SCHEME: ${SCHEME:-}
+      # The staging login (Caddyfile basic_auth). Set in /srv/csfr/edge/.env, never in git. Single-quote
+      # the hash there: it contains "$" signs. deploy/edge.sh refuses to install without both.
+      STAGING_AUTH_USER: ${STAGING_AUTH_USER:-}
+      STAGING_AUTH_HASH: ${STAGING_AUTH_HASH:-}
     volumes:
       # /srv/csfr/edge/caddy, written only by deploy/edge.sh. A directory, not one file, so a changed file is seen.
       - ./caddy:/etc/caddy:ro

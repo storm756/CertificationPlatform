@@ -87,6 +87,31 @@ that is expected.
 
 ---
 
+### 1.4 The staging login (security audit 2026-11)
+
+Staging holds the real course and exam sets, so the edge Caddy asks for one shared login on every staging page except
+`/healthz/` (the uptime monitor still works). Prod is not affected. The user name and a bcrypt **hash** of the password live only
+in `/srv/csfr/edge/.env` on the server; the password itself goes in the team's password manager. `deploy.sh edge` refuses to
+install a Caddyfile while either value is missing, and the running Caddy keeps its old config.
+
+```bash
+# on the server, once (and again to change the password)
+docker run --rm -it caddy:2 caddy hash-password       # type the password twice; prints a hash starting $2a$
+nano /srv/csfr/edge/.env                               # add the two lines below (single quotes: the hash has $ signs)
+#   STAGING_AUTH_USER=ccfr-team
+#   STAGING_AUTH_HASH='$2a$14$...the hash...'
+chmod 600 /srv/csfr/edge/.env
+cd ~/csfr-repo && git pull && deploy/deploy.sh edge
+curl -s -o /dev/null -w '%{http_code}
+' https://staging.cyberfirstresponse.io/          # 401
+curl -s https://staging.cyberfirstresponse.io/healthz/                                  # ok
+curl -s -o /dev/null -w '%{http_code}
+' https://cyberfirstresponse.io/                 # 200 (prod is open)
+```
+
+The browser asks for the login once per session; links in staging emails work after it. The journeys and the load test pass
+it with `E2E_HTTP_USER` / `E2E_HTTP_PASSWORD` and `LT_HTTP_USER` / `LT_HTTP_PASSWORD` (§8).
+
 ## 2. Roll back
 
 1. Redeploy the previous tag: `deploy/deploy.sh prod v1.2.0` (staging the same way). Migrations stay backward-compatible for one
@@ -302,7 +327,7 @@ MANAGE_T=("${MANAGE[@]:0:5}" -T "${MANAGE[@]:5}")   # the same helper without a 
 (umask 077; "${MANAGE_T[@]}" e2e_seed 2>/dev/null > /tmp/e2e-manifest.json)
 # copy /tmp/e2e-manifest.json to e2e/manifest.json on your PC (scp), then, on your PC:
 cd e2e && npm ci && npx playwright install chromium
-BASE_URL=https://staging.cyberfirstresponse.io npx playwright test
+E2E_HTTP_USER=ccfr-team E2E_HTTP_PASSWORD='<staging login>' BASE_URL=https://staging.cyberfirstresponse.io npx playwright test
 # back on the server, remove everything the run added:
 "${MANAGE[@]}" e2e_clean; rm -f /tmp/e2e-manifest.json   # and delete e2e/manifest.json on your PC
 ```
@@ -316,7 +341,7 @@ trace in `e2e/test-results/`. Record the result in `docs/history/`. Details: `e2
 ```bash
 # on the server
 "${MANAGE[@]}" loadtest_seed --count 60     # prints {"password": ...}: a new random one each run
-# on your PC (LT_PASSWORD=<that password>) (python -m venv .venv-load; pip install -r loadtest/requirements.txt), one network, all 60 at once:
+# on your PC (LT_PASSWORD=<that password>, LT_HTTP_USER / LT_HTTP_PASSWORD = the staging login, §1.4) (python -m venv .venv-load; pip install -r loadtest/requirements.txt), one network, all 60 at once:
 locust -f loadtest/locustfile.py --headless --host https://staging.cyberfirstresponse.io -u 60 -r 60 --run-time 20m --csv loadtest/results
 # back on the server:
 "${MANAGE[@]}" loadtest_seed --clean; "${MANAGE[@]}" e2e_clean

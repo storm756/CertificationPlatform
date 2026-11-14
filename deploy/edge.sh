@@ -46,9 +46,18 @@ set +a
 PROD_DOMAIN="${PROD_DOMAIN:-cyberfirstresponse.io}"
 STAGING_DOMAIN="${STAGING_DOMAIN:-staging.cyberfirstresponse.io}"
 
+# The staging login (security audit 2026-11). Without it the new Caddyfile can't work, so stop here
+# and leave the running Caddy as it is.
+if [ -z "${STAGING_AUTH_USER:-}" ] || [ -z "${STAGING_AUTH_HASH:-}" ]; then
+  rm -f "$NEW"
+  echo "STAGING_AUTH_USER and STAGING_AUTH_HASH must be set in $EDGE/.env (docs/runbook.md §1.4)." >&2
+  echo "Nothing was installed; Caddy still runs its previous config." >&2
+  exit 1
+fi
+
 echo "==> [edge] validating the new Caddyfile ($REV) in a throwaway Caddy"
 if ! docker run --rm \
-  -e PROD_DOMAIN="$PROD_DOMAIN" -e STAGING_DOMAIN="$STAGING_DOMAIN" -e SCHEME="${SCHEME:-}" \
+  -e PROD_DOMAIN="$PROD_DOMAIN" -e STAGING_DOMAIN="$STAGING_DOMAIN" -e SCHEME="${SCHEME:-}"   -e STAGING_AUTH_USER="$STAGING_AUTH_USER" -e STAGING_AUTH_HASH="$STAGING_AUTH_HASH" \
   -v "$NEW:/etc/caddy/Caddyfile:ro" "$CADDY_IMAGE" \
   caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile; then
   rm -f "$NEW"
