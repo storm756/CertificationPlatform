@@ -283,3 +283,11 @@ html { scroll-behavior: auto; }
 @media (min-width: 100rem) {
 .site-header--staff .brand-copy { display: block; }
 }
+.nav-links a, .nav-staff summary, .nav-actions .btn { white-space: nowrap; }
+.user-chip > span:last-child { min-width: 0; max-width: 10rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (min-width: 72rem) and (max-width: 85.99rem) {
+.nav-links { gap: .9rem; }
+.primary-nav { gap: .9rem; }
+.nav-actions { gap: .4rem; padding-left: .9rem; }
+.user-chip > span:last-child { max-width: 7rem; }
+}

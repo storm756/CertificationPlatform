@@ -29,6 +29,7 @@ const auth = opt("auth", "");
 const lang = opt("lang", "");
 const totp = opt("totp", "");
 const browserName = opt("browser", "msedge");
+const widths = opt("widths", "390,1366").split(",").map(Number);
 const paths = args.filter((a) => !a.startsWith("--"));
 if (!paths.length) {
   console.error("Give at least one path, e.g. /accounts/login/");
@@ -80,8 +81,8 @@ if (auth) {
   await loginContext.close();
 }
 
-for (const width of [390, 1366]) {
-  const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 900 }, storageState });
+for (const width of widths) {
+  const context = await browser.newContext({ viewport: { width, height: width <= 480 ? 844 : 900 }, storageState });
   if (lang) await context.addCookies([{ name: "django_language", value: lang, url: base }]);
   for (const p of paths) {
     const page = await context.newPage();

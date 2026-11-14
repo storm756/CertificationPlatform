@@ -305,6 +305,13 @@ def test_move_to_unknown_or_foreign_batch_gives_the_same_403_and_audits(mentor_c
     unknown = mentor_client.post(url, {"batch": 999999})
     garbage = mentor_client.post(url, {"batch": "not-a-number"})
     assert foreign.status_code == unknown.status_code == garbage.status_code == 403
-    assert foreign.content == unknown.content == garbage.content
+
+    # the 403 page is the site layout now, so ignore the per-response CSRF token and nonce
+    def same(r):
+        return re.sub(
+            rb'(csrfmiddlewaretoken" value="|nonce="|csrf-token" content=")[^"]+', rb"", r.content
+        )
+
+    assert same(foreign) == same(unknown) == same(garbage)
     assert AuditEvent.objects.filter(action="access.denied").count() == 3
     assert Enrolment.objects.get(user=learner).batch == world["mine"]
