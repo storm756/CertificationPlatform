@@ -56,6 +56,14 @@ def has_room(kind: str, now=None) -> bool:
     return sent_today(now)[pool] < limits[pool]
 
 
+def sent_recently(kind: str, address: str, now=None) -> bool:
+    """An email of this kind went to this address in the last 24 hours."""
+    now = now or timezone.now()
+    return EmailLog.objects.filter(
+        kind=kind, address_hash=_hash(address), sent_at__gte=now - timedelta(hours=24)
+    ).exists()
+
+
 def can_send(kind: str, address: str, now=None) -> bool:
     now = now or timezone.now()
     if not has_room(kind, now):

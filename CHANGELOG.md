@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-14: Pilot fixes after the first prod deploy
+
+- **Staff opening assessments:** a styled `403.html`; admins get a read-only preview of module parts, the pre-test and the final (banner "nothing is saved or scored", no Attempt or any other row, options listed without a mark); mentors get a friendly page and still never see exam questions. Why: an admin opening `/assess/26/` got a bare 403.
+- **Staff catalogue and header:** staff see what learners will see instead of "Coming soon" (admins get a Preview link); staff links moved into one "Staff tools" menu with an "Admin dashboard" link, and the admin dashboard links back to the site; no overlap at 390, 1280 and 1366px.
+- **Password reset:** a second request the same day says a link was already sent; identical for unknown addresses.
+- **Config:** `SUPPORT_EMAIL` from the environment; email subject prefix and sender name are always "CCFR" (`SITE_NAME` is no longer read).
+- **Leadership section:** WebP photos (kept out of git), the lead's titles, alt text. Shows only with `PEOPLE_CONSENT_GIVEN=1`.
+- **Ops:** `remove_test_learner`; `import_draft_translations` no longer fails on an unwritable report file; runbook: no-sudo `chown`, the `app.env` backup block, copying signatures and photos to a server.
+- **Decision recorded:** videos stay MP4 (D35 stands; no YouTube switch for now). Why: the lead's call on 14 Nov 2026.
+
 ## 2026-11-14: Stage 10b, browser journeys and load test
 
 - **`e2e/`:** Playwright journeys 1–16 of architecture §18 (17 is the restore drill), driven through the real pages. They pass at 1366px against a development stack that holds the full course (`csfr-restore`) and on an empty database (what CI uses), and at 390px (`E2E_MOBILE=1`) on the empty database. New commands `manage.py e2e_seed` and `e2e_clean` add and remove invented batches, learners, staff, a released exam set and a sandbox module; they refuse anything but dev and staging and never edit existing rows.

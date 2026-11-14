@@ -102,7 +102,7 @@ def _latest_versions(questions) -> list[QuestionVersion]:
         QuestionVersion.objects.filter(question__in=questions)
         .order_by("question__stable_id", "-version")
         .distinct("question__stable_id")
-        .select_related("question")
+        .select_related("question__module")
     )
 
 

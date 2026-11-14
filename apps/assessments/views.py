@@ -27,7 +27,7 @@ from apps.results.policy import PASS_MARK
 from apps.translations.assess import display_body, display_hint
 from apps.translations.pages import localise_parts
 
-from . import examsets, programme, services
+from . import examsets, preview, programme, services
 from .models import AssessmentPart, Attempt, AttemptStatus
 
 
@@ -37,6 +37,27 @@ def learner_required(view):
         if request.user.role != Role.LEARNER:
             raise PermissionDenied
         return view(request, *args, **kwargs)
+
+    wrapper.__name__ = view.__name__
+    wrapper.__doc__ = view.__doc__
+    return wrapper
+
+
+def learner_or_staff_notice(view):
+    """Learner pages that staff may open: an admin sees a read-only preview, a mentor a friendly
+    page, anyone else a 403. Used only for the two intro pages (pilot fixes)."""
+
+    @login_required
+    def wrapper(request, *args, **kwargs):
+        role = request.user.role
+        if role == Role.LEARNER:
+            return view(request, *args, **kwargs)
+        if role == Role.ADMIN:
+            target = redirect("preview_part" if "part_id" in kwargs else "preview_exam", **kwargs)
+            return target
+        if role == Role.MENTOR:
+            return preview.staff_notice(request)
+        raise PermissionDenied
 
     wrapper.__name__ = view.__name__
     wrapper.__doc__ = view.__doc__
@@ -107,7 +128,7 @@ def _question_context(attempt, position):
 # --- intro, start ------------------------------------------------------------------------------
 
 
-@learner_required
+@learner_or_staff_notice
 def intro(request, part_id):
     part = get_object_or_404(
         AssessmentPart.objects.select_related("module"), pk=part_id, is_published=True
@@ -370,7 +391,7 @@ def _programme_result(request, attempt):
     return render(request, "assessments/programme_result.html", context)
 
 
-@learner_required
+@learner_or_staff_notice
 def programme_intro(request, kind):
     if kind not in ("final", "pretest"):
         raise Http404

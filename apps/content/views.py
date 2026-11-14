@@ -142,6 +142,7 @@ def catalogue(request):
         {
             "cards": cards,
             "exams_ready": exams_ready,
+            "staff_view": request.user.role in ("mentor", "admin"),
             "stats": {
                 "modules": len(learning),
                 "topics": sum(c["topics"] for c in learning),

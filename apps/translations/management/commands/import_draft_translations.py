@@ -58,8 +58,16 @@ class Command(BaseCommand):
         self.stdout.write(f"already translated (left alone): {result.skipped_existing}")
         self.stdout.write(f"refused by validation: {len(result.refused)}")
         self.stdout.write(f"unmatched (in the report): {len(result.unmatched)}")
-        drafts.write_report(result, p["report"])
-        self.stdout.write(f"report: {paths['report']}")
+        try:
+            report_path = drafts.write_report(result, p["report"])
+            self.stdout.write(f"report: {report_path}")
+        except OSError:
+            self.stdout.write(
+                self.style.WARNING(
+                    "The unmatched-lines report could not be written (the outputs folder is not "
+                    "writable): fix it as in docs/runbook.md 7.1 and run the preview again."
+                )
+            )
         if apply:
             saved = drafts.apply(result)
             self.stdout.write(self.style.SUCCESS(f"saved {saved} draft lines"))

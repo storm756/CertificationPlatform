@@ -266,3 +266,28 @@ html { scroll-behavior: auto; }
 .page h2 { font-size: clamp(1.35rem, 2.4vw, 1.7rem); }
 .form-stack { display: grid; gap: 1.1rem; }
 .form-stack .field > input:not([type=checkbox]), .form-stack .field > select, .form-stack .field > textarea { width: 100%; }
+/* ---------- Staff header (pilot fixes): staff links live in one menu so the nav never collides ---------- */
+.nav-staff summary { min-height: 52px; display: flex; align-items: center; gap: .6rem; font-weight: 600; font-size: 1.08rem; cursor: pointer; list-style: none; border-bottom: 1px solid rgba(7, 26, 61, .1); }
+.nav-staff summary::-webkit-details-marker { display: none; }
+.nav-staff summary::after { content: ""; width: .5rem; height: .5rem; margin-left: auto; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); }
+.nav-staff ul { padding-left: 1.2rem; }
+.site-header--staff .brand-copy { display: none; }
+@media (min-width: 72rem) {
+.nav-staff { position: relative; }
+.nav-staff summary { min-height: 48px; border: 0; font-size: 1rem; }
+.nav-staff summary .icon { display: none; }
+.nav-staff ul { position: absolute; top: 100%; right: 0; z-index: 50; min-width: 14rem; padding: .5rem; display: grid; background: var(--header-bg); border: 1px solid rgba(7, 26, 61, .18); border-radius: .8rem; box-shadow: var(--shadow); }
+.nav-staff ul a { padding-inline: .75rem; }
+.nav-staff ul a::after { display: none; }
+}
+@media (min-width: 100rem) {
+.site-header--staff .brand-copy { display: block; }
+}
+.nav-links a, .nav-staff summary, .nav-actions .btn { white-space: nowrap; }
+.user-chip > span:last-child { min-width: 0; max-width: 10rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (min-width: 72rem) and (max-width: 85.99rem) {
+.nav-links { gap: .9rem; }
+.primary-nav { gap: .9rem; }
+.nav-actions { gap: .4rem; padding-left: .9rem; }
+.user-chip > span:last-child { max-width: 7rem; }
+}

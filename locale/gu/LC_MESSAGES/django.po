@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ccfr\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-14 01:21+0530\n"
+"POT-Creation-Date: 2026-11-14 23:04+0530\n"
 "PO-Revision-Date: 2026-11-13 21:00+0530\n"
 "Language-Team: CCFR translators (drafts pending review)\n"
 "Language: gu\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 # draft: needs review
-#: apps/accounts/adapter.py:29
+#: apps/accounts/adapter.py:31
 msgid "Too many wrong passwords. Please wait 5 minutes and try again, or reset your password."
 msgstr ""
 "ઘણી વાર ખોટો પાસવર્ડ નાખવામાં આવ્યો. કૃપા કરીને 5 મિનિટ રાહ જોઈને ફરી પ્રયાસ કરો, અથવા તમારો "
@@ -46,7 +46,7 @@ msgid "Password"
 msgstr "પાસવર્ડ"
 
 # draft: needs review
-#: apps/accounts/forms.py:51 templates/components/header.html:45
+#: apps/accounts/forms.py:51 templates/components/header.html:55
 msgid "Language"
 msgstr "ભાષા"
 
@@ -122,17 +122,17 @@ msgid "Your email can't be changed for 7 days after a password reset by your men
 msgstr "મેન્ટર દ્વારા પાસવર્ડ રીસેટ કર્યા પછી 7 દિવસ સુધી તમારો ઈમેલ બદલી શકાશે નહીં."
 
 # draft: needs review
-#: apps/accounts/views.py:116
+#: apps/accounts/views.py:118
 msgid "We have emailed your guardian again."
 msgstr "અમે તમારા વાલીને ફરીથી ઈમેલ મોકલ્યો છે."
 
 # draft: needs review
-#: apps/accounts/views.py:118
+#: apps/accounts/views.py:120
 msgid "We could not send the email right now. Please try again later."
 msgstr "હમણાં ઈમેલ મોકલી શકાયો નથી. કૃપા કરીને પછીથી ફરી પ્રયાસ કરો."
 
 # draft: needs review
-#: apps/accounts/views.py:167
+#: apps/accounts/views.py:169
 msgid "Your password is changed. Please sign in."
 msgstr "તમારો પાસવર્ડ બદલાઈ ગયો છે. કૃપા કરીને સાઇન ઇન કરો."
 
@@ -506,8 +506,9 @@ msgstr "આચાર્ય, SAKEC"
 
 # draft: needs review
 #: apps/core/people.py:19
-msgid "Head, Department of Cyber Security, SAKEC"
-msgstr "વડા, સાયબર સુરક્ષા વિભાગ, SAKEC"
+#| msgid "Head, Department of Cyber Security, SAKEC"
+msgid "HOD Cyber Security, SAKEC"
+msgstr "વિભાગના વડા, સાયબર સિક્યુરિટી, SAKEC"
 
 # draft: needs review
 #: apps/core/people.py:21
@@ -899,7 +900,7 @@ msgid "Final"
 msgstr "અંતિમ"
 
 # draft: needs review
-#: apps/results/views.py:36 templates/certificates/mine.html:7 templates/components/header.html:36
+#: apps/results/views.py:36 templates/certificates/mine.html:7 templates/components/header.html:46
 #: templates/progress/dashboard.html:91
 msgid "Certificate"
 msgstr "પ્રમાણપત્ર"
@@ -987,6 +988,26 @@ msgid "The real effect differed from the preview, so nothing was saved. Preview 
 msgstr "વાસ્તવિક અસર પૂર્વાવલોકનથી અલગ હતી, તેથી કંઈ સાચવ્યું નથી. ફરી પૂર્વાવલોકન કરો."
 
 # draft: needs review
+#: templates/403.html:3 templates/403.html:7
+#| msgid "We can't find that page"
+msgid "You can't open this page"
+msgstr "તમે આ પેજ ખોલી શકતા નથી"
+
+# draft: needs review
+#: templates/403.html:8
+msgid ""
+"This page is not available for your account. If you think it should be, tell your mentor or the "
+"programme team."
+msgstr ""
+"આ પેજ તમારા ખાતા માટે ઉપલબ્ધ નથી. જો તમને લાગે કે હોવું જોઈએ, તો તમારા મેન્ટર અથવા કાર્યક્રમ ટીમને"
+" જણાવો."
+
+# draft: needs review
+#: templates/403.html:9 templates/404.html:9 templates/500.html:21
+msgid "Go home"
+msgstr "હોમ પર જાઓ"
+
+# draft: needs review
 #: templates/404.html:3
 msgid "Page not found"
 msgstr "પાનું મળ્યું નથી"
@@ -1000,11 +1021,6 @@ msgstr "અમને તે પાનું મળતું નથી"
 #: templates/404.html:8
 msgid "The link may be old, or the page may have moved. Nothing you have saved is affected."
 msgstr "લિંક જૂની હોઈ શકે, અથવા પાનું ખસેડાયું હોઈ શકે. તમે સાચવેલી કોઈ પણ વસ્તુ પર અસર થઈ નથી."
-
-# draft: needs review
-#: templates/404.html:9 templates/500.html:21
-msgid "Go home"
-msgstr "હોમ પર જાઓ"
 
 # draft: needs review
 #: templates/404.html:9 templates/components/footer.html:9 templates/public/help.html:3
@@ -1052,7 +1068,7 @@ msgstr ""
 
 # draft: needs review
 #: templates/account/login.html:3 templates/account/login.html:34
-#: templates/assessments/attempt.html:26 templates/components/header.html:60
+#: templates/assessments/attempt.html:26 templates/components/header.html:70
 #: templates/landing.html:30 templates/landing.html:304 templates/registration/register.html:23
 msgid "Sign in"
 msgstr "સાઇન ઇન કરો"
@@ -1123,6 +1139,29 @@ msgid "Create your account"
 msgstr "તમારું ખાતું બનાવો"
 
 # draft: needs review
+#: templates/account/password_reset_done.html:5 templates/account/password_reset_done.html:9
+msgid "Password Reset"
+msgstr "પાસવર્ડ રીસેટ"
+
+# draft: needs review
+#: templates/account/password_reset_done.html:16
+msgid ""
+"If an account exists for this address, we already sent a reset link today. Check spam, or try "
+"again tomorrow."
+msgstr ""
+"આ સરનામા પર ખાતું હોય તો, અમે આજે રીસેટ લિંક મોકલી દીધી છે. સ્પામ તપાસો, અથવા કાલે ફરી પ્રયત્ન "
+"કરો."
+
+# draft: needs review
+#: templates/account/password_reset_done.html:18
+msgid ""
+"We have sent you an email. If you have not received it please check your spam folder. Otherwise "
+"contact us if you do not receive it in a few minutes."
+msgstr ""
+"અમે તમને એક ઈમેલ મોકલ્યો છે. ન મળ્યો હોય તો કૃપા કરીને સ્પામ ફોલ્ડર તપાસો. થોડીવારમાં ન મળે તો "
+"અમારો સંપર્ક કરો."
+
+# draft: needs review
 #: templates/accounts/reset_link_form.html:3 templates/accounts/reset_link_form.html:5
 msgid "Choose a new password"
 msgstr "નવો પાસવર્ડ પસંદ કરો"
@@ -1161,6 +1200,11 @@ msgid "Django site admin"
 msgstr "સાઇટ એડમિન"
 
 # draft: needs review
+#: templates/admin/index.html:11
+msgid "Back to site"
+msgstr "સાઇટ પર પાછા"
+
+# draft: needs review
 #: templates/assessments/_palette.html:8 templates/assessments/_question_panel.html:41
 msgid "Review and submit"
 msgstr "તપાસો અને સબમિટ કરો"
@@ -1192,13 +1236,14 @@ msgid "Sign in again to save"
 msgstr "સાચવવા માટે ફરી સાઇન ઇન કરો"
 
 # draft: needs review
-#: templates/assessments/_question_panel.html:11 templates/learn/module.html:61
+#: templates/assessments/_question_panel.html:11 templates/assessments/preview.html:27
+#: templates/learn/module.html:61
 msgid "Interactive"
 msgstr "ઇન્ટરઍક્ટિવ"
 
 # draft: needs review
-#: templates/assessments/_question_panel.html:11 templates/landing.html:173
-#: templates/learn/module.html:61
+#: templates/assessments/_question_panel.html:11 templates/assessments/preview.html:27
+#: templates/landing.html:173 templates/learn/module.html:61
 msgid "Multiple choice"
 msgstr "બહુવિકલ્પ"
 
@@ -1231,6 +1276,7 @@ msgstr "આગળ"
 
 # draft: needs review
 #: templates/assessments/attempt.html:14 templates/assessments/intro.html:6
+#: templates/assessments/preview.html:27
 #, python-format
 msgid "Module %(n)s"
 msgstr "મોડ્યુલ %(n)s"
@@ -1388,6 +1434,55 @@ msgstr "ફરી શરૂ કરો"
 #: templates/assessments/intro.html:44 templates/assessments/programme_intro.html:60
 msgid "View result"
 msgstr "પરિણામ જુઓ"
+
+# draft: needs review
+#: templates/assessments/preview.html:3 templates/learn/_staff_exam_note.html:1
+#: templates/staff/question_list.html:17 templates/staff/question_preview.html:3
+msgid "Preview"
+msgstr "પૂર્વાવલોકન"
+
+# draft: needs review
+#: templates/assessments/preview.html:7
+msgid "Preview: nothing is saved or scored."
+msgstr "પૂર્વાવલોકન: કંઈ સાચવવામાં કે ગુણાંકિત કરવામાં આવતું નથી."
+
+# draft: needs review
+#: templates/assessments/preview.html:7
+msgid ""
+"No attempt is made and no result, eligibility or certificate changes. Options are listed without "
+"any mark: the correct answers are only in the admin."
+msgstr ""
+"કોઈ પ્રયાસ બનતો નથી અને કોઈ પરિણામ, પાત્રતા કે પ્રમાણપત્ર બદલાતું નથી. વિકલ્પો કોઈ નિશાન વિના "
+"બતાવ્યા છે: સાચા જવાબો ફક્ત એડમિનમાં છે."
+
+# draft: needs review
+#: templates/assessments/preview.html:12
+#, python-format
+msgid ""
+"A learner sees %(n)s questions drawn at random from a pool of %(total)s. All %(total)s are listed."
+msgstr ""
+"શીખનારને %(total)s પ્રશ્નોના સમૂહમાંથી અનિયમિત રીતે પસંદ કરેલા %(n)s પ્રશ્નો દેખાય છે. બધા "
+"%(total)s અહીં આપ્યા છે."
+
+# draft: needs review
+#: templates/assessments/preview.html:16
+msgid "Exam set"
+msgstr "પરીક્ષા સેટ"
+
+# draft: needs review
+#: templates/assessments/preview.html:18 templates/components/field.html:23
+msgid "Show"
+msgstr "બતાવો"
+
+# draft: needs review
+#: templates/assessments/preview.html:22
+msgid "There are no questions to show yet."
+msgstr "બતાવવા માટે હજુ કોઈ પ્રશ્ન નથી."
+
+# draft: needs review
+#: templates/assessments/preview.html:34
+msgid "Back to modules"
+msgstr "મોડ્યુલ પર પાછા"
 
 # draft: needs review
 #: templates/assessments/programme_intro.html:8
@@ -1728,7 +1823,7 @@ msgid "marked for review"
 msgstr "સમીક્ષા માટે ચિહ્નિત"
 
 # draft: needs review
-#: templates/assessments/review.html:21 templates/components/header.html:49
+#: templates/assessments/review.html:21 templates/components/header.html:59
 msgid "Change"
 msgstr "બદલો"
 
@@ -1756,6 +1851,21 @@ msgstr "સબમિટ કર્યા પછી જવાબો બદલી �
 #: templates/assessments/review.html:27 templates/assessments/review.html:28
 msgid "Submit"
 msgstr "સબમિટ કરો"
+
+# draft: needs review
+#: templates/assessments/staff_notice.html:3 templates/assessments/staff_notice.html:7
+msgid "Assessments are taken by learners"
+msgstr "મૂલ્યાંકન શીખનારાઓ આપે છે"
+
+# draft: needs review
+#: templates/assessments/staff_notice.html:8
+msgid "Your batch's progress is on the mentor dashboard."
+msgstr "તમારી બેચની પ્રગતિ મેન્ટર ડેશબોર્ડ પર છે."
+
+# draft: needs review
+#: templates/assessments/staff_notice.html:9
+msgid "Go to the mentor dashboard"
+msgstr "મેન્ટર ડેશબોર્ડ પર જાઓ"
 
 # draft: needs review
 #: templates/base.html:11
@@ -2049,11 +2159,6 @@ msgstr "આગળ વધો"
 
 # draft: needs review
 #: templates/components/field.html:23
-msgid "Show"
-msgstr "બતાવો"
-
-# draft: needs review
-#: templates/components/field.html:23
 msgid "Hide"
 msgstr "છુપાવો"
 
@@ -2133,46 +2238,56 @@ msgid "My batches"
 msgstr "મારી બેચ"
 
 # draft: needs review
-#: templates/components/header.html:27 templates/landing.html:281
+#: templates/components/header.html:29
+msgid "Staff tools"
+msgstr "સ્ટાફ ટૂલ્સ"
+
+# draft: needs review
+#: templates/components/header.html:31 templates/landing.html:281
 #: templates/staff/question_edit.html:7 templates/staff/question_list.html:3
 #: templates/staff/question_list.html:7 templates/staff/question_list.html:15
 msgid "Questions"
 msgstr "પ્રશ્નો"
 
 # draft: needs review
-#: templates/components/header.html:28 templates/learn/module.html:63
+#: templates/components/header.html:33 templates/learn/module.html:63
 #: templates/staff/marks_edit.html:11
 msgid "Marks"
 msgstr "ગુણ"
 
 # draft: needs review
-#: templates/components/header.html:29 templates/learn/module.html:63
+#: templates/components/header.html:34 templates/learn/module.html:63
 msgid "Attempts"
 msgstr "પ્રયાસો"
 
 # draft: needs review
-#: templates/components/header.html:30 templates/learn/_blocks.html:14
+#: templates/components/header.html:35 templates/learn/_blocks.html:14
 #: templates/learn/module.html:47 templates/staff/report.html:3 templates/staff/report.html:7
 msgid "Report"
 msgstr "ફરિયાદ કરો"
 
 # draft: needs review
-#: templates/components/header.html:34 templates/progress/dashboard.html:3
+#: templates/components/header.html:37
+msgid "Admin dashboard"
+msgstr "એડમિન ડેશબોર્ડ"
+
+# draft: needs review
+#: templates/components/header.html:44 templates/progress/dashboard.html:3
 msgid "My progress"
 msgstr "મારી પ્રગતિ"
 
 # draft: needs review
-#: templates/components/header.html:39
+#: templates/components/header.html:49
 msgid "Privacy"
 msgstr "ગોપનીયતા"
 
 # draft: needs review
-#: templates/components/header.html:57
+#: templates/components/header.html:67
 msgid "Sign out"
 msgstr "સાઇન આઉટ"
 
 # draft: needs review
-#: templates/components/header.html:61
+#: templates/components/header.html:71
 msgid "Enrol now"
 msgstr "હમણાં નોંધણી કરો"
 
@@ -2894,6 +3009,12 @@ msgid "Delivered by the SAKEC Department of Cyber Security with the CyberPeace F
 msgstr "SAKEC સાયબર સુરક્ષા વિભાગ દ્વારા સાયબરપીસ ફાઉન્ડેશન સાથે સંચાલિત."
 
 # draft: needs review
+#: templates/landing.html:253
+#, python-format
+msgid "Photo of %(name)s, %(role)s"
+msgstr "%(name)s નો ફોટો, %(role)s"
+
+# draft: needs review
 #: templates/landing.html:258
 msgid "Leadership team"
 msgstr "નેતૃત્વ ટીમ"
@@ -3068,6 +3189,11 @@ msgstr "શરૂ કર્યું નથી"
 #: templates/learn/_outline.html:14 templates/learn/module.html:67
 msgid "Assessments are being prepared"
 msgstr "મૂલ્યાંકનો તૈયાર થઈ રહ્યાં છે"
+
+# draft: needs review
+#: templates/learn/_staff_exam_note.html:1
+msgid "Learners see the pre-test and final once their batch has a released exam set."
+msgstr "બેચનો પરીક્ષા સેટ જાહેર થાય ત્યારે જ શીખનારાઓને પ્રી-ટેસ્ટ અને અંતિમ પરીક્ષા દેખાય છે."
 
 # draft: needs review
 #: templates/learn/_video.html:8
@@ -4652,11 +4778,6 @@ msgstr "ફોર્મેટ"
 #: templates/staff/question_list.html:17
 msgid "Edit"
 msgstr "સંપાદિત કરો"
-
-# draft: needs review
-#: templates/staff/question_list.html:17 templates/staff/question_preview.html:3
-msgid "Preview"
-msgstr "પૂર્વાવલોકન"
 
 # draft: needs review
 #: templates/staff/question_list.html:17
