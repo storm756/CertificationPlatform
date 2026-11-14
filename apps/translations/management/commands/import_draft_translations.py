@@ -58,8 +58,8 @@ class Command(BaseCommand):
         self.stdout.write(f"already translated (left alone): {result.skipped_existing}")
         self.stdout.write(f"refused by validation: {len(result.refused)}")
         self.stdout.write(f"unmatched (in the report): {len(result.unmatched)}")
-        drafts.write_report(result, p["report"])
-        self.stdout.write(f"report: {paths['report']}")
+        report_path = drafts.write_report(result, p["report"])
+        self.stdout.write(f"report: {report_path}")
         if apply:
             saved = drafts.apply(result)
             self.stdout.write(self.style.SUCCESS(f"saved {saved} draft lines"))

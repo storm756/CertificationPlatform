@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load i18n ccfr %}
+{% block head_title %}{% translate "Preview" %}: {{ title }}{% endblock %}
+{% block content %}
+  <div role="note" class="notice notice--mustard">
+    {% icon "alert-triangle" %}
+    <div><p><strong>{% translate "Preview: nothing is saved or scored." %}</strong> {% translate "No attempt is made and no result, eligibility or certificate changes. Options are listed without any mark: the correct answers are only in the admin." %}</p></div>
+  </div>
+  <div>
+    <p class="eyebrow">{{ eyebrow }}</p>
+    <h1>{{ title }}</h1>
+    {% if note_pool %}<p class="muted">{% blocktranslate with n=draw_n total=pool_size %}A learner sees {{ n }} questions drawn at random from a pool of {{ total }}. All {{ total }} are listed.{% endblocktranslate %}</p>{% endif %}
+  </div>
+  {% if exam_sets %}
+    <form method="get" class="row">
+      <label>{% translate "Exam set" %}
+        <select name="set">{% for s in exam_sets %}<option value="{{ s.code }}"{% if s == chosen_set %} selected{% endif %}>{{ s }}</option>{% endfor %}</select></label>
+      <button class="btn btn-outline btn-sm" type="submit">{% translate "Show" %}</button>
+    </form>
+  {% endif %}
+  {% if not rows %}
+    <p class="muted">{% translate "There are no questions to show yet." %}</p>
+  {% endif %}
+  <ol class="stack">
+    {% for r in rows %}
+      <li class="card stack">
+        <p class="muted">{% if r.module %}{% blocktranslate with n=r.module %}Module {{ n }}{% endblocktranslate %} · {% endif %}{% if r.format == "mcq" %}{% translate "Multiple choice" %}{% else %}{% translate "Interactive" %} ({{ r.format }}){% endif %}</p>
+        <p><strong>{{ r.text }}</strong></p>
+        {% if r.ask %}<p>{{ r.ask }}</p>{% endif %}
+        {% if r.options %}<ul>{% for o in r.options %}<li>{{ o }}</li>{% endfor %}</ul>{% endif %}
+      </li>
+    {% endfor %}
+  </ol>
+  <p><a class="btn btn-outline" href="{% url 'learn_catalogue' %}">{% translate "Back to modules" %}</a></p>
+{% endblock %}

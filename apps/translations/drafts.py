@@ -242,7 +242,31 @@ def apply(result: Plan) -> int:
     return len(result.rows)
 
 
-def write_report(result: Plan, path: Path) -> None:
+def write_report(result: Plan, path: Path) -> Path:
+    """Write the unmatched-lines report and return where it went.
+
+    The usual path may already exist and belong to another user (a file copied from a PC), so a
+    PermissionError must never stop an import: fall back to a timestamped name beside it, then to
+    the system temp folder."""
+    import tempfile
+    from datetime import datetime
+
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    candidates = [
+        path,
+        path.with_name(f"{path.stem}-{stamp}{path.suffix}"),
+        Path(tempfile.gettempdir()) / f"{path.stem}-{stamp}{path.suffix}",
+    ]
+    for target in candidates:
+        try:
+            _write_report_file(result, target)
+        except OSError:
+            continue
+        return target
+    raise OSError("could not write the translation import report anywhere")
+
+
+def _write_report_file(result: Plan, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8-sig", newline="") as handle:
         writer = csv.writer(handle)

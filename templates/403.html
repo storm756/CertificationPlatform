@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% load i18n ccfr %}
+{% block head_title %}{% translate "You can't open this page" %}{% endblock %}
+{% block body %}
+  <main id="main" tabindex="-1">
+    <section class="error-page"><p class="code" aria-hidden="true">403</p>
+      <h1>{% translate "You can't open this page" %}</h1>
+      <p class="muted">{% translate "This page is not available for your account. If you think it should be, tell your mentor or the programme team." %}</p>
+      <div class="row row--center"><a class="btn btn-primary" href="{% url 'home' %}">{% translate "Go home" %}</a></div>
+    </section>
+  </main>
+{% endblock %}

@@ -1,5 +1,5 @@
 {% load static i18n ccfr %}
-<header class="site-header" data-header>
+<header class="site-header{% if user.is_authenticated and user.role != 'learner' %} site-header--staff{% endif %}" data-header>
   <div class="header-inner">
     <a class="brand-lockup" href="{% url 'home' %}" aria-label="{{ PROGRAMME_NAME }} — {% translate 'Home' %}">
       <img class="brand-logo brand-logo--anchor blend" src="{% static 'img/shah-anchor-logo.png' %}" width="245" height="254" alt="SAKEC (Shah &amp; Anchor)">
@@ -24,10 +24,20 @@
         {% if user.role == 'mentor' or user.role == 'admin' %}
           {% url 'mentor_home' as mentor_url %}
           <li><a href="{{ mentor_url }}"{% if mentor_url in request.path %} aria-current="page"{% endif %}>{% icon "users" %}{% translate "My batches" %}</a></li>
-          <li><a href="{% url 'staff_questions' %}"{% if '/staff/questions' in request.path %} aria-current="page"{% endif %}>{% icon "list" %}{% translate "Questions" %}</a></li>
-          {% if user.role == 'admin' %}<li><a href="{% url 'staff_marks' %}"{% if '/staff/marks' in request.path %} aria-current="page"{% endif %}>{% icon "sliders" %}{% translate "Marks" %}</a></li>
-          <li><a href="{% url 'staff_attempts' %}"{% if '/staff/attempts' in request.path %} aria-current="page"{% endif %}>{% icon "clock" %}{% translate "Attempts" %}</a></li>
-          <li><a href="{% url 'staff_report' %}"{% if '/staff/report' in request.path %} aria-current="page"{% endif %}>{% icon "chart" %}{% translate "Report" %}</a></li>{% endif %}
+          <li class="nav-staff">
+            <details data-staff-menu{% if '/staff/' in request.path %} open{% endif %}>
+              <summary>{% icon "list" %}{% translate "Staff tools" %}</summary>
+              <ul>
+                <li><a href="{% url 'staff_questions' %}"{% if '/staff/questions' in request.path %} aria-current="page"{% endif %}>{% translate "Questions" %}</a></li>
+                {% if user.role == 'admin' %}
+                  <li><a href="{% url 'staff_marks' %}"{% if '/staff/marks' in request.path %} aria-current="page"{% endif %}>{% translate "Marks" %}</a></li>
+                  <li><a href="{% url 'staff_attempts' %}"{% if '/staff/attempts' in request.path %} aria-current="page"{% endif %}>{% translate "Attempts" %}</a></li>
+                  <li><a href="{% url 'staff_report' %}"{% if '/staff/report' in request.path %} aria-current="page"{% endif %}>{% translate "Report" %}</a></li>
+                {% endif %}
+                {% if user.is_staff %}<li><a href="/admin/">{% translate "Admin dashboard" %}</a></li>{% endif %}
+              </ul>
+            </details>
+          </li>
         {% endif %}
         {% if user.is_authenticated and user.role == 'learner' %}
           {% url 'start' as start_url %}

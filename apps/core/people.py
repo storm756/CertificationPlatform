@@ -11,12 +11,12 @@ from django.utils.translation import gettext_lazy as _
 
 # slug -> (photo file, name, role). Names and roles match the certificate signatories (D36).
 PEOPLE = [
-    ("bhavesh-patel", "bhavesh-patel.jpg", "Dr. Bhavesh Patel", _("Principal, SAKEC")),
+    ("bhavesh-patel", "bhavesh-patel.webp", "Dr. Bhavesh Patel", _("Principal, SAKEC")),
     (
         "nilakshi-jain",
-        "nilakshi-jain.jpg",
+        "nilakshi-jain.webp",
         "Dr. Nilakshi Jain",
-        _("Head, Department of Cyber Security, SAKEC"),
+        _("HOD Cyber Security, SAKEC"),
     ),
     ("vineet-kumar", "vineet-kumar.webp", "Maj. Vineet Kumar", _("Founder, CyberPeace Foundation")),
 ]

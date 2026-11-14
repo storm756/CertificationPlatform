@@ -1,9 +1,15 @@
 from django.urls import path
 
-from . import views
+from apps.staff.views import admin_required
+
+from . import preview, views
 
 urlpatterns = [
     path("assess/<int:part_id>/", views.intro, name="assess_intro"),
+    path(
+        "preview/assess/<int:part_id>/", admin_required(preview.preview_part), name="preview_part"
+    ),
+    path("preview/exam/<slug:kind>/", admin_required(preview.preview_exam), name="preview_exam"),
     path("assess/<int:part_id>/start/", views.start, name="assess_start"),
     path("exam/<slug:kind>/", views.programme_intro, name="programme_intro"),
     path("exam/<slug:kind>/start/", views.programme_start, name="programme_start"),

@@ -106,7 +106,7 @@ def test_people_placeholder_shows_until_consent_and_photos(client, tmp_path):
 
 
 def test_people_switch_on_only_with_consent_and_every_photo(client, tmp_path):
-    for name in ("bhavesh-patel.jpg", "nilakshi-jain.jpg", "vineet-kumar.webp"):
+    for name in ("bhavesh-patel.webp", "nilakshi-jain.webp", "vineet-kumar.webp"):
         (tmp_path / name).write_bytes(b"fake-image")
     with override_settings(PEOPLE_PHOTO_DIR=tmp_path, PEOPLE_CONSENT_GIVEN=False):
         assert "Leadership team" in client.get("/").content.decode()

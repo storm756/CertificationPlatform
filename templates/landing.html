@@ -250,7 +250,7 @@
       {% if people %}
       <div class="people-grid">
         {% for p in people %}
-          <article class="person"><img src="{% url 'people_photo' p.slug %}" alt="{{ p.name }}" loading="lazy" width="480" height="360"><div><h3>{{ p.name }}</h3><p class="role">{{ p.role }}</p></div></article>
+          <article class="person"><img src="{% url 'people_photo' p.slug %}" alt="{% blocktranslate with name=p.name role=p.role %}Photo of {{ name }}, {{ role }}{% endblocktranslate %}" loading="lazy" width="480" height="360"><div><h3>{{ p.name }}</h3><p class="role">{{ p.role }}</p></div></article>
         {% endfor %}
       </div>
       {% else %}

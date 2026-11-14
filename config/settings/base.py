@@ -1,6 +1,7 @@
 """Settings shared by every environment. Everything environment-specific comes from env vars."""
 
 import os
+from email.utils import formataddr, parseaddr
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -116,7 +117,9 @@ SITE_DOMAIN = env("SITE_DOMAIN", "localhost:8000")
 # The programme name is read from here everywhere, never hard-coded (D23, D30).
 PROGRAMME_NAME = "Community Cyber First Responder"
 PROGRAMME_SHORT = "CCFR"
-SITE_NAME = env("SITE_NAME", PROGRAMME_NAME)
+# The Site name is the subject prefix of every allauth email ("[CCFR] ..."). It comes from the
+# programme, not from an env file, so an old SITE_NAME in app.env cannot bring back another name.
+SITE_NAME = PROGRAMME_SHORT
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
@@ -177,7 +180,12 @@ EMAIL_PORT = int(env("EMAIL_PORT", "1025"))
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", False)
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", f"{PROGRAMME_NAME} <noreply@cyberfirstresponse.io>")
+# The sender ADDRESS comes from the env; the sender NAME is always the programme short name.
+_from_address = parseaddr(env("DEFAULT_FROM_EMAIL", "no-reply@cyberfirstresponse.io"))[1]
+DEFAULT_FROM_EMAIL = formataddr(
+    (PROGRAMME_SHORT, _from_address or "no-reply@cyberfirstresponse.io")
+)
+SUPPORT_EMAIL = env("SUPPORT_EMAIL", "support@cyberfirstresponse.io")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 # --- i18n ---

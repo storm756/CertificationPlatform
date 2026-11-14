@@ -5,6 +5,8 @@ from django.utils.translation import gettext_lazy as _
 
 from . import email_budget
 
+RESET_LIMITED_KEY = "reset_limited_today"
+
 log = logging.getLogger(__name__)
 
 # allauth template prefix -> budget kind
@@ -33,10 +35,20 @@ class BudgetedAccountAdapter(DefaultAccountAdapter):
     def is_open_for_signup(self, request):
         return False
 
+    def _remember_reset_limited(self):
+        if getattr(self, "request", None) is not None and hasattr(self.request, "session"):
+            self.request.session[RESET_LIMITED_KEY] = True
+
     def send_mail(self, template_prefix, email, context):
         kind = _KIND_BY_TEMPLATE.get(template_prefix, email_budget.RESET)
         if not email_budget.can_send(kind, email):
             log.warning("Email not sent (budget or per-address limit): %s", kind)
+            if kind == email_budget.RESET and email_budget.sent_recently(kind, email):
+                # The same for a known and an unknown address: both get one email a day (the
+                # unknown-account email counts as a reset), so this never reveals an account.
+                self._remember_reset_limited()
             return
         super().send_mail(template_prefix, email, context)
         email_budget.record(kind, email)
+        if kind == email_budget.RESET and hasattr(getattr(self, "request", None), "session"):
+            self.request.session.pop(RESET_LIMITED_KEY, None)
