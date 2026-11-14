@@ -84,7 +84,8 @@ def test_the_final_is_listed_before_any_learner_has_opened_it(limits_admin):
     page = limits_admin.get(reverse("staff_attempts"))
     final = ProgrammeAssessment.objects.get(kind=ProgrammeAssessmentKind.FINAL)
     assert f'name="final_{final.pk}"'.encode() in page.content
-    assert limits_admin.post(reverse("staff_attempts"), {f"final_{final.pk}": "3"}).status_code == 302
+    saved = limits_admin.post(reverse("staff_attempts"), {f"final_{final.pk}": "3"})
+    assert saved.status_code == 302
     final.refresh_from_db()
     assert final.max_attempts == 3
     assert final.blueprint["per_module"]  # made with the real defaults, not an empty row
