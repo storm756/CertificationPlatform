@@ -68,7 +68,10 @@ def test_seed_builds_a_working_course_and_clean_removes_it():
     assert mentor.mentored.count() == 3  # B01, B03 and B04
 
     again = json.loads(run("e2e_seed"))  # safe to run twice
-    assert again == manifest
+    creds = ("password", "totp_secret")
+    assert {k: v for k, v in again.items() if k not in creds} == {
+        k: v for k, v in manifest.items() if k not in creds
+    }
 
     done = json.loads(run("e2e_clean"))
     assert done["users"] > 0
@@ -85,3 +88,56 @@ def test_clean_keeps_nothing_it_did_not_make():
     assert not Batch.objects.filter(code__startswith="E2E-").exists()
     assert not ExamSet.objects.filter(code="E2EJ").exists()
     assert not Question.objects.filter(stable_id__startswith="E2EJ-").exists()
+
+
+# --- security audit 2026-11, H1: no fixed password or authenticator secret in the public repo ----
+
+
+def _secrets(user):
+    return list(user.authenticator_set.filter(type="totp").values_list("data__secret", flat=True))
+
+
+def test_each_seed_run_makes_new_credentials_and_retires_the_old_ones():
+    first = json.loads(run("e2e_seed"))
+    second = json.loads(run("e2e_seed"))
+    assert first["password"] != second["password"]
+    assert first["totp_secret"] != second["totp_secret"]
+    assert len(second["password"]) >= 24
+
+    admin = User.objects.get(email=second["users"]["admin"])
+    learner = User.objects.get(email=second["users"]["final"])
+    for user in (admin, learner):
+        assert user.check_password(second["password"])
+        assert not user.check_password(first["password"])  # an old manifest no longer works
+    assert _secrets(admin) == [second["totp_secret"]]  # one authenticator, this run's secret
+    assert not learner.authenticator_set.exists()
+
+
+def test_no_fixed_credentials_are_left_in_the_code():
+    from pathlib import Path
+
+    from apps.core import e2e_data
+
+    assert not hasattr(e2e_data, "PASSWORD")
+    assert not hasattr(e2e_data, "TOTP_SECRET")
+    root = Path(e2e_data.__file__).resolve().parents[2]
+    for path in ("apps/core/e2e_data.py", "loadtest/locustfile.py"):
+        text = (root / path).read_text(encoding="utf-8")
+        assert "e2e-Invented-Pass-42" not in text
+        assert "JBSWY3DPEHPK3PXP" not in text
+
+
+def test_the_load_test_admin_cannot_sign_in():
+    out = json.loads(run("loadtest_seed", "--count", "2"))
+    admin = User.objects.get(email="lt-admin@load.example.com")
+    assert not admin.has_usable_password()
+    assert not admin.authenticator_set.exists()
+    learner = User.objects.get(email="lt001@load.example.com")
+    assert learner.check_password(out["password"])
+
+    again = json.loads(run("loadtest_seed", "--count", "2"))  # a rerun gives everyone the new one
+    learner.refresh_from_db()
+    assert learner.check_password(again["password"])
+    assert not learner.check_password(out["password"])
+    run("loadtest_seed", "--clean")
+    run("e2e_clean")

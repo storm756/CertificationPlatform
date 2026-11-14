@@ -43,10 +43,11 @@ module 1 mark split for a few seconds and puts it back.
    ```bash
    "${MANAGE[@]}" e2e_clean
    MANAGE_T=("${MANAGE[@]:0:5}" -T "${MANAGE[@]:5}")   # the same helper without a terminal, so the JSON can be redirected
-   "${MANAGE_T[@]}" e2e_seed 2>/dev/null > /tmp/e2e-manifest.json
+   (umask 077; "${MANAGE_T[@]}" e2e_seed 2>/dev/null > /tmp/e2e-manifest.json)
    ```
    The command refuses any settings but dev and staging, so it cannot run on production. Copy `/tmp/e2e-manifest.json` to
-   `e2e/manifest.json` on your PC (`scp`; it holds only ids and the invented accounts' addresses, no secrets).
+   `e2e/manifest.json` on your PC (`scp`). **It holds live credentials**: each seed run gives the test accounts a new random
+   password and the staff a new authenticator secret, so never commit or paste it, and delete it (and run `e2e_clean`) when done.
 2. On your PC:
    ```bash
    cd e2e && BASE_URL=https://staging.cyberfirstresponse.io npx playwright test
@@ -61,7 +62,7 @@ module 1 mark split for a few seconds and puts it back.
 ## What the seed makes (all marked)
 
 * Batches `E2E-B01` … `E2E-B04`, a mentor for B01/B03/B04, a mentor for B02 and an admin (staff accounts have TOTP; the journeys
-  compute the code from the invented secret in `manifest.json`, see `support/totp.ts`).
+  compute the code from this run's random secret in `manifest.json`, see `support/totp.ts`).
 * Learners with the final locked, open, or already done; a released exam set `E2EJ` that follows the final's blueprint.
 * A sandbox module `91` (not counted) with an invented multiple-choice part and an invented interactive part with a gate option, and
   one uncounted extra part in module 1 for journey 15. If a counted module has no published counted part (an empty database, as in
