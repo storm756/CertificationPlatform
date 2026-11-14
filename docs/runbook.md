@@ -68,6 +68,10 @@ that is expected.
    `"${MANAGE[@]}" import_draft_translations` (preview), then `"${MANAGE[@]}" import_draft_translations --apply`, with the
    `-v /srv/csfr/<env>/content-data:/app/content-data` mount from section 7.2. Lines it could not match go to
    `content-data/outputs/translation-import-report.csv` (private).
+   If that file already exists and cannot be overwritten (copied from a PC, another owner), the command writes
+   `translation-import-report-<date>-<time>.csv` next to it (or in the system temp folder) and prints the path. **Nothing is lost
+   and nothing needs deleting:** the report is written before `--apply`, and `--apply` is safe to run again. If an older run stopped at
+   the report, just run the same command again.
 4. Rosetta edits on a server are lost at the next deploy: download the catalogue from Rosetta and commit it in a PR.
 
 ### 1.3 Smoke test after every deploy
@@ -232,10 +236,20 @@ From the lead's PC (the private shared drive has them), copy into `/srv/csfr/<en
 
 ```bash
 scp -r content-data deploy@<server>:/srv/csfr/staging/      # from the PC
-ssh deploy@<server> 'chmod -R a+rX /srv/csfr/staging/content-data && mkdir -p /srv/csfr/staging/content-data/outputs && sudo chown 10001 /srv/csfr/staging/content-data/outputs'
+ssh deploy@<server> 'chmod -R a+rX /srv/csfr/staging/content-data && mkdir -p /srv/csfr/staging/content-data/outputs'
 ```
 
-(10001 is the `app` user inside the container; the importers write their reports to `outputs/`.)
+The importers write their reports to `outputs/`, which must belong to the `app` user inside the container (uid 10001). The `deploy`
+user has **no sudo**, so never use `sudo chown`. Use a one-off root container instead (helper exports from the top of this file;
+use `/srv/csfr/prod/content-data` on prod. The compose file drops all Linux capabilities, so root needs `--cap-add` to change owners):
+
+```bash
+docker compose -f compose.yml run --rm --user root --cap-add CHOWN --cap-add DAC_OVERRIDE --cap-add FOWNER -v /srv/csfr/staging/content-data:/app/content-data web 
+  chown -R 10001 /app/content-data/outputs
+```
+
+`chmod 777` on `outputs/` also works but leaves it writable by everyone; prefer the `chown`. A report file copied from a PC keeps
+its old owner and the importer cannot overwrite it: the importer now writes a timestamped report beside it instead of failing.
 
 ### 7.2 Run the loaders, in this order, preview before apply
 
@@ -320,3 +334,79 @@ runs. If it fails, do not raise the line: send the numbers back for a fix PR. De
 
 A ping sends nothing but a GET to the secret URL; no personal data. A failed run pings `<url>/fail`, a dead service sends nothing,
 and the heartbeat service alerts in both cases.
+
+---
+
+## 10. Pilot housekeeping (added after the first prod deploy)
+
+### 10.1 The `app.env` shape: backups and email
+
+Each setting appears **once** in `/srv/csfr/<env>/app.env`. A duplicated backup block stops the deploy at the backup upload (it did on
+the first prod deploy, and that "stop if the backup fails" behaviour is on purpose). The block is exactly this, with the key, the
+secret and the age public key from the password manager. `RCLONE_CONFIG_B2_TYPE` is the word `s3`, never a key:
+
+```
+BACKUP_ENV_NAME=prod                      # staging on staging
+AGE_PUBLIC_KEY=age1...
+BACKUP_REMOTE=b2:<bucket>/<env>           # e.g. b2:Certification-Platform/prod
+RCLONE_CONFIG_B2_TYPE=s3
+RCLONE_CONFIG_B2_PROVIDER=Other
+RCLONE_CONFIG_B2_ENDPOINT=https://s3.us-west-004.backblazeb2.com
+RCLONE_CONFIG_B2_ACCESS_KEY_ID=<write-only key id>
+RCLONE_CONFIG_B2_SECRET_ACCESS_KEY=<write-only key>
+```
+
+Check without printing secrets: `grep -c '^RCLONE_CONFIG_B2_TYPE=' app.env` must print `1`, and `grep '^RCLONE_CONFIG_B2_TYPE=' app.env`
+must show `s3`. Copy the whole block from the other environment when in doubt, then fix `BACKUP_ENV_NAME` and `BACKUP_REMOTE`.
+
+Email lines: `DEFAULT_FROM_EMAIL=CCFR <no-reply@cyberfirstresponse.io>` (only the address is read; the sender name is always the programme
+short name) and optionally `SUPPORT_EMAIL=...` (default `support@cyberfirstresponse.io`). `SITE_NAME` is no longer read: an old
+line does no harm, and you can delete it. The subject prefix is `[CCFR]`.
+
+### 10.2 Remove a test learner
+
+For testing on prod with a Gmail plus-address (`me+test1@gmail.com`) in the OPEN batch. Registration accepts `+` addresses, but **prod
+folds Gmail dots and `+tags` into one address** (`EMAIL_NORMALISE_ALIASES`), so only one `+` test account can exist at a time, and none
+if the plain `me@gmail.com` is already registered. Remove the test learner before making the next one. Mail still reaches your inbox.
+
+```bash
+# helper exports from the top of this file (prod: replace staging with prod), then:
+"${MANAGE[@]}" remove_test_learner me+test1@gmail.com              # preview only: lists what would go
+"${MANAGE[@]}" remove_test_learner me+test1@gmail.com --yes        # deletes
+```
+
+It works on **learners only** (a mentor or admin is refused). It deletes the account, profile, enrolment and attempts. If the learner
+holds a certificate it refuses, because the admin cannot delete such a user either; add `--include-certificate` to delete the
+certificate and its PDF too. **That leaves a gap in the serial numbers**: they come from one global sequence and are never reused or
+renumbered, so a gap is permanent and the next certificate gets the next number. The command says this before it deletes. The audit
+row records only IDs.
+
+### 10.3 Put the signature images and the leadership photos on a server
+
+Both are private (never in git) and live in the media volume. The `deploy` user has no sudo, so copy to a folder it owns, then move the
+files into the volume with a one-off root container. From the PC (PowerShell; `<server>` is the host you already use for `ssh deploy@`):
+
+```powershell
+ssh -i C:\Users\Acer\.ssh\csfr_vps deploy@<server> "mkdir -p /srv/csfr/staging/incoming /srv/csfr/prod/incoming"
+scp -i C:\Users\Acer\.ssh\csfr_vps content-data\signatures\signature-1.png content-data\signatures\signature-2.png content-data\signatures\signature-3.png deploy@<server>:/srv/csfr/staging/incoming/
+scp -i C:\Users\Acer\.ssh\csfr_vps content-data\people\bhavesh-patel.webp content-data\people\nilakshi-jain.webp content-data\people\vineet-kumar.webp deploy@<server>:/srv/csfr/staging/incoming/
+```
+
+Then on the server, once per environment (helper exports from the top of this file, `staging` or `prod`):
+
+```bash
+docker compose -f compose.yml run --rm --no-deps --user root --cap-add CHOWN --cap-add DAC_OVERRIDE --cap-add FOWNER -v /srv/csfr/staging/incoming:/incoming:ro web sh -c '
+  mkdir -p /app/media/private/signatures /app/media/private/people &&
+  cp /incoming/signature-*.png /app/media/private/signatures/ &&
+  cp /incoming/*.webp /app/media/private/people/ &&
+  chown -R 10001 /app/media/private/signatures /app/media/private/people &&
+  chmod 640 /app/media/private/signatures/* /app/media/private/people/* &&
+  ls -l /app/media/private/signatures /app/media/private/people'
+rm /srv/csfr/staging/incoming/*
+```
+
+Repeat with `prod` in the paths and in the helper exports. The signatures are used from the next certificate (nothing else to set);
+mentors' "signatures missing" warning disappears. For the leadership photos also add to `app.env`
+`PEOPLE_PHOTO_DIR=/app/media/private/people` and, **only after all three people agreed to a public photo**, `PEOPLE_CONSENT_GIVEN=1`,
+then restart: `docker compose -f compose.yml up -d`. The "Who runs it" section stays a placeholder until both are set.
+`CERTIFICATE_DESIGN_FINAL` is not touched: the final design is still pending, so the placeholder warning stays.
