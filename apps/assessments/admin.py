@@ -55,6 +55,16 @@ class AssessmentPartAdmin(ModelAdmin):
 class ProgrammeAssessmentAdmin(ModelAdmin):
     list_display = ("kind", "cooldown_hours", "max_attempts")
 
+    def changelist_view(self, request, extra_context=None):
+        """List the final and the pre-test even before any learner has opened them: their rows
+        are otherwise made lazily, so an admin couldn't set the final's limit or cooldown first."""
+        from . import programme
+        from .models import ProgrammeAssessmentKind
+
+        for kind in (ProgrammeAssessmentKind.FINAL, ProgrammeAssessmentKind.PRETEST):
+            programme.get_assessment(kind)  # not the practice mock (D26): it has no page yet
+        return super().changelist_view(request, extra_context)
+
     def save_model(self, request, obj, form, change):
         _save_with_audited_limit(request, obj, change)
 

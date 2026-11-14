@@ -146,6 +146,12 @@ ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_LOGOUT_ON_GET = False
 ACCOUNT_ADAPTER = "apps.accounts.adapter.BudgetedAccountAdapter"
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
+# One address per account: a change is verified at the new address and then replaces the old one,
+# and the old address is told about email and password changes (architecture 7.4; security audit
+# 2026-11, M3). allauth requires MAX_EMAIL_ADDRESSES = 2 with CHANGE_EMAIL (old + pending new).
+ACCOUNT_CHANGE_EMAIL = True
+ACCOUNT_MAX_EMAIL_ADDRESSES = 2
+ACCOUNT_EMAIL_NOTIFICATIONS = True
 LOGIN_REDIRECT_URL = "start"
 LOGIN_URL = "account_login"
 ACCOUNT_LOGOUT_REDIRECT_URL = "/"

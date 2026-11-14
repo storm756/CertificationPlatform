@@ -15,6 +15,11 @@ from .models import EmailLog
 REGISTRATION = "registration"  # verification emails
 DUPLICATE = "duplicate"  # "you already have an account" notice
 RESET = "reset"
+# A reset asked for an address with no account. Nothing is sent (security audit 2026-11, M1: those
+# emails let anyone use up the reset pool), but a row is kept so a second request that day gets
+# the same "already sent" page as a real address would. It belongs to no pool.
+RESET_UNKNOWN = "reset_unknown"
+NOTICE = "notice"  # "your email / password was changed" to the account's address (M3)
 GUARDIAN = "guardian"
 ALERT = "alert"
 
@@ -23,11 +28,14 @@ POOL_OF = {
     REGISTRATION: "registration",
     DUPLICATE: "registration",
     RESET: "reset_guardian",
+    NOTICE: "reset_guardian",
     GUARDIAN: "reset_guardian",
     ALERT: "reserve",
 }
 # Kinds that may be sent to one address at most once in 24 hours.
 ONCE_PER_ADDRESS = {DUPLICATE, RESET}
+# Rows that record a request, not an email: they use no budget.
+NOT_SENT = {RESET_UNKNOWN}
 
 
 def _hash(address: str) -> str:
@@ -45,6 +53,8 @@ def sent_today(now=None) -> dict[str, int]:
     for log in EmailLog.objects.filter(sent_at__gte=_since_midnight(now)).values_list(
         "kind", flat=True
     ):
+        if log in NOT_SENT:
+            continue
         counts[POOL_OF.get(log, "reserve")] += 1
     counts["total"] = sum(counts.values())
     return counts
@@ -57,10 +67,12 @@ def has_room(kind: str, now=None) -> bool:
 
 
 def sent_recently(kind: str, address: str, now=None) -> bool:
-    """An email of this kind went to this address in the last 24 hours."""
+    """An email of this kind went to this address in the last 24 hours. For a reset, an unknown
+    address's recorded request counts too, so both get the same page (M1)."""
     now = now or timezone.now()
+    kinds = [kind, RESET_UNKNOWN] if kind == RESET else [kind]
     return EmailLog.objects.filter(
-        kind=kind, address_hash=_hash(address), sent_at__gte=now - timedelta(hours=24)
+        kind__in=kinds, address_hash=_hash(address), sent_at__gte=now - timedelta(hours=24)
     ).exists()
 
 
@@ -68,13 +80,7 @@ def can_send(kind: str, address: str, now=None) -> bool:
     now = now or timezone.now()
     if not has_room(kind, now):
         return False
-    if kind in ONCE_PER_ADDRESS:
-        recent = EmailLog.objects.filter(
-            kind=kind, address_hash=_hash(address), sent_at__gte=now - timedelta(hours=24)
-        )
-        if recent.exists():
-            return False
-    return True
+    return not (kind in ONCE_PER_ADDRESS and sent_recently(kind, address, now))
 
 
 def record(kind: str, address: str) -> None:

@@ -74,3 +74,26 @@ def test_mentor_and_learner_get_403_and_it_is_logged(mentor_client, mentor, fina
         "data__path", flat=True
     )
     assert "/staff/attempts/" in set(paths)
+
+
+# --- the final's row is made on demand, not only when a learner opens the final ------------------
+
+
+def test_the_final_is_listed_before_any_learner_has_opened_it(limits_admin):
+    assert not ProgrammeAssessment.objects.exists()
+    page = limits_admin.get(reverse("staff_attempts"))
+    final = ProgrammeAssessment.objects.get(kind=ProgrammeAssessmentKind.FINAL)
+    assert f'name="final_{final.pk}"'.encode() in page.content
+    saved = limits_admin.post(reverse("staff_attempts"), {f"final_{final.pk}": "3"})
+    assert saved.status_code == 302
+    final.refresh_from_db()
+    assert final.max_attempts == 3
+    assert final.blueprint["per_module"]  # made with the real defaults, not an empty row
+
+
+def test_the_admin_list_shows_the_final_and_the_pretest_from_the_start(limits_admin):
+    assert not ProgrammeAssessment.objects.exists()
+    response = limits_admin.get(reverse("admin:assessments_programmeassessment_changelist"))
+    assert response.status_code == 200
+    kinds = set(ProgrammeAssessment.objects.values_list("kind", flat=True))
+    assert kinds == {ProgrammeAssessmentKind.FINAL, ProgrammeAssessmentKind.PRETEST}

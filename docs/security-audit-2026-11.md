@@ -29,10 +29,10 @@ but limited impact or harder to reach. **Low** = defence in depth. **Info** = no
 | H1 | **High** (Critical while seeded) | The journey and load-test seeds create a staging **superuser** whose password and TOTP secret are in the public repo | Fixed in PR `security-fixes` |
 | H2 | **High** | Pillow 12.0.0 has 61 published advisories and decodes every uploaded picture | Fixed in PR `security-fixes` |
 | H3 | **High** (conditional) | The final's overall % is an answer oracle with unlimited attempts, and staging's open registration lets anyone farm it | Final limit 3 on prod and staging, STG1 closed (lead, 15 Nov); staging login in PR `staging-login` |
-| M1 | Medium | The daily email budget can be drained by strangers, blocking real resets, guardian consent and sign-up verification | Fix proposed for the second PR |
-| M2 | Medium | The sign-up rate limit is keyed on the raw `batch` value, so `01`, `001` … each get a fresh bucket | Fix proposed for the second PR |
-| M3 | Medium | An email change does not notify the old address (architecture §7.4 says it does), and accounts may add unlimited addresses | Fix proposed for the second PR |
-| L1 | Low | Open redirect in `POST /notice/dismiss/` (`next`) | Fix proposed for the second PR |
+| M1 | Medium | The daily email budget can be drained by strangers, blocking real resets, guardian consent and sign-up verification | Fixed in PR `security-fixes-2` (reset part) |
+| M2 | Medium | The sign-up rate limit is keyed on the raw `batch` value, so `01`, `001` … each get a fresh bucket | Fixed in PR `security-fixes-2` |
+| M3 | Medium | An email change does not notify the old address (architecture §7.4 says it does), and accounts may add unlimited addresses | Fixed in PR `security-fixes-2` |
+| L1 | Low | Open redirect in `POST /notice/dismiss/` (`next`) | Fixed in PR `security-fixes-2` |
 | L2 | Low | One-time tokens in gunicorn access logs; Docker log rotation unknown | Server check (§6) |
 | L3 | Low | No retention for audit IPs, `EmailLog`, consent IPs; expired sessions are never cleared | Needs a retention decision |
 | L4 | Low | UI translations (`.po`, Rosetta) are rendered unescaped, so a translator can inject HTML | Report only |
@@ -117,11 +117,12 @@ but limited impact or harder to reach. **Low** = defence in depth. **Info** = no
   or through `/accounts/email/` (M3) from one verified account.
 * **Impact:** a cheap, repeatable denial of service on sign-up, password reset and guardian consent during a pilot week. It also sends
   mail from our domain to addresses an attacker chooses, which hurts the sender reputation.
-* **Fix (second PR):** stop sending the unknown-account email (it's a courtesy, not a requirement). Instead, record a marker row that
-  belongs to no pool, so the "already sent today" message still shows identically for known and unknown addresses (the PR #21 test stays
-  green). Add a per-network daily cap on reset emails (e.g. 30 a day per client IP) on top of allauth's per-minute limit. Keep the 150
-  alert. Tests: an unknown-address reset sends no mail and uses no budget, the page is identical, and 100 unknown resets leave the pool
-  untouched.
+* **Fix (done, `security-fixes-2`):** the unknown-account email is no longer sent (it's a courtesy, not a requirement). A marker row that
+  belongs to no pool is kept instead, so the "already sent today" message still shows identically for known and unknown addresses (the
+  PR #21 test stays green). Tests: an unknown-address reset sends no mail and uses no budget; 120 unknown resets leave the pool open and a
+  real reset still goes out. **Left open:** draining the pool now needs ≥ 100 real addresses (one email each a day), so I did not add a
+  per-network daily cap; the sign-up pool can still be drained through an open batch at 90 per 10 minutes (M2 removes the bypass), which
+  is the lead's accepted classroom rate.
 
 ### M2. The sign-up rate limit can be dodged (Medium)
 
@@ -130,7 +131,8 @@ but limited impact or harder to reach. **Low** = defence in depth. **Info** = no
 * **Reproduce (staging, T5):** POST `/register/` with `batch=02`, `batch=002` …: each starts a fresh 90-per-10-minutes allowance.
 * **Impact:** the only brake on mass sign-ups to an open batch disappears, which feeds M1 and fills the database with throwaway accounts
   (purged after 7 days).
-* **Fix (second PR):** key on the integer batch id (`int(value)` or `"invalid"`), with a test that `02` and `2` share one bucket.
+* **Fix (done, `security-fixes-2`):** the key is the batch number (`batch:2`); anything that isn't plain digits shares one `batch:invalid`
+  bucket. Tests for `2`, `02`, `002`, ` 2`, `+2`, `2.0` and a full-width digit.
 
 ### M3. Email changes are silent to the old address (Medium)
 
@@ -140,16 +142,19 @@ but limited impact or harder to reach. **Low** = defence in depth. **Info** = no
 * **Impact:** someone who gets into a learner's or mentor's session (a shared lab PC, a lost phone) can add their own address, verify it,
   make it primary and remove the owner's, and the owner is never told. They can then reset the password at will. Each added address also
   sends a verification email (M1).
-* **Fix (second PR):** `ACCOUNT_CHANGE_EMAIL = True` (one address, a change replaces it after verification), `ACCOUNT_EMAIL_NOTIFICATIONS =
-  True` (the old address hears about email and password changes), and count those notices against the reset pool. Tests: a change sends
-  a notice to the old address; an account cannot hold a third address.
+* **Fix (done, `security-fixes-2`):** `ACCOUNT_CHANGE_EMAIL = True` with `ACCOUNT_MAX_EMAIL_ADDRESSES = 2` (allauth's required pair: the
+  current address plus one pending; a change replaces it after verification) and `ACCOUNT_EMAIL_NOTIFICATIONS = True` (the old address
+  hears about email and password changes). Notices count against the reset pool but not its once-a-day limit, so a notice never blocks a
+  real reset link. Tests: a change replaces the address and tells the old one; a second pending address replaces the first; a password
+  change is notified. The `/accounts/email/` page now shows "Current email / Change to" (screenshots at 390 and 1366px in the PR).
 
 ### L1. Open redirect after dismissing the reset notice (Low)
 
 * **Where:** `apps/accounts/views.py::dismiss_reset_notice`: `redirect(request.POST.get("next") or "start")`.
 * **Impact:** low, because it is POST-only and needs the CSRF token, so another site can't trigger it. It is still an open redirect if
   anything on our own pages ever lets a user choose `next`.
-* **Fix (second PR):** accept `next` only if `url_has_allowed_host_and_scheme()`; otherwise go to `start`. Test with `https://evil.example/`.
+* **Fix (done, `security-fixes-2`):** `next` is used only if `url_has_allowed_host_and_scheme()` accepts it; otherwise `start`. Tests with
+  `https://evil.example/`, `//evil.example/x` and `javascript:`.
 
 ### L2. One-time tokens in access logs (Low)
 
