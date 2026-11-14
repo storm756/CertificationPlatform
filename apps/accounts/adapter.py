@@ -15,8 +15,15 @@ _KIND_BY_TEMPLATE = {
     "account/email/email_confirmation_signup": email_budget.REGISTRATION,
     "account/email/account_already_exists": email_budget.DUPLICATE,
     "account/email/password_reset_key": email_budget.RESET,
-    "account/email/unknown_account": email_budget.RESET,
+    # allauth's security notices (ACCOUNT_EMAIL_NOTIFICATIONS, M3)
+    "account/email/email_changed": email_budget.NOTICE,
+    "account/email/email_deleted": email_budget.NOTICE,
+    "account/email/email_confirm": email_budget.NOTICE,
+    "account/email/password_changed": email_budget.NOTICE,
+    "account/email/password_set": email_budget.NOTICE,
+    "account/email/password_reset": email_budget.NOTICE,
 }
+UNKNOWN_ACCOUNT = "account/email/unknown_account"
 
 
 class BudgetedAccountAdapter(DefaultAccountAdapter):
@@ -35,11 +42,25 @@ class BudgetedAccountAdapter(DefaultAccountAdapter):
     def is_open_for_signup(self, request):
         return False
 
+    def _unknown_account_reset(self, email):
+        """A reset for an address with no account: send nothing, use no budget (security audit
+        2026-11, M1), but answer exactly as for a real address, including "already sent today"
+        on a second request (pilot fixes)."""
+        if email_budget.sent_recently(email_budget.RESET, email):
+            self._remember_reset_limited()
+            return
+        email_budget.record(email_budget.RESET_UNKNOWN, email)
+        if hasattr(getattr(self, "request", None), "session"):
+            self.request.session.pop(RESET_LIMITED_KEY, None)
+
     def _remember_reset_limited(self):
         if getattr(self, "request", None) is not None and hasattr(self.request, "session"):
             self.request.session[RESET_LIMITED_KEY] = True
 
     def send_mail(self, template_prefix, email, context):
+        if template_prefix == UNKNOWN_ACCOUNT:
+            self._unknown_account_reset(email)
+            return
         kind = _KIND_BY_TEMPLATE.get(template_prefix, email_budget.RESET)
         if not email_budget.can_send(kind, email):
             log.warning("Email not sent (budget or per-address limit): %s", kind)
