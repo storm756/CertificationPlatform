@@ -468,16 +468,21 @@ def item_statistics(limit=40):
 
 
 def _limit_rows():
-    """Every assessment part (grouped by module order) and the final, with their limit."""
-    from apps.assessments.models import ProgrammeAssessment, ProgrammeAssessmentKind
+    """Every assessment part (grouped by module order) and the final, with their limit.
+
+    The final's settings row is made here if no learner has opened the final yet (it used to be
+    created only then, so an admin could not set a limit before launch). The pre-test takes no
+    limit (D32), so it is not listed.
+    """
+    from apps.assessments import programme
+    from apps.assessments.models import ProgrammeAssessmentKind
 
     rows = [
         {"key": f"part_{p.pk}", "label": f"Module {p.module.number}: {p.name}", "obj": p}
         for p in AssessmentPart.objects.select_related("module").order_by("module__number", "pk")
     ]
-    final = ProgrammeAssessment.objects.filter(kind=ProgrammeAssessmentKind.FINAL).first()
-    if final:
-        rows.append({"key": f"final_{final.pk}", "label": "Final exam", "obj": final})
+    final = programme.get_assessment(ProgrammeAssessmentKind.FINAL)
+    rows.append({"key": f"final_{final.pk}", "label": "Final exam", "obj": final})
     return rows
 
 
