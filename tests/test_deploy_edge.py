@@ -46,9 +46,7 @@ def test_edge_compose_mounts_its_own_directory():
 
 def _site(caddyfile: str, name: str) -> str:
     start = caddyfile.index("{$SCHEME}{$" + name + "} {")
-    return caddyfile[start : caddyfile.index("
-}
-", start)]
+    return caddyfile[start : caddyfile.index("\n}\n", start)]
 
 
 def test_staging_is_behind_a_login_but_healthz_and_prod_are_not():
