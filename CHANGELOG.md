@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-15: Security audit fixes (critical and high)
+
+- **Test accounts no longer have public credentials:** `e2e_seed` and `loadtest_seed` give every marked account a new random password and TOTP secret on each run, printed only in the manifest; the load-test admin cannot sign in; `locustfile.py` has no default password. Why: the old fixed values in this public repo opened a staging superuser while the seed data existed (audit H1).
+- **Pillow 12.0.0 → 13.0.0.** Why: 61 published advisories in the decoder that handles every uploaded picture (audit H2).
+- **`.coderabbit.yaml`** with a Django and security focus. Report: `docs/security-audit-2026-11.md`.
+
 ## 2026-11-14: Pilot fixes after the first prod deploy
 
 - **Staff opening assessments:** a styled `403.html`; admins get a read-only preview of module parts, the pre-test and the final (banner "nothing is saved or scored", no Attempt or any other row, options listed without a mark); mentors get a friendly page and still never see exam questions. Why: an admin opening `/assess/26/` got a bare 403.

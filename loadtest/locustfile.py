@@ -27,7 +27,8 @@ from locust import HttpUser, between, events, task
 from locust.exception import StopUser
 from locust.stats import StatsEntry
 
-PASSWORD = os.environ.get("LT_PASSWORD", "e2e-Invented-Pass-42")
+# The password `loadtest_seed` printed: each seed run makes a new one (security audit 2026-11).
+PASSWORD = os.environ.get("LT_PASSWORD", "")
 DOMAIN = os.environ.get("LT_DOMAIN", "load.example.com")
 USERS = int(os.environ.get("LT_USERS", "60"))
 THINK = float(os.environ.get("LT_THINK", "3"))
@@ -62,6 +63,8 @@ class FinalTaker(HttpUser):
         return self.client.cookies.get("csrftoken", "")
 
     def sign_in(self):
+        if not PASSWORD:
+            raise StopUser("Set LT_PASSWORD to the password that `loadtest_seed` printed.")
         self.client.get("/accounts/login/", name="/accounts/login/ (page)")
         with self.client.post(
             "/accounts/login/",

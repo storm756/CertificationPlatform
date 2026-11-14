@@ -36,7 +36,8 @@ pip install -r loadtest/requirements.txt
    ```
    `-r 60` starts everyone at once. The run stops when the 60 learners have finished (or at `--run-time`). `LT_THINK` (default 3 s per
    question) is the pause between questions; use `LT_THINK=0` for the harshest case. Environment variables: `LT_USERS` (default 60,
-   keep it equal to `-u`), `LT_THINK`, `LT_P95_MS` (the pass line, default 1000), `LT_PASSWORD`, `LT_DOMAIN`.
+   keep it equal to `-u`), `LT_THINK`, `LT_P95_MS` (the pass line, default 1000), `LT_PASSWORD` (**required**: the `password` that `loadtest_seed` printed; every seed
+   run makes a new random one and gives it to all the load learners), `LT_DOMAIN`.
 4. Read the last lines: `VERDICT: PASS` or `FAIL` with the p50 and p95 of the exam requests (the exit code is 0 or 1). The table above
    it gives each endpoint. A failure on `/exam/final/start/` usually means a learner was not seeded or the final is locked.
 5. Look at the server while it runs: `docker stats`, and `docker compose logs web | tail` for errors. Record the numbers (users, think

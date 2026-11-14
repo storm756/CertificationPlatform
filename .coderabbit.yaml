@@ -1,0 +1,78 @@
+# CodeRabbit review settings (security audit 2026-11). Docs: https://docs.coderabbit.ai/reference/configuration
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-GB
+early_access: false
+
+reviews:
+  profile: assertive # more findings, fewer nitpicks filtered out: this is an exam and certificate platform
+  request_changes_workflow: false # a person merges (D29); CodeRabbit comments, it never blocks
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: true
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches: ["main"]
+
+  # Not reviewed: the visual prototype (D20, reference only), translation catalogues (reviewed by
+  # people in Rosetta, D7), vendored and generated files.
+  path_filters:
+    - "!design-reference/**"
+    - "!locale/**"
+    - "!static/fonts/**"
+    - "!static/js/engine.js" # built from engine/src (reviewed there)
+    - "!e2e/package-lock.json"
+    - "!**/*.min.js"
+
+  path_instructions:
+    - path: "**/*.py"
+      instructions: |
+        Django 5.2 + allauth + HTMX. Review for security first:
+        - Access control: every view needs the right decorator (learner_required, mentor_required,
+          staff_required, admin_required, signin_required). Mentor-facing queries must go through
+          apps.batches.scoping.batches_for(user). Objects must be looked up with the owner
+          (user=request.user), never by id alone (IDOR).
+        - Exam integrity: no answer key, correct option, score rule, [[!marker]], hotspot answer or
+          canonical order may reach the browser. What the browser gets comes only from
+          client_projection(). Option/item ids must be random per-attempt tokens, never positional.
+        - Scores use Decimal and apps/results/policy.py::round1(), never floats.
+        - QuestionVersion and published UnitVersion rows are never edited in place.
+        - Rate limits never use django-ratelimit key="ip" (Caddy's address); use the real client IP.
+        - Nothing personal (emails, names, IPs) in logs or audit `data`; audit takes ids only.
+        - Business rules belong in services/policy/rules modules, not in views or templates.
+    - path: "templates/**/*.html"
+      instructions: |
+        Never `|safe`, `mark_safe` or `{% autoescape off %}` on user or content text. No inline
+        <script> or style attributes (the CSP is script-src 'self'). The browser must never receive
+        a correct option, key or score rule. Tap targets at least 48px.
+    - path: "static/js/**/*.js"
+      instructions: |
+        Never use innerHTML, outerHTML, insertAdjacentHTML or eval; write text with textContent.
+        No localStorage for progress or answers. Everything must work under a strict CSP.
+    - path: "deploy/**"
+      instructions: |
+        Docker and Caddy: containers non-root, read_only, cap_drop ALL, no published ports except
+        Caddy's 80/443. No secrets in images or compose files. Never serve /media directly; files
+        go out only through Django's X-Accel-Redirect check.
+    - path: ".github/workflows/**"
+      instructions: |
+        Least-privilege `permissions:`, no pull_request_target, no secrets exposed to pull
+        requests from forks.
+
+  tools:
+    ruff:
+      enabled: true
+    gitleaks:
+      enabled: true
+    shellcheck:
+      enabled: true
+    hadolint:
+      enabled: true
+    yamllint:
+      enabled: true
+    actionlint:
+      enabled: true
+
+chat:
+  auto_reply: true

@@ -13,7 +13,9 @@ production (`guard()`). The browser only ever sees what the real pages send: the
 questions say in their own wording which option is right, so a test can answer without a key.
 """
 
+import base64
 import os
+import secrets
 from datetime import date, timedelta
 
 from allauth.account.models import EmailAddress
@@ -42,8 +44,6 @@ from apps.questions.models import Pool, Question, QuestionVersion
 
 JOURNEY_DOMAIN = "e2e.example.com"
 LOAD_DOMAIN = "load.example.com"
-PASSWORD = "e2e-Invented-Pass-42"  # invented; only ever valid for the marked test accounts  # noqa: S105
-TOTP_SECRET = "JBSWY3DPEHPK3PXP"  # invented; staff test accounts use it (e2e/support/totp.ts)  # noqa: S105
 EXAM_SET_CODE = "E2EJ"
 SANDBOX_MODULE = 91
 PART_PREFIX = "E2E-J"
@@ -94,15 +94,48 @@ def email(key, domain=JOURNEY_DOMAIN):
 # --- people -------------------------------------------------------------------------------------
 
 
-def _user(key, role, batch=None, name=None, language="en", domain=JOURNEY_DOMAIN):
+def new_credentials() -> dict:
+    """A fresh password and TOTP secret for one seed run (security audit 2026-11, H1).
+
+    Staging is on the public internet and this repo is public, so the test accounts never have a
+    password or an authenticator secret written in the code. Each run makes new ones, sets them on
+    every marked account it touches, and prints them only in its manifest (stdout).
+    """
+    return {
+        "password": secrets.token_urlsafe(24),
+        "totp_secret": base64.b32encode(secrets.token_bytes(20)).decode(),
+    }
+
+
+def _set_credentials(user, creds, *, login=True) -> None:
+    """Give a marked test account this run's password and secret (or no usable password)."""
+    if login:
+        user.set_password(creds["password"])
+    else:
+        user.set_unusable_password()
+    user.save(update_fields=["password"])
+    if user.role != Role.LEARNER:
+        Authenticator.objects.filter(user=user, type=Authenticator.Type.TOTP).delete()
+        if login:
+            Authenticator.objects.create(
+                user=user, type=Authenticator.Type.TOTP, data={"secret": creds["totp_secret"]}
+            )
+
+
+def _user(
+    key, role, batch=None, name=None, language="en", domain=JOURNEY_DOMAIN, *, creds, login=True
+):
+    """The marked test account `key@domain`, made if missing, with this run's credentials.
+    `login=False` leaves it with no usable password (an account nobody signs in as)."""
     address = email(key, domain)
     user = User.objects.filter(email=address).first()
     if user is not None:
+        _set_credentials(user, creds, login=login)
         return user
     if role == Role.ADMIN:
-        user = User.objects.create_superuser(address, PASSWORD)
+        user = User.objects.create_superuser(address, None)
     else:
-        user = User.objects.create_user(address, PASSWORD, role=role, is_staff=False)
+        user = User.objects.create_user(address, None, role=role, is_staff=False)
     EmailAddress.objects.create(user=user, email=address, primary=True, verified=True)
     Profile.objects.create(
         user=user,
@@ -112,10 +145,7 @@ def _user(key, role, batch=None, name=None, language="en", domain=JOURNEY_DOMAIN
     )
     if batch is not None:
         Enrolment.objects.create(user=user, batch=batch)
-    if role != Role.LEARNER:
-        Authenticator.objects.create(
-            user=user, type=Authenticator.Type.TOTP, data={"secret": TOTP_SECRET}
-        )
+    _set_credentials(user, creds, login=login)
     return user
 
 
@@ -319,7 +349,8 @@ def finish_pretest(user):
 def seed_journeys():
     """Create (or complete) the journey data and return the manifest the tests read."""
     guard()
-    admin = _user("admin", Role.ADMIN)
+    creds = new_credentials()
+    admin = _user("admin", Role.ADMIN, creds=creds)
     course = ensure_course()
     exam_set = ensure_exam_set(admin)
     batches = {}
@@ -340,14 +371,14 @@ def seed_journeys():
         batches[code] = batch
     staff = {}
     for key, role, mentored in STAFF:
-        user = _user(key, role)
+        user = _user(key, role, creds=creds)
         for code in mentored:
             BatchMentor.objects.get_or_create(batch=batches[code], mentor=user)
         staff[key] = user
     learners = {}
     for key, code, name, language, state in LEARNERS:
         existing = User.objects.filter(email=email(key)).exists()
-        user = _user(key, Role.LEARNER, batches[code], name, language)
+        user = _user(key, Role.LEARNER, batches[code], name, language, creds=creds)
         if not existing and state in ("locked", "ready"):
             finish_course(user, course["parts"], leave_blank=state == "locked")
             if state == "ready":
@@ -357,8 +388,8 @@ def seed_journeys():
         pool=Pool.FINAL, stable_id__startswith=QUESTION_PREFIX
     ).first()
     return {
-        "password": PASSWORD,
-        "totp_secret": TOTP_SECRET,
+        "password": creds["password"],
+        "totp_secret": creds["totp_secret"],
         "domain": JOURNEY_DOMAIN,
         "batches": {code: b.pk for code, b in batches.items()},
         "users": {key: u.email for key, u in {**staff, **learners}.items()},
@@ -455,7 +486,9 @@ LOAD_BATCH = "LT-01"
 def seed_load(count=60):
     """`count` invented learners (lt001@load.example.com …) with the final open, in one batch."""
     guard()
-    admin = _user("lt-admin", Role.ADMIN, domain=LOAD_DOMAIN)
+    creds = new_credentials()
+    # The load test never signs in as this admin: it only releases and assigns the exam set.
+    admin = _user("lt-admin", Role.ADMIN, domain=LOAD_DOMAIN, creds=creds, login=False)
     course = ensure_course()
     exam_set = ensure_exam_set(admin)
     batch, _ = Batch.objects.get_or_create(
@@ -467,16 +500,19 @@ def seed_load(count=60):
     made = 0
     for n in range(1, count + 1):
         key = f"lt{n:03d}"
-        if User.objects.filter(email=email(key, LOAD_DOMAIN)).exists():
+        existing = User.objects.filter(email=email(key, LOAD_DOMAIN)).exists()
+        user = _user(
+            key, Role.LEARNER, batch, f"Load Learner {_word(n)}", domain=LOAD_DOMAIN, creds=creds
+        )
+        if existing:  # already set up by an earlier run; it now has this run's password
             continue
-        user = _user(key, Role.LEARNER, batch, f"Load Learner {_word(n)}", domain=LOAD_DOMAIN)
         finish_course(user, course["parts"])
         finish_pretest(user)
         made += 1
     return {
         "count": count,
         "created": made,
-        "password": PASSWORD,
+        "password": creds["password"],
         "email_pattern": f"lt{{n:03d}}@{LOAD_DOMAIN}",
         "batch": LOAD_BATCH,
     }
