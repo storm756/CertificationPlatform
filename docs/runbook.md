@@ -139,10 +139,10 @@ Record the result in `docs/history/` (date, who, times, problems) and in STATUS.
    ```
 5. Restore from the key holder's laptop, so the private key and the plaintext never touch the server's disk:
    ```bash
-   age -d -i age-identity.txt csfr-prod-<stamp>.dump.age | ssh deploy@<server> \
+   age -d -i age-identity.txt csfr-prod-<stamp>.dump.age | ssh ccfr \
      'cd /srv/csfr/prod/src/deploy && CSFR_ENV=prod CSFR_ENV_FILE=/srv/csfr/prod/app.env CSFR_DB_ENV_FILE=/srv/csfr/prod/db.env \
       docker compose -f compose.yml exec -T db pg_restore -U csfr_owner -d csfr --no-owner --no-privileges --exit-on-error'
-   age -d -i age-identity.txt media-prod-<stamp>.tar.age | ssh deploy@<server> \
+   age -d -i age-identity.txt media-prod-<stamp>.tar.age | ssh ccfr \
      'docker volume create csfr-prod_media >/dev/null; docker run --rm -i -v csfr-prod_media:/media alpine tar -C /media -xf -'
    ```
    Restoring as `csfr_owner` makes it the owner, and the default privileges give `csfr_app` its row access.
@@ -235,8 +235,8 @@ From the lead's PC (the private shared drive has them), copy into `/srv/csfr/<en
 | The final-exam workbook (Sets B and D) | `import_final_sets` |
 
 ```bash
-scp -r content-data deploy@<server>:/srv/csfr/staging/      # from the PC
-ssh deploy@<server> 'chmod -R a+rX /srv/csfr/staging/content-data && mkdir -p /srv/csfr/staging/content-data/outputs'
+scp -r content-data ccfr:/srv/csfr/staging/      # from the PC
+ssh ccfr 'chmod -R a+rX /srv/csfr/staging/content-data && mkdir -p /srv/csfr/staging/content-data/outputs'
 ```
 
 The importers write their reports to `outputs/`, which must belong to the `app` user inside the container (uid 10001). The `deploy`
@@ -273,7 +273,7 @@ The films and handouts are stored in the env's media volume; `publish_ccfr_cours
 
 1. Create an admin with 2FA (section 6).
 2. **Admin → Exam sets → Check → Release** each set (released papers are fixed, D31), then pick the set on each batch.
-3. Open a test batch, register a test learner (staging mail is in Mailpit: `ssh -L 8025:127.0.0.1:8025 deploy@<server>`, then
+3. Open a test batch, register a test learner (staging mail is in Mailpit: `ssh -L 8025:127.0.0.1:8025 ccfr`, then
    http://localhost:8025), and check: `/learn/m4/t3/` (a corrected table), `/learn/m8/film/` (plays, English and Hindi captions),
    `/learn/m8/handout/` (PDF), Module 8 Part A and Part B (start, save, submit).
 4. Delete the inputs: `rm -rf /srv/csfr/staging/content-data` (keep the `outputs/` report if the team needs it, off the server).
@@ -366,8 +366,8 @@ line does no harm, and you can delete it. The subject prefix is `[CCFR]`.
 ### 10.2 Remove a test learner
 
 For testing on prod with a Gmail plus-address (`me+test1@gmail.com`) in the OPEN batch. Registration accepts `+` addresses, but **prod
-folds Gmail dots and `+tags` into one address** (`EMAIL_NORMALISE_ALIASES`), so only one `+` test account can exist at a time, and none
-if the plain `me@gmail.com` is already registered. Remove the test learner before making the next one. Mail still reaches your inbox.
+folds Gmail dots and `+tags` into one address** (`EMAIL_NORMALISE_ALIASES`), so only one `+` test account can exist at a time, and **none
+if the plain Gmail address is already registered** (the lead's is, so the lead uses a different address for prod tests). Remove the test learner before making the next one. Mail still reaches your inbox.
 
 ```bash
 # helper exports from the top of this file (prod: replace staging with prod), then:
@@ -383,16 +383,28 @@ row records only IDs.
 
 ### 10.3 Put the signature images and the leadership photos on a server
 
-Both are private (never in git) and live in the media volume. The `deploy` user has no sudo, so copy to a folder it owns, then move the
-files into the volume with a one-off root container. From the PC (PowerShell; `<server>` is the host you already use for `ssh deploy@`):
+Both are private (never in git) and live in the media volume. The lead connects with `ssh ccfr` (host, user `deploy` and key are in
+`~/.ssh/config`); `deploy` has no sudo, so copy to a folder it owns, then move the files into the volume with a one-off root container.
+
+**Signatures: staging only until the final design and the hi-res images exist.** Nothing in the app stops prod from using signature
+files that are on it: a certificate picks up whatever `media/private/signatures/signature-1..3.png` holds at the moment it is issued
+(each PDF is then fixed). The only protections are that auto-issue is off and a mentor must approve each certificate (and the warning
+shown while signatures are missing or `CERTIFICATE_DESIGN_FINAL` is off). So **do not copy signatures to prod early**; put them there
+together with the hi-res images and the final design.
+
+Photos go to staging and prod once all three people have consented (they have, 14 Nov 2026). Photos are `.webp`, the signatures `.png`.
+
+From the PC (PowerShell, in the repo folder):
 
 ```powershell
-ssh -i C:\Users\Acer\.ssh\csfr_vps deploy@<server> "mkdir -p /srv/csfr/staging/incoming /srv/csfr/prod/incoming"
-scp -i C:\Users\Acer\.ssh\csfr_vps content-data\signatures\signature-1.png content-data\signatures\signature-2.png content-data\signatures\signature-3.png deploy@<server>:/srv/csfr/staging/incoming/
-scp -i C:\Users\Acer\.ssh\csfr_vps content-data\people\bhavesh-patel.webp content-data\people\nilakshi-jain.webp content-data\people\vineet-kumar.webp deploy@<server>:/srv/csfr/staging/incoming/
+ssh ccfr "mkdir -p /srv/csfr/staging/incoming /srv/csfr/prod/incoming"
+scp content-data\signatures\signature-1.png content-data\signatures\signature-2.png content-data\signatures\signature-3.png ccfr:/srv/csfr/staging/incoming/
+scp content-data\people\bhavesh-patel.webp content-data\people\nilakshi-jain.webp content-data\people\vineet-kumar.webp ccfr:/srv/csfr/staging/incoming/
+scp content-data\people\bhavesh-patel.webp content-data\people\nilakshi-jain.webp content-data\people\vineet-kumar.webp ccfr:/srv/csfr/prod/incoming/
 ```
 
-Then on the server, once per environment (helper exports from the top of this file, `staging` or `prod`):
+Then on the server, once per environment (`ssh ccfr`, then `cd /srv/csfr/<env>/src/deploy` and the helper exports from the top of
+this file). Staging (signatures and photos):
 
 ```bash
 docker compose -f compose.yml run --rm --no-deps --user root --cap-add CHOWN --cap-add DAC_OVERRIDE --cap-add FOWNER -v /srv/csfr/staging/incoming:/incoming:ro web sh -c '
@@ -405,8 +417,21 @@ docker compose -f compose.yml run --rm --no-deps --user root --cap-add CHOWN --c
 rm /srv/csfr/staging/incoming/*
 ```
 
-Repeat with `prod` in the paths and in the helper exports. The signatures are used from the next certificate (nothing else to set);
-mentors' "signatures missing" warning disappears. For the leadership photos also add to `app.env`
-`PEOPLE_PHOTO_DIR=/app/media/private/people` and, **only after all three people agreed to a public photo**, `PEOPLE_CONSENT_GIVEN=1`,
-then restart: `docker compose -f compose.yml up -d`. The "Who runs it" section stays a placeholder until both are set.
-`CERTIFICATE_DESIGN_FINAL` is not touched: the final design is still pending, so the placeholder warning stays.
+Success: `ls` lists three `signature-N.png` and three `.webp` files owned by `10001`. Safe to rerun (it overwrites the same files).
+Prod is the same command with `prod` in the paths and the prod helper exports, but **only the photos**: leave out the signature
+lines (`mkdir … signatures`, the `cp … signature-*.png` and the signatures part of `chown`/`chmod`) and copy only the `.webp` files.
+
+Then for each environment that has photos, add these two lines to `/srv/csfr/<env>/app.env` (edit with `nano`; never print the file)
+and restart:
+
+```
+PEOPLE_PHOTO_DIR=/app/media/private/people
+PEOPLE_CONSENT_GIVEN=1
+```
+
+```bash
+docker compose -f compose.yml up -d web tasks
+```
+
+Success: the home page shows the three photos under "Who runs it" (`/people/bhavesh-patel/` returns an image). Remove the two lines
+and restart to switch the section back to the placeholder. `CERTIFICATE_DESIGN_FINAL` is not touched: the final design is still pending.
