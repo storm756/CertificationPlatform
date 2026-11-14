@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-15: Security audit fixes (medium and low)
+
+- **Password reset for an unknown address sends nothing** and uses no email budget; the page is unchanged (still "already sent today" on a second request). Why: anyone could use up the day's 100 reset and guardian emails with made-up addresses (audit M1).
+- **Sign-up limit keyed on the batch number,** so `02` and `2` share one allowance. Why: each spelling was a fresh allowance (M2).
+- **One email address per account; changes notify the old address,** as do password changes (allauth `CHANGE_EMAIL`, `EMAIL_NOTIFICATIONS`). Why: architecture §7.4 promised it and a takeover was silent (M3).
+- **The reset notice's `next` stays on the site.** Why: open redirect (L1).
+
 ## 2026-11-15: Security audit fixes (critical and high)
 
 - **Test accounts no longer have public credentials:** `e2e_seed` and `loadtest_seed` give every marked account a new random password and TOTP secret on each run, printed only in the manifest; the load-test admin cannot sign in; `locustfile.py` has no default password. Why: the old fixed values in this public repo opened a staging superuser while the seed data existed (audit H1).

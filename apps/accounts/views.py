@@ -8,6 +8,7 @@ from django.db import transaction
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 from django_ratelimit.decorators import ratelimit
@@ -24,8 +25,13 @@ from .tokens import hash_token
 
 
 def _rate_key(group, request):
-    # Per batch, not per IP: a classroom shares one Wi-Fi address (architecture 7.2).
-    return request.POST.get("batch", "none")
+    """Per batch, not per IP: a classroom shares one Wi-Fi address (architecture 7.2).
+
+    Keyed on the batch number itself, so "2", "02" and " 2" (which the form all accepts as batch 2)
+    share one allowance (security audit 2026-11, M2). Anything that isn't a number shares one too.
+    """
+    raw = request.POST.get("batch", "").strip()
+    return f"batch:{int(raw)}" if raw.isascii() and raw.isdigit() else "batch:invalid"
 
 
 @ratelimit(key=_rate_key, rate=lambda g, r: settings.REGISTER_RATE, method="POST", block=False)
@@ -125,7 +131,11 @@ def resend_guardian(request):
 @require_POST
 def dismiss_reset_notice(request):
     Profile.objects.filter(user=request.user).update(mentor_reset_notice=False)
-    return redirect(request.POST.get("next") or "start")
+    target = request.POST.get("next", "")
+    safe = url_has_allowed_host_and_scheme(
+        target, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    )
+    return redirect(target if target and safe else "start")  # never off-site (audit 2026-11, L1)
 
 
 def _valid_reset_link(raw_token):

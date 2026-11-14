@@ -262,7 +262,7 @@ POST /register  (rate-limited per batch, not per IP — classrooms share Wi-Fi)
 | Sessions | 14 days with "remember me", 12 hours for staff. Rotated at login. HttpOnly, Secure, SameSite=Lax. |
 | Login limits | allauth login rate limits. Messages are the same whether or not the email exists. |
 | Password reset | allauth email link, or a **mentor-generated one-time link** (valid 1 hour) to hand over in person. A mentor link ends all the learner's sessions, shows them a banner at next login, and blocks an email change for 7 days. |
-| Email change | Re-verified at the new address, and the old address is notified |
+| Email change | One address per account (`ACCOUNT_CHANGE_EMAIL`): re-verified at the new address, which then replaces the old one, and the old address is notified (`ACCOUNT_EMAIL_NOTIFICATIONS`, also for password changes; the notices use the reset pool but not its once-a-day limit). A reset asked for an unknown address sends nothing and uses no budget; the page is the same as for a real address (security audit 2026-11) |
 
 ---
 
