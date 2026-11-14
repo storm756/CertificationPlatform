@@ -61,8 +61,8 @@ class ProgrammeAssessmentAdmin(ModelAdmin):
         from . import programme
         from .models import ProgrammeAssessmentKind
 
-        for kind in ProgrammeAssessmentKind.values:
-            programme.get_assessment(kind)
+        for kind in (ProgrammeAssessmentKind.FINAL, ProgrammeAssessmentKind.PRETEST):
+            programme.get_assessment(kind)  # not the practice mock (D26): it has no page yet
         return super().changelist_view(request, extra_context)
 
     def save_model(self, request, obj, form, change):
