@@ -39,3 +39,33 @@ def test_edge_compose_mounts_its_own_directory():
     compose = (DEPLOY / "compose.edge.yml").read_text(encoding="utf-8")
     assert "name: csfr-edge" in compose  # same project name: the TLS certificate volume is kept
     assert "- ./caddy:/etc/caddy:ro" in compose
+
+
+# --- the staging login (security audit 2026-11) --------------------------------------------------
+
+
+def _site(caddyfile: str, name: str) -> str:
+    start = caddyfile.index("{$SCHEME}{$" + name + "} {")
+    return caddyfile[start : caddyfile.index("\n}\n", start)]
+
+
+def test_staging_is_behind_a_login_but_healthz_and_prod_are_not():
+    caddyfile = (DEPLOY / "caddy" / "Caddyfile").read_text(encoding="utf-8")
+    staging, prod = _site(caddyfile, "STAGING_DOMAIN"), _site(caddyfile, "PROD_DOMAIN")
+    assert "@team not path /healthz/" in staging
+    assert "basic_auth @team" in staging and "{$STAGING_AUTH_HASH}" in staging
+    assert "basic_auth" not in prod
+
+
+def test_the_login_comes_from_the_server_never_from_git():
+    caddyfile = (DEPLOY / "caddy" / "Caddyfile").read_text(encoding="utf-8")
+    assert "$2a$" not in caddyfile and "$2b$" not in caddyfile  # no bcrypt hash committed
+    compose = (DEPLOY / "compose.edge.yml").read_text(encoding="utf-8")
+    assert "STAGING_AUTH_HASH: ${STAGING_AUTH_HASH:-}" in compose
+
+
+def test_edge_refuses_to_install_without_the_login():
+    edge = (DEPLOY / "edge.sh").read_text(encoding="utf-8")
+    check = edge.index('[ -z "${STAGING_AUTH_HASH:-}" ]')
+    assert check < edge.index("caddy validate") < edge.index('cat "$NEW" > "$LIVE"')
+    assert '-e STAGING_AUTH_HASH="$STAGING_AUTH_HASH"' in edge  # the validation sees it too

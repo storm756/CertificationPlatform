@@ -50,6 +50,8 @@ class FinalTaker(HttpUser):
     wait_time = between(0, 0)
 
     def on_start(self):
+        if os.environ.get("LT_HTTP_USER"):  # staging's login (security audit 2026-11)
+            self.client.auth = (os.environ["LT_HTTP_USER"], os.environ.get("LT_HTTP_PASSWORD", ""))
         self.number = next(_numbers)
         self.email = f"lt{self.number:03d}@{DOMAIN}"
         self.sign_in()

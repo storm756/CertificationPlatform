@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-15: Staging behind a login
+
+- **The staging site asks for one shared login** (Caddy `basic_auth`) on every page except `/healthz/`; prod is unchanged. The user name and bcrypt hash live only in `/srv/csfr/edge/.env`; `deploy.sh edge` refuses to install without them. The journeys and the load test pass the login from the environment. Why: staging is public with open sign-up and holds the real exam sets, so the final's answer key could be worked out there (security audit H3).
+
 ## 2026-11-15: Security audit fixes (medium and low)
 
 - **Password reset for an unknown address sends nothing** and uses no email budget; the page is unchanged (still "already sent today" on a second request). Why: anyone could use up the day's 100 reset and guardian emails with made-up addresses (audit M1).

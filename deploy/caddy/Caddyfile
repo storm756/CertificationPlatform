@@ -53,6 +53,13 @@
 {$SCHEME}{$STAGING_DOMAIN} {
 	import common "max-age=300"
 	header X-Robots-Tag "noindex, nofollow"
+	# Staging is for the team only: it holds the real course and exam sets (security audit 2026-11, H3).
+	# One login for everything except /healthz/, which the uptime monitor checks. The user name and the
+	# bcrypt hash come from /srv/csfr/edge/.env on the server (never from git); see docs/runbook.md §1.4.
+	@team not path /healthz/
+	basic_auth @team {
+		{$STAGING_AUTH_USER} {$STAGING_AUTH_HASH}
+	}
 	handle_path /static/* {
 		root * /srv/staging/static
 		header Cache-Control "no-cache"
