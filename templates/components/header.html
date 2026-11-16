@@ -25,8 +25,9 @@
           {% url 'mentor_home' as mentor_url %}
           <li><a href="{{ mentor_url }}"{% if mentor_url in request.path %} aria-current="page"{% endif %}>{% icon "users" %}{% translate "My batches" %}</a></li>
           <li class="nav-staff">
-            <details data-staff-menu{% if '/staff/' in request.path %} open{% endif %}>
-              <summary>{% icon "list" %}{% translate "Staff tools" %}</summary>
+            {# Starts closed on every page (it used to open itself on /staff/ pages and cover the content). #}
+            <details data-staff-menu>
+              <summary aria-expanded="false">{% icon "list" %}{% translate "Staff tools" %}</summary>
               <ul>
                 <li><a href="{% url 'staff_questions' %}"{% if '/staff/questions' in request.path %} aria-current="page"{% endif %}>{% translate "Questions" %}</a></li>
                 {% if user.role == 'admin' %}

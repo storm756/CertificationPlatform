@@ -9,6 +9,7 @@ Journeys 1 to 16 of `docs/architecture.md` §18, driven through the real pages i
 | `tests/01-registration.spec.ts` | 1 no batch open · 2 adult registers and verifies · 3 17-year-old and guardian · 4 batch closes mid-form |
 | `tests/02-attempts.spec.ts` | 5 resume on another phone · 6 double tap on Submit · 7 final locked with the reason · 8 gate choice · 9 result page · 10 no keys in the browser · 11 final shows overall % and bands · plus the `/admin/` 403 check |
 | `tests/03-certificates-and-staff.spec.ts` | 12 certificate issued and verified · 13 two tabs, one certificate · 14 mentor scoping (403, logged) · 15 new counted part (preview, confirm) · 16 Marathi learner switches language mid-final |
+| `tests/04-staff-menu.spec.ts` | The "Staff tools" menu at 1366 and 390px: starts closed, closes on an outside click, Escape (focus back), choosing an item and page scroll; `aria-expanded` follows. Read-only. |
 
 The journeys run **one at a time, in order** (they change data). Each run needs fresh seed data: clean, seed, run.
 

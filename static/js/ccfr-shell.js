@@ -29,6 +29,32 @@
     }
   }
 
+  /* ---- Staff tools menu (<details data-staff-menu>): a dropdown that closes on an outside click or
+     tap, on Escape (focus back to the button), when an item is chosen and when the page scrolls.
+     aria-expanded on the <summary> follows the open state for screen readers. ---- */
+  $$("[data-staff-menu]").forEach(function (menu) {
+    var button = $("summary", menu);
+    if (!button) { return; }
+    var sync = function () { button.setAttribute("aria-expanded", String(menu.open)); };
+    var close = function (focusButton) {
+      if (!menu.open) { return; }
+      menu.open = false;
+      sync();
+      if (focusButton) { button.focus(); }
+    };
+    sync();
+    menu.addEventListener("toggle", sync);
+    document.addEventListener("click", function (e) {
+      if (!menu.contains(e.target)) { close(false); }
+    });
+    // Capture phase, so Escape closes this menu before the mobile menu's own Escape handler runs.
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && menu.open) { e.stopPropagation(); close(true); }
+    }, true);
+    $$("a", menu).forEach(function (link) { link.addEventListener("click", function () { close(false); }); });
+    window.addEventListener("scroll", function () { close(false); }, { passive: true });
+  });
+
   /* ---- Language select: submits Django's set_language form on change ---- */
   $$("[data-lang-select]").forEach(function (select) {
     select.addEventListener("change", function () { select.form.submit(); });
