@@ -113,7 +113,7 @@ curl -s -o /dev/null -w '%{http_code}
 reads `/srv/csfr/edge/.env` with `set -u`, so without quotes the shell reads `$2a`, `$14` … as variables and the deploy stops with
 an "unbound variable" error (or, if it got past that, Caddy would get a mangled hash and every staging login would fail). Write the
 line exactly as `STAGING_AUTH_HASH='$2a$14$...'`: single quotes, not double, no spaces around `=`. Check it without printing the
-hash: `grep -c "^STAGING_AUTH_HASH='\$2a\$" /srv/csfr/edge/.env` must print `1`. If you change the password, run
+hash: `grep -cF "STAGING_AUTH_HASH='\$2a\$" /srv/csfr/edge/.env` must print `1` (`-F`: the `$` signs are plain text). If you change the password, run
 `deploy/deploy.sh edge` again so Caddy reads the new hash.
 
 The browser asks for the login once per session; links in staging emails work after it. The journeys and the load test pass
@@ -233,9 +233,10 @@ secret. Write the start and end times down.
    echo "== live prod, read only"; docker exec csfr-prod-db-1 psql -U postgres -d csfr -tA -F ' | ' -c "$Q"
    EOF
    ```
-   **Pass:** `tables` and `migrations` are the same in both (unless a deploy ran since the dump), every count in the copy is above 0
-   where prod's is, and none is higher than prod's. Prod may be a little higher: rows added since the dump's `<stamp>` (at most one
-   hour). Safe to rerun.
+   **Pass:** `tables` and `migrations` are the same in both (unless a deployment ran since the dump), every count in the copy is
+   above 0 where prod's is, and none is higher than prod's. Prod may be a little higher: rows added since the dump's `<stamp>`.
+   **And** the dump `<stamp>` is at most one hour before the time you started step 3. An older newest dump means the hourly
+   backups have stopped: the drill fails, tell the lead. Safe to rerun.
 5. **Delete the throwaway database** (and its data volume), then check it is gone:
    ```bash
    ssh ccfr 'docker rm -f -v csfr-drill-db; docker ps -a --filter name=csfr-drill --format "{{.Names}}"'

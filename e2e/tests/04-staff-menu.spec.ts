@@ -92,7 +92,7 @@ for (const size of SIZES) {
     });
 
     test("scrolling the page closes it", async ({ browser }) => {
-      test.skip(size.mobile, "the open mobile menu covers the page, so there is no page to scroll behind it");
+      test.skip(size.mobile, "inside the open mobile menu it is an accordion and stays open while scrolling");
       const page = await adminAt(browser, size.viewport);
       await page.goto("/");
       await page.evaluate(() => { document.body.style.minHeight = "3000px"; }); // make sure the page can scroll

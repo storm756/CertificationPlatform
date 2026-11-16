@@ -52,7 +52,11 @@
       if (e.key === "Escape" && menu.open) { e.stopPropagation(); close(true); }
     }, true);
     $$("a", menu).forEach(function (link) { link.addEventListener("click", function () { close(false); }); });
-    window.addEventListener("scroll", function () { close(false); }, { passive: true });
+    // Only as a dropdown: inside the open mobile menu it is an accordion, and scrolling there (or the
+    // browser scrolling a link into view) must not fold it away.
+    window.addEventListener("scroll", function () {
+      if (!document.body.classList.contains("nav-open")) { close(false); }
+    }, { passive: true });
   });
 
   /* ---- Language select: submits Django's set_language form on change ---- */

@@ -111,18 +111,21 @@ def batch_report_csv(batch, rows=None) -> str:
     writer = csv.writer(out, quoting=csv.QUOTE_ALL, lineterminator="\r\n")
     writer.writerow([safe_cell(h) for h in HEADER])
     for row in rows:
-        line = [
-            batch.code,
-            row["name"],
-            row["email"],
-            _text(row["pretest"]),
-            _text(row["first_final"]),
-            _text(row["best_final"]),
-            _text(row["gain"]),
-            row["modules_passed"],
-            _text(row["hours"]),
-            row["hours_basis"],
-            row["certificate"],
-        ]
-        writer.writerow([safe_cell(x) for x in line])
+        # Text from people is made spreadsheet-safe; the numbers are Decimals computed here, so a
+        # negative gain stays a number (-25.0), not the text '-25.0.
+        writer.writerow(
+            [
+                safe_cell(batch.code),
+                safe_cell(row["name"]),
+                safe_cell(row["email"]),
+                _text(row["pretest"]),
+                _text(row["first_final"]),
+                _text(row["best_final"]),
+                _text(row["gain"]),
+                safe_cell(row["modules_passed"]),
+                _text(row["hours"]),
+                safe_cell(row["hours_basis"]),
+                safe_cell(row["certificate"]),
+            ]
+        )
     return out.getvalue()

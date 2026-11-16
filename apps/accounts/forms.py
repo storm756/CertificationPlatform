@@ -72,8 +72,11 @@ class RegistrationForm(forms.Form):
         language = self.fields["preferred_language"]
         language.choices = [c for c in Language.choices if languages.is_enabled(c[0])]
         if len(language.choices) == 1:
+            # Disabled: Django ignores what was posted (a stale "hi") and uses the initial value, so
+            # a hidden field can never hold a rejected choice the visitor cannot correct.
             language.widget = forms.HiddenInput()
             language.initial = language.choices[0][0]
+            language.disabled = True
 
     def keep_posted_batch_choice(self):
         """After a refusal, keep the chosen (now closed) batch visible so the input is kept."""

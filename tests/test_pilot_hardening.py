@@ -143,7 +143,26 @@ def test_english_only_registration_hides_the_language_field(english_only):
     field = RegistrationForm().fields["preferred_language"]
     assert field.choices == [("en", "English")] or [c[0] for c in field.choices] == ["en"]
     assert field.widget.is_hidden and field.initial == "en"
-    assert RegistrationForm(data={"preferred_language": "hi"}).errors.get("preferred_language")
+    # A stale or tampered "hi" is ignored (the field is disabled), so the hidden input can never hold
+    # a rejected value the visitor cannot correct; the form saves English.
+    stale = RegistrationForm(data={"preferred_language": "hi"})
+    stale.is_valid()
+    assert "preferred_language" not in stale.errors
+    assert stale.cleaned_data["preferred_language"] == "en"
+    assert 'value="en"' in str(stale["preferred_language"])
+
+
+@pytest.mark.django_db
+def test_a_switched_off_saved_language_beats_an_enabled_cookie(
+    client, make_user, make_batch, settings
+):
+    settings.LANGUAGES_ENABLED = ["en", "hi"]
+    learner = make_user(batch=make_batch())
+    learner.profile.preferred_language = "mr"
+    learner.profile.save()
+    client.force_login(learner)
+    client.cookies[django_settings.LANGUAGE_COOKIE_NAME] = "hi"
+    assert '<html lang="en">' in client.get("/").content.decode()
 
 
 @pytest.mark.django_db
@@ -187,6 +206,8 @@ ROOT = Path(__file__).resolve().parent.parent
         ('"GET /accounts/confirm-email/MQ:1tSecret:abcDEF/ HTTP/1.1" 200', "MQ:1tSecret:abcDEF"),
         ('"GET /verify/K7Q2X9/ HTTP/1.1" 200', "K7Q2X9"),
         ("Not Found: /reset/plainToken/", "plainToken"),
+        ('"GET /%72eset/abcDEF123/ HTTP/1.1" 200', "abcDEF123"),
+        ('"GET /guardian%2Fenc0dedTok/ HTTP/1.1" 200', "enc0dedTok"),
         ("https://cyberfirstresponse.io/guardian/fullUrlToken/", "fullUrlToken"),
         ('"GET /accounts/login/?next=/x&key=queryKey123 HTTP/1.1"', "queryKey123"),
         ('"GET /x/?token=queryTok&code=queryCode HTTP/1.1"', "queryCode"),
@@ -214,6 +235,19 @@ def test_redact_leaves_ordinary_paths_alone(line):
         assert redact(line).startswith('"POST /accounts/password/reset/')
     else:
         assert redact(line) == line
+
+
+def test_the_filter_masks_tokens_in_tracebacks_too():
+    import sys
+
+    try:
+        raise ValueError("bad link /guardian/tracebackTok9/")
+    except ValueError:
+        exc_info = sys.exc_info()
+    record = logging.LogRecord("x", logging.ERROR, __file__, 1, "failed", (), exc_info)
+    RedactTokensFilter().filter(record)
+    text = logging.Formatter().format(record)
+    assert "tracebackTok9" not in text and "/guardian/***/" in text
 
 
 def test_the_filter_rewrites_a_record_and_never_drops_it():
@@ -441,3 +475,19 @@ def test_the_report_page_links_each_batch_csv(report_admin, make_batch):
     html = report_admin.get(reverse("staff_report")).content.decode()
     assert reverse("staff_report_batch_csv", args=[batch.pk]) in html
     assert "Learner report" in html
+
+
+def test_a_negative_gain_stays_a_number_in_the_csv():
+    from apps.staff.export import batch_report_csv
+
+    row = {
+        "name": "=Evil", "email": "a@example.com", "pretest": Decimal("75.0"), "first_final": Decimal("50.0"),
+        "best_final": Decimal("50.0"), "gain": Decimal("-25.0"), "modules_passed": "1/9",
+        "hours": Decimal("1.0"), "hours_basis": "engaged", "certificate": "",
+    }  # fmt: skip
+    head, line = list(
+        _csv.reader(_io.StringIO(batch_report_csv(SimpleNamespace(code="B1"), [row]).lstrip("﻿")))
+    )
+    values = dict(zip(head, line, strict=True))
+    assert values["Gain (pts)"] == "-25.0"
+    assert values["Name"] == "'=Evil"  # text is still made safe
