@@ -248,7 +248,11 @@ UNFOLD = {
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    # One-time links (/reset/<token>/ and the like) are masked in every line (security audit L2).
+    "filters": {"redact_tokens": {"()": "apps.core.redact.RedactTokensFilter"}},
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "filters": ["redact_tokens"]},
+    },
     "root": {"handlers": ["console"], "level": env("LOG_LEVEL", "INFO")},
     # WeasyPrint and fontTools log every rendering step at INFO; keep only their warnings.
     "loggers": {

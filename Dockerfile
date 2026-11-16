@@ -34,4 +34,6 @@ RUN mkdir -p /app/staticfiles /app/media && chown app:app /app/staticfiles /app/
 
 USER app
 EXPOSE 8000
-CMD ["sh", "-c", "exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers ${WEB_CONCURRENCY:-3} --access-logfile - --error-logfile -"]
+# Bind, workers (WEB_CONCURRENCY, default 3) and logging live in config/gunicorn.conf.py, which also
+# masks one-time tokens in the access log (security audit L2).
+CMD ["gunicorn", "-c", "config/gunicorn.conf.py", "config.wsgi:application"]

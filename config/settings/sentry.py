@@ -1,14 +1,16 @@
 """Sentry set-up (architecture §16, §17). Off when SENTRY_DSN is empty.
 
 No PII is sent: request bodies, cookies, headers, query strings and the user are dropped;
-stack frames carry no local variables; email addresses are masked in messages, exception text
-and breadcrumbs (a database error can quote one). A person creates the Sentry project and puts
-its DSN in /srv/csfr/<env>/app.env (docs/runbook.md).
+stack frames carry no local variables; email addresses and one-time link tokens (the URL too) are
+masked in messages, exception text and breadcrumbs (a database error can quote one). A person
+creates the Sentry project and puts its DSN in /srv/csfr/<env>/app.env (docs/runbook.md).
 """
 
 import re
 
 import sentry_sdk
+
+from apps.core.redact import redact
 
 _SCRUB_KEYS = {"cookies", "data", "headers", "query_string", "env"}
 _EMAIL = re.compile(r"[\w.+-]+@[\w-]+(\.[\w-]+)+")
@@ -16,7 +18,8 @@ MASK = "[email]"
 
 
 def _mask(value):
-    return _EMAIL.sub(MASK, value) if isinstance(value, str) else value
+    """Email addresses and one-time link tokens (/reset/<token>/ …, security audit L2) masked."""
+    return redact(_EMAIL.sub(MASK, value)) if isinstance(value, str) else value
 
 
 def _mask_breadcrumb(crumb):
@@ -32,6 +35,8 @@ def scrub_event(event, hint):
     if request:
         for key in _SCRUB_KEYS & request.keys():
             request[key] = "[scrubbed]"
+        if "url" in request:
+            request["url"] = redact(request["url"])
     event.pop("user", None)
     for exc in (event.get("exception") or {}).get("values") or []:
         exc["value"] = _mask(exc.get("value"))

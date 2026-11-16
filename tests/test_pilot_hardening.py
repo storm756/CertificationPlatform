@@ -161,3 +161,117 @@ def test_languages_enabled_env_parsing(monkeypatch):
     finally:
         monkeypatch.delenv("LANGUAGES_ENABLED")
         importlib.reload(base)
+
+
+# --- L2: one-time links never reach the logs ---------------------------------------------------------
+
+from pathlib import Path  # noqa: E402
+
+from apps.core.redact import RedactTokensFilter, redact  # noqa: E402
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+@pytest.mark.parametrize(
+    ("line", "secret"),
+    [
+        ('"GET /reset/Zx9-mentorToken_1/ HTTP/1.1" 200', "Zx9-mentorToken_1"),
+        ('"GET /guardian/g7Kq2-consentToken/ HTTP/1.1" 200', "g7Kq2-consentToken"),
+        ('"GET /accounts/password/reset/key/2c-a1b2c3d4e5f6/ HTTP/1.1" 302', "a1b2c3d4e5f6"),
+        ('"GET /accounts/confirm-email/MQ:1tSecret:abcDEF/ HTTP/1.1" 200', "MQ:1tSecret:abcDEF"),
+        ('"GET /verify/K7Q2X9/ HTTP/1.1" 200', "K7Q2X9"),
+        ("Not Found: /reset/plainToken/", "plainToken"),
+        ("https://cyberfirstresponse.io/guardian/fullUrlToken/", "fullUrlToken"),
+        ('"GET /accounts/login/?next=/x&key=queryKey123 HTTP/1.1"', "queryKey123"),
+        ('"GET /x/?token=queryTok&code=queryCode HTTP/1.1"', "queryCode"),
+    ],
+)
+def test_redact_masks_every_one_time_token(line, secret):
+    cleaned = redact(line)
+    assert secret not in cleaned
+    assert "***" in cleaned
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        '"GET /accounts/password/reset/ HTTP/1.1" 200',
+        '"POST /accounts/password/reset/done/ HTTP/1.1" 200',
+        '"GET /verify/ HTTP/1.1" 200',
+        '"GET /learn/module/3/ HTTP/1.1" 200',
+        "plain message without a path",
+    ],
+)
+def test_redact_leaves_ordinary_paths_alone(line):
+    if "/accounts/password/reset/done/" in line:
+        # "done" after the reset form is not a token, but masking it would be harmless too
+        assert redact(line).startswith('"POST /accounts/password/reset/')
+    else:
+        assert redact(line) == line
+
+
+def test_the_filter_rewrites_a_record_and_never_drops_it():
+    record = logging.LogRecord("django.request", logging.WARNING, __file__, 1, "Not Found: %s", ("/reset/abcDEF123/",), None)
+    assert RedactTokensFilter().filter(record) is True
+    assert record.getMessage() == "Not Found: /reset/***/"
+
+
+def test_django_logging_masks_tokens_on_the_console_handler(settings):
+    console = settings.LOGGING["handlers"]["console"]
+    assert "redact_tokens" in console["filters"]
+    assert settings.LOGGING["filters"]["redact_tokens"]["()"] == "apps.core.redact.RedactTokensFilter"
+    handler = next(h for h in logging.getLogger().handlers if isinstance(h, logging.StreamHandler))
+    assert any(isinstance(f, RedactTokensFilter) for f in handler.filters)
+
+
+def test_gunicorn_access_and_error_logs_mask_tokens(capsys):
+    import runpy
+
+    from gunicorn.config import Config
+
+    conf = runpy.run_path(str(ROOT / "config" / "gunicorn.conf.py"))
+    assert conf["accesslog"] == "-" and conf["errorlog"] == "-"
+    cfg = Config()
+    cfg.set("accesslog", "-")
+    cfg.set("errorlog", "-")
+    cfg.set("logger_class", conf["logger_class"])
+    log = cfg.logger_class(cfg)
+    log.access_log.info('%(h)s "%(r)s" %(s)s', {"h": "1.2.3.4", "r": "GET /guardian/sEcReT42/ HTTP/1.1", "s": "200"})
+    log.error("Error handling request /reset/sEcReT43/")
+    out = capsys.readouterr()
+    text = out.out + out.err
+    assert "sEcReT42" not in text and "sEcReT43" not in text
+    assert "/guardian/***/" in text and "/reset/***/" in text
+
+
+def test_the_image_starts_gunicorn_with_the_redacting_config():
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    assert '"-c", "config/gunicorn.conf.py"' in dockerfile
+    assert "--access-logfile" not in dockerfile
+
+
+@pytest.mark.parametrize("name", ["compose.yml", "compose.edge.yml"])
+def test_every_server_service_rotates_its_logs(name):
+    import re
+
+    text = (ROOT / "deploy" / name).read_text(encoding="utf-8")
+    anchor = text.split("x-logging: &rotated-logs", 1)[1].split("\n\n", 1)[0]
+    assert "driver: json-file" in anchor
+    assert 'max-size: "20m"' in anchor and 'max-file: "5"' in anchor
+    services = text.split("\nservices:\n", 1)[1].split("\n\n" + "networks:", 1)[0]
+    blocks = re.split(r"\n(?=  [a-z][\w-]*:)", "\n" + services)
+    blocks = [b for b in blocks if b.strip()]
+    assert blocks
+    for block in blocks:
+        assert "    logging: *rotated-logs" in block, block.strip().splitlines()[0]
+
+
+def test_sentry_masks_tokens_in_the_url_and_messages():
+    from config.settings.sentry import scrub_event
+
+    event = {
+        "request": {"url": "https://cyberfirstresponse.io/reset/sentryTok1/", "query_string": "x"},
+        "message": "failed at /guardian/sentryTok2/",
+    }
+    out = scrub_event(event, None)
+    assert "sentryTok1" not in out["request"]["url"] and "sentryTok2" not in out["message"]
