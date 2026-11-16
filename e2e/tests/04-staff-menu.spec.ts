@@ -91,15 +91,21 @@ for (const size of SIZES) {
       await page.context().close();
     });
 
-    test("scrolling the page closes it", async ({ browser }) => {
-      test.skip(size.mobile, "inside the open mobile menu it is an accordion and stays open while scrolling");
+    test(size.mobile ? "scrolling keeps it open inside the mobile menu" : "scrolling the page closes it", async ({ browser }) => {
       const page = await adminAt(browser, size.viewport);
       await page.goto("/");
       await page.evaluate(() => { document.body.style.minHeight = "3000px"; }); // make sure the page can scroll
       const { details, button } = await menu(page, size.mobile);
       await open(button, details);
-      await page.mouse.wheel(0, 400);
-      await expectClosed(button, details);
+      if (size.mobile) {
+        // The open drawer may lock the page, so fire the window scroll event the menu listens to.
+        await page.evaluate(() => window.dispatchEvent(new Event("scroll")));
+        await expect(details).toHaveJSProperty("open", true);
+        await expect(button).toHaveAttribute("aria-expanded", "true");
+      } else {
+        await page.mouse.wheel(0, 400);
+        await expectClosed(button, details);
+      }
       await page.context().close();
     });
   });
