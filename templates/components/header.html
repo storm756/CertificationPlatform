@@ -49,6 +49,7 @@
         <li><a href="{{ privacy_url }}"{% if request.path == privacy_url %} aria-current="page"{% endif %}>{% icon "shield" %}{% translate "Privacy" %}</a></li>
       </ul>
       <div class="nav-actions">
+        {% if SHOW_LANGUAGE_SWITCHER %}
         <form class="lang-form" method="post" action="{% url 'set_language' %}" data-lang-form>
           {% csrf_token %}
           <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -58,6 +59,7 @@
             </select>{% icon "chevron" "sm" %}</label>
           <noscript><button class="btn btn-outline btn-sm" type="submit">{% translate "Change" %}</button></noscript>
         </form>
+        {% endif %}
         {% if user.is_authenticated %}
           <a class="user-chip" href="{% if user.role == 'learner' %}{% url 'start' %}{% else %}{% url 'mentor_home' %}{% endif %}">
             <span class="avatar" aria-hidden="true">{% if user.profile %}{{ user.profile.certificate_name|initials }}{% else %}{{ user.email|initials }}{% endif %}</span>

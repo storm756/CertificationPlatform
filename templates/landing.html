@@ -202,6 +202,7 @@
       <div class="access-copy">
         <p class="eyebrow">{% translate "Made for your phone, in your language" %}</p>
         <h2 id="access-title">{% translate "Learn in the language you think in." %}</h2>
+        {% if SHOW_LANGUAGE_SWITCHER %}
         <p>{% translate "Study in English, Hindi, Marathi or Gujarati and switch any time, even during an assessment. Pages are light, large and easy to tap, so they work well on an everyday Android phone over 4G." %}</p>
         <form method="post" action="{% url 'set_language' %}">{% csrf_token %}
           <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -209,6 +210,9 @@
             {% for code, name in LANGUAGE_CHOICES %}<li><button class="lang-chip" type="submit" name="language" value="{{ code }}" lang="{{ code }}">{% if code == 'en' %}English{% else %}{{ name }}{% endif %}</button></li>{% endfor %}
           </ul>
         </form>
+        {% else %}
+        <p>{% translate "The course is in English for now; Hindi, Marathi and Gujarati follow once the translations are reviewed. Pages are light, large and easy to tap, so they work well on an everyday Android phone over 4G." %}</p>
+        {% endif %}
         <ul class="ticks">
           <li>{% icon "phone" %} {% translate "Mobile-first, with large tap targets" %}</li>
           <li>{% icon "wifi" %} {% translate "Answers save to your account as you go, so you can pick up on any device" %}</li>
