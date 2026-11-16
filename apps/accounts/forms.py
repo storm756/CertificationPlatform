@@ -68,7 +68,7 @@ class RegistrationForm(forms.Form):
         super().__init__(*args, **kwargs)
         now = now or timezone.now()
         self.fields["batch"].choices = [(b.pk, str(b)) for b in accepting_batches(now)]
-        # Only the enabled languages (LANGUAGES_ENABLED). With one, the field is hidden and sends it.
+        # Only the enabled languages (LANGUAGES_ENABLED); with just one the field is hidden.
         language = self.fields["preferred_language"]
         language.choices = [c for c in Language.choices if languages.is_enabled(c[0])]
         if len(language.choices) == 1:

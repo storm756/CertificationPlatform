@@ -47,7 +47,9 @@ def test_raw_percent_fallback_logs_a_warning(caplog):
 
 
 def test_raw_percent_with_items_logs_nothing(caplog):
-    attempt = SimpleNamespace(pk=1, total_points=Decimal(3), earned_points=Decimal(2), score=Decimal("66.7"))
+    attempt = SimpleNamespace(
+        pk=1, total_points=Decimal(3), earned_points=Decimal(2), score=Decimal("66.7")
+    )
     with caplog.at_level(logging.WARNING, logger="apps.results.policy"):
         value = policy._raw_percent(attempt)
     assert value == Decimal(200) / Decimal(3)
@@ -55,8 +57,6 @@ def test_raw_percent_with_items_logs_nothing(caplog):
 
 
 # --- English-only switch (LANGUAGES_ENABLED) ---------------------------------------------------------
-
-
 
 
 @pytest.fixture
@@ -96,20 +96,26 @@ def test_english_only_ignores_a_guest_cookie_and_the_browser_language(client, en
 
 
 @pytest.mark.django_db
-def test_english_only_serves_english_to_a_learner_who_saved_hindi(client, make_user, make_batch, english_only):
+def test_english_only_serves_english_to_a_learner_who_saved_hindi(
+    client, make_user, make_batch, english_only
+):
     learner = make_user(batch=make_batch())
     learner.profile.preferred_language = "hi"
     learner.profile.save()
     client.force_login(learner)
     response = client.get("/")
     assert '<html lang="en">' in response.content.decode()
-    assert django_settings.LANGUAGE_COOKIE_NAME not in response.cookies  # the cookie is not rewritten
+    assert (
+        django_settings.LANGUAGE_COOKIE_NAME not in response.cookies
+    )  # the cookie is not rewritten
     learner.profile.refresh_from_db()
     assert learner.profile.preferred_language == "hi"  # kept for when Hindi is switched on
 
 
 @pytest.mark.django_db
-def test_english_only_refuses_choosing_a_switched_off_language(client, make_user, make_batch, english_only):
+def test_english_only_refuses_choosing_a_switched_off_language(
+    client, make_user, make_batch, english_only
+):
     learner = make_user(batch=make_batch())
     client.force_login(learner)
     response = client.post(reverse("set_language"), {"language": "mr", "next": "/"})
@@ -211,7 +217,15 @@ def test_redact_leaves_ordinary_paths_alone(line):
 
 
 def test_the_filter_rewrites_a_record_and_never_drops_it():
-    record = logging.LogRecord("django.request", logging.WARNING, __file__, 1, "Not Found: %s", ("/reset/abcDEF123/",), None)
+    record = logging.LogRecord(
+        "django.request",
+        logging.WARNING,
+        __file__,
+        1,
+        "Not Found: %s",
+        ("/reset/abcDEF123/",),
+        None,
+    )
     assert RedactTokensFilter().filter(record) is True
     assert record.getMessage() == "Not Found: /reset/***/"
 
@@ -219,7 +233,9 @@ def test_the_filter_rewrites_a_record_and_never_drops_it():
 def test_django_logging_masks_tokens_on_the_console_handler(settings):
     console = settings.LOGGING["handlers"]["console"]
     assert "redact_tokens" in console["filters"]
-    assert settings.LOGGING["filters"]["redact_tokens"]["()"] == "apps.core.redact.RedactTokensFilter"
+    assert (
+        settings.LOGGING["filters"]["redact_tokens"]["()"] == "apps.core.redact.RedactTokensFilter"
+    )
     handler = next(h for h in logging.getLogger().handlers if isinstance(h, logging.StreamHandler))
     assert any(isinstance(f, RedactTokensFilter) for f in handler.filters)
 
@@ -236,7 +252,9 @@ def test_gunicorn_access_and_error_logs_mask_tokens(capsys):
     cfg.set("errorlog", "-")
     cfg.set("logger_class", conf["logger_class"])
     log = cfg.logger_class(cfg)
-    log.access_log.info('%(h)s "%(r)s" %(s)s', {"h": "1.2.3.4", "r": "GET /guardian/sEcReT42/ HTTP/1.1", "s": "200"})
+    log.access_log.info(
+        '%(h)s "%(r)s" %(s)s', {"h": "1.2.3.4", "r": "GET /guardian/sEcReT42/ HTTP/1.1", "s": "200"}
+    )
     log.error("Error handling request /reset/sEcReT43/")
     out = capsys.readouterr()
     text = out.out + out.err
@@ -304,40 +322,58 @@ def report_admin(client, make_user):
 
 
 def csv_rows(response):
-    text = b"".join(response.streaming_content).decode() if response.streaming else response.content.decode()
+    text = (
+        b"".join(response.streaming_content).decode()
+        if response.streaming
+        else response.content.decode()
+    )
     assert text.startswith("﻿")
     return list(_csv.reader(_io.StringIO(text.lstrip("﻿"))))
 
 
-def take_pretest_and_final(learner, exam):
+def take_pretest_and_final(learner, parts):
     pre, _ = programme.start_programme(learner, "pretest")
     for n, item in enumerate(pre.items.all()):
-        services.save_answer(pre.pk, learner, item.position, choice=right_token(item) if n < 1 else wrong_token(item))
+        services.save_answer(
+            pre.pk, learner, item.position, choice=right_token(item) if n < 1 else wrong_token(item)
+        )
     services.submit(pre.pk, learner.pk)  # 1 of 4 shared right = 25.0
-    answer_all_parts(learner, exam)
+    answer_all_parts(learner, parts)
     shared = set_ids("B", pretest=True)
     final, _ = programme.start_programme(learner, "final")
     for item in final.items.select_related("question_version"):
         right = item.question_version.question_id in shared
-        services.save_answer(final.pk, learner, item.position, choice=right_token(item) if right else wrong_token(item))
+        services.save_answer(
+            final.pk,
+            learner,
+            item.position,
+            choice=right_token(item) if right else wrong_token(item),
+        )
     services.submit(final.pk, learner.pk)  # shared all right, others wrong
 
 
 @pytest.mark.django_db
 def test_the_batch_csv_has_one_row_per_learner_with_gain_hours_and_certificate(
-    report_admin, learner, exam, monkeypatch
+    report_admin,
+    learner,
+    exam,  # noqa: F811 (the exam fixture, imported from test_results)
+    monkeypatch,
 ):
     take_pretest_and_final(learner, exam)
     Certificate.objects.create(
         user=learner, serial=998, certificate_no="CCFR-2026-T-000998", verify_code="PH12345678",
         snapshot={}, issued_at=timezone.now(),
     )  # fmt: skip
-    monkeypatch.setattr("apps.staff.export.hours_for", lambda user: {"kind": "engaged", "minutes": 95})
+    monkeypatch.setattr(
+        "apps.staff.export.hours_for", lambda user: {"kind": "engaged", "minutes": 95}
+    )
     batch = learner.enrolment.batch
     response = report_admin.post(reverse("staff_report_batch_csv", args=[batch.pk]))
     assert response.status_code == 200
     assert response["Content-Type"].startswith("text/csv")
-    assert "attachment" in response["Content-Disposition"] and response["Cache-Control"] == "no-store"
+    assert (
+        "attachment" in response["Content-Disposition"] and response["Cache-Control"] == "no-store"
+    )
     head, *rows = csv_rows(response)
     assert head == [
         "Batch", "Name", "Email", "Pre-test %", "First final %", "Best final %", "Gain (pts)",
@@ -353,7 +389,9 @@ def test_the_batch_csv_has_one_row_per_learner_with_gain_hours_and_certificate(
     assert row["Modules passed"].endswith("/2") or "/" in row["Modules passed"]
     assert row["Hours"] == "1.6" and row["Hours basis"] == "engaged"
     assert row["Certificate number"] == "CCFR-2026-T-000998"
-    assert AuditEvent.objects.filter(action="report.batch_exported", actor=report_admin.admin_user).exists()
+    assert AuditEvent.objects.filter(
+        action="report.batch_exported", actor_id=report_admin.admin_user.pk
+    ).exists()
 
 
 @pytest.mark.django_db
@@ -362,10 +400,14 @@ def test_the_batch_csv_leaves_blanks_before_any_exam_and_marks_under_18_hours(
 ):
     batch = make_batch()
     make_user(batch=batch)
-    monkeypatch.setattr("apps.staff.export.hours_for", lambda user: {"kind": "nominal", "minutes": 30})
+    monkeypatch.setattr(
+        "apps.staff.export.hours_for", lambda user: {"kind": "nominal", "minutes": 30}
+    )
     head, row = csv_rows(report_admin.post(reverse("staff_report_batch_csv", args=[batch.pk])))
     row = dict(zip(head, row, strict=True))
-    assert row["Pre-test %"] == row["First final %"] == row["Best final %"] == row["Gain (pts)"] == ""
+    assert (
+        row["Pre-test %"] == row["First final %"] == row["Best final %"] == row["Gain (pts)"] == ""
+    )
     assert row["Hours"] == "0.5" and row["Hours basis"] == "nominal (under 18)"
     assert row["Certificate number"] == ""
 
@@ -374,7 +416,7 @@ def test_the_batch_csv_leaves_blanks_before_any_exam_and_marks_under_18_hours(
 def test_the_batch_csv_cells_are_spreadsheet_safe(report_admin, make_user, make_batch):
     batch = make_batch()
     user = make_user(batch=batch)
-    user.profile.certificate_name = "=HYPERLINK(\"x\")"
+    user.profile.certificate_name = '=HYPERLINK("x")'
     user.profile.save()
     head, row = csv_rows(report_admin.post(reverse("staff_report_batch_csv", args=[batch.pk])))
     assert dict(zip(head, row, strict=True))["Name"].startswith("'=")

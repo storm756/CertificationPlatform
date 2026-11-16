@@ -533,7 +533,9 @@ def report_batch_csv(request, pk):
     batch = get_object_or_404(Batch, pk=pk)
     rows = export.batch_report_rows(batch)
     body = export.batch_report_csv(batch, rows)
-    audit("report.batch_exported", actor=request.user, target=batch, request=request, rows=len(rows))
+    audit(
+        "report.batch_exported", actor=request.user, target=batch, request=request, rows=len(rows)
+    )
     response = HttpResponse(body, content_type="text/csv; charset=utf-8")
     response["Content-Disposition"] = f'attachment; filename="{batch.code}-learner-report.csv"'
     response["Cache-Control"] = "no-store"
