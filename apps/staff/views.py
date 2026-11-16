@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Avg, Count
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
@@ -29,6 +30,7 @@ from apps.results import impact as impact_mod
 from apps.results import insights
 from apps.results.policy import compute_results
 
+from . import export
 from .forms import QuestionForm
 
 
@@ -522,3 +524,18 @@ def attempt_limits(request):
         r["value"] = "" if r["value"] is None else r["value"]
         r["error"] = errors.get(r["key"])
     return render(request, "staff/attempts.html", {"rows": rows, "errors": errors})
+
+
+@admin_required
+@require_POST
+def report_batch_csv(request, pk):
+    """One batch's learners for the HOD: pre-test, finals, gain, modules, hours, certificate. Audited."""
+    batch = get_object_or_404(Batch, pk=pk)
+    rows = export.batch_report_rows(batch)
+    body = export.batch_report_csv(batch, rows)
+    audit("report.batch_exported", actor=request.user, target=batch, request=request, rows=len(rows))
+    response = HttpResponse(body, content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = f'attachment; filename="{batch.code}-learner-report.csv"'
+    response["Cache-Control"] = "no-store"
+    response["X-Content-Type-Options"] = "nosniff"
+    return response

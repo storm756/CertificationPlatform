@@ -275,3 +275,127 @@ def test_sentry_masks_tokens_in_the_url_and_messages():
     }
     out = scrub_event(event, None)
     assert "sentryTok1" not in out["request"]["url"] and "sentryTok2" not in out["message"]
+
+
+# --- the admin's per-batch learner report (CSV) ------------------------------------------------------
+
+import csv as _csv  # noqa: E402
+import io as _io  # noqa: E402
+
+from allauth.mfa.models import Authenticator  # noqa: E402
+from django.utils import timezone  # noqa: E402
+
+from apps.accounts.models import Role  # noqa: E402
+from apps.assessments import programme, services  # noqa: E402
+from apps.audit.models import AuditEvent  # noqa: E402
+from apps.certificates.models import Certificate  # noqa: E402
+
+from .conftest import right_token, wrong_token  # noqa: E402
+from .test_results import admin_user, answer_all_parts, exam, set_ids  # noqa: E402,F401
+
+
+@pytest.fixture
+def report_admin(client, make_user):
+    admin = make_user(role=Role.ADMIN, is_staff=True, is_superuser=True)
+    Authenticator.objects.create(user=admin, type=Authenticator.Type.TOTP, data={"secret": "x"})
+    client.force_login(admin)
+    client.admin_user = admin
+    return client
+
+
+def csv_rows(response):
+    text = b"".join(response.streaming_content).decode() if response.streaming else response.content.decode()
+    assert text.startswith("﻿")
+    return list(_csv.reader(_io.StringIO(text.lstrip("﻿"))))
+
+
+def take_pretest_and_final(learner, exam):
+    pre, _ = programme.start_programme(learner, "pretest")
+    for n, item in enumerate(pre.items.all()):
+        services.save_answer(pre.pk, learner, item.position, choice=right_token(item) if n < 1 else wrong_token(item))
+    services.submit(pre.pk, learner.pk)  # 1 of 4 shared right = 25.0
+    answer_all_parts(learner, exam)
+    shared = set_ids("B", pretest=True)
+    final, _ = programme.start_programme(learner, "final")
+    for item in final.items.select_related("question_version"):
+        right = item.question_version.question_id in shared
+        services.save_answer(final.pk, learner, item.position, choice=right_token(item) if right else wrong_token(item))
+    services.submit(final.pk, learner.pk)  # shared all right, others wrong
+
+
+@pytest.mark.django_db
+def test_the_batch_csv_has_one_row_per_learner_with_gain_hours_and_certificate(
+    report_admin, learner, exam, monkeypatch
+):
+    take_pretest_and_final(learner, exam)
+    Certificate.objects.create(
+        user=learner, serial=998, certificate_no="CCFR-2026-T-000998", verify_code="PH12345678",
+        snapshot={}, issued_at=timezone.now(),
+    )  # fmt: skip
+    monkeypatch.setattr("apps.staff.export.hours_for", lambda user: {"kind": "engaged", "minutes": 95})
+    batch = learner.enrolment.batch
+    response = report_admin.post(reverse("staff_report_batch_csv", args=[batch.pk]))
+    assert response.status_code == 200
+    assert response["Content-Type"].startswith("text/csv")
+    assert "attachment" in response["Content-Disposition"] and response["Cache-Control"] == "no-store"
+    head, *rows = csv_rows(response)
+    assert head == [
+        "Batch", "Name", "Email", "Pre-test %", "First final %", "Best final %", "Gain (pts)",
+        "Modules passed", "Hours", "Hours basis", "Certificate number",
+    ]  # fmt: skip
+    assert len(rows) == 1
+    row = dict(zip(head, rows[0], strict=True))
+    assert row["Batch"] == batch.code and row["Email"] == learner.email
+    assert row["Name"] == learner.profile.certificate_name
+    assert row["Pre-test %"] == "25.0"
+    assert row["Gain (pts)"] == "75.0"  # the same figure the Report page averages
+    assert row["First final %"] != "" and row["Best final %"] != ""
+    assert row["Modules passed"].endswith("/2") or "/" in row["Modules passed"]
+    assert row["Hours"] == "1.6" and row["Hours basis"] == "engaged"
+    assert row["Certificate number"] == "CCFR-2026-T-000998"
+    assert AuditEvent.objects.filter(action="report.batch_exported", actor=report_admin.admin_user).exists()
+
+
+@pytest.mark.django_db
+def test_the_batch_csv_leaves_blanks_before_any_exam_and_marks_under_18_hours(
+    report_admin, make_user, make_batch, monkeypatch
+):
+    batch = make_batch()
+    make_user(batch=batch)
+    monkeypatch.setattr("apps.staff.export.hours_for", lambda user: {"kind": "nominal", "minutes": 30})
+    head, row = csv_rows(report_admin.post(reverse("staff_report_batch_csv", args=[batch.pk])))
+    row = dict(zip(head, row, strict=True))
+    assert row["Pre-test %"] == row["First final %"] == row["Best final %"] == row["Gain (pts)"] == ""
+    assert row["Hours"] == "0.5" and row["Hours basis"] == "nominal (under 18)"
+    assert row["Certificate number"] == ""
+
+
+@pytest.mark.django_db
+def test_the_batch_csv_cells_are_spreadsheet_safe(report_admin, make_user, make_batch):
+    batch = make_batch()
+    user = make_user(batch=batch)
+    user.profile.certificate_name = "=HYPERLINK(\"x\")"
+    user.profile.save()
+    head, row = csv_rows(report_admin.post(reverse("staff_report_batch_csv", args=[batch.pk])))
+    assert dict(zip(head, row, strict=True))["Name"].startswith("'=")
+
+
+@pytest.mark.django_db
+def test_the_batch_csv_is_forbidden_to_mentors(mentor_client, make_batch):
+    batch = make_batch()
+    assert mentor_client.post(reverse("staff_report_batch_csv", args=[batch.pk])).status_code == 403
+
+
+@pytest.mark.django_db
+def test_the_batch_csv_is_post_only(report_admin, make_batch):
+    batch = make_batch()
+    assert report_admin.get(reverse("staff_report_batch_csv", args=[batch.pk])).status_code == 405
+    assert report_admin.post(reverse("staff_report_batch_csv", args=[999999])).status_code == 404
+
+
+@pytest.mark.django_db
+def test_the_report_page_links_each_batch_csv(report_admin, make_batch):
+    batch = make_batch()
+    html = report_admin.get(reverse("staff_report")).content.decode()
+    assert reverse("staff_report_batch_csv", args=[batch.pk]) in html
+    assert "Learner report" in html

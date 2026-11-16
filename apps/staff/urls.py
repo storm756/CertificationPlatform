@@ -11,4 +11,5 @@ urlpatterns = [
     path("marks/<int:number>/", views.marks_edit, name="staff_marks_edit"),
     path("attempts/", views.attempt_limits, name="staff_attempts"),
     path("report/", views.report, name="staff_report"),
+    path("report/<int:pk>/csv/", views.report_batch_csv, name="staff_report_batch_csv"),
 ]
