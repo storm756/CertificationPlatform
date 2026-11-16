@@ -6,6 +6,14 @@
 # compose.edge.yml and reaches each web container over the external network "csfr-edge".
 name: csfr-${CSFR_ENV:?set by deploy.sh}
 
+# Docker log rotation for every service (security audit L2): at most 5 files of 20 MB each, so logs
+# can never fill the disk. Applies when a container is (re)created, e.g. by the next deploy.
+x-logging: &rotated-logs
+  driver: json-file
+  options:
+    max-size: "20m"
+    max-file: "5"
+
 services:
   web:
     build:
@@ -13,6 +21,7 @@ services:
     image: csfr-web:${CSFR_ENV}
     env_file: ${CSFR_ENV_FILE:?set by deploy.sh}
     restart: unless-stopped
+    logging: *rotated-logs
     read_only: true
     tmpfs: [/tmp]
     cap_drop: [ALL]
@@ -56,6 +65,7 @@ services:
     user: "10001:10001" # non-root: the image's `app` user
     env_file: ${CSFR_ENV_FILE:?set by deploy.sh}
     restart: unless-stopped
+    logging: *rotated-logs
     read_only: true
     tmpfs: [/tmp]
     cap_drop: [ALL]
@@ -67,6 +77,7 @@ services:
   db:
     image: postgres:17
     restart: unless-stopped
+    logging: *rotated-logs
     # Database secrets live in their own file so the web container never holds the owner password.
     env_file: ${CSFR_DB_ENV_FILE:?set by deploy.sh}
     environment:
@@ -87,6 +98,7 @@ services:
       context: backup
     image: csfr-backup:${CSFR_ENV}
     restart: unless-stopped
+    logging: *rotated-logs
     env_file: ${CSFR_ENV_FILE}
     read_only: true
     tmpfs: [/tmp]
@@ -103,6 +115,7 @@ services:
     profiles: [mailpit]
     image: axllent/mailpit:latest
     restart: unless-stopped
+    logging: *rotated-logs
     ports:
       - "127.0.0.1:${MAILPIT_PORT:-8025}:8025" # view through an SSH tunnel
 

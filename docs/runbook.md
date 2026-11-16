@@ -109,6 +109,13 @@ curl -s -o /dev/null -w '%{http_code}
 ' https://cyberfirstresponse.io/                 # 200 (prod is open)
 ```
 
+**Gotcha: the single quotes around the hash are required.** A bcrypt hash is full of `$` signs (`$2a$14$…`). `deploy/edge.sh`
+reads `/srv/csfr/edge/.env` with `set -u`, so without quotes the shell reads `$2a`, `$14` … as variables and the deploy stops with
+an "unbound variable" error (or, if it got past that, Caddy would get a mangled hash and every staging login would fail). Write the
+line exactly as `STAGING_AUTH_HASH='$2a$14$...'`: single quotes, not double, no spaces around `=`. Check it without printing the
+hash: `grep -cF "STAGING_AUTH_HASH='\$2a\$" /srv/csfr/edge/.env` must print `1` (`-F`: the `$` signs are plain text). If you change the password, run
+`deploy/deploy.sh edge` again so Caddy reads the new hash.
+
 The browser asks for the login once per session; links in staging emails work after it. The journeys and the load test pass
 it with `E2E_HTTP_USER` / `E2E_HTTP_PASSWORD` and `LT_HTTP_USER` / `LT_HTTP_PASSWORD` (§8).
 
@@ -178,6 +185,66 @@ Record the result in `docs/history/` (date, who, times, problems) and in STATUS.
 
 Same as 3.2 steps 4–6 on the existing server, after `docker compose -f compose.yml stop web tasks` and with
 `pg_restore … --clean --if-exists` instead of a fresh volume. Agree the data loss with the lead first.
+
+### 3.4 Restore drill on the server, into a throwaway database (about 20 minutes)
+
+A shorter check than 3.1: the newest prod dump is restored into a **temporary Postgres container on the VPS** that has no network
+and touches neither staging nor prod, its row counts are compared with live prod, and it is deleted. The **age private key and the
+B2 login stay on your PC**: the dump is decrypted on the PC and only the decrypted stream goes through `ssh` into the container, so
+nothing readable is written to the server's disk except inside that container, which is deleted at the end. Nothing here prints a
+secret. Write the start and end times down.
+
+**On the PC, use Git Bash** (PowerShell corrupts binary data in a pipe). You need: Docker Desktop running, this repo up to date,
+`ssh ccfr` working, the age identity file (from one of the two key holders), and the Backblaze login.
+
+1. **Download the newest dump.** Sign in at `backblaze.com` → **B2 Cloud Storage → Buckets** → the backup bucket → **Browse
+   Files** → `prod` → `db` → `hourly` → sort by date, click the newest `csfr-prod-<stamp>.dump.age` → **Download**. Note the
+   `<stamp>` (UTC). Safe to repeat.
+2. **Start the throwaway database on the server** (no network, no password, small limits so prod is not slowed):
+   ```bash
+   ssh ccfr 'df -h / | tail -1; docker run -d --name csfr-drill-db --network none --memory 1g --cpus 1 -e POSTGRES_HOST_AUTH_METHOD=trust -e POSTGRES_DB=csfr postgres:17 >/dev/null && for i in $(seq 1 60); do docker exec csfr-drill-db pg_isready -U postgres -d csfr >/dev/null 2>&1 && break; sleep 1; done; docker exec csfr-drill-db pg_isready -U postgres -d csfr'
+   ```
+   Success: the disk line shows well under 80% used, then `/var/run/postgresql:5432 - accepting connections`. If it says the name
+   `csfr-drill-db` is already in use, an earlier drill was not cleaned up: do step 5 first, then this step again.
+3. **Decrypt on the PC and restore into it** (replace the two paths; the key file is only mounted read-only into a local container):
+   ```bash
+   cd /d/CertificationPlatform && git pull
+   docker build -q -t csfr-backup:restore deploy/backup
+   export MSYS_NO_PATHCONV=1
+   KEYDIR="$(cd /c/path/to/key-folder && pwd -W)"          # the folder that holds age-identity.txt
+   DUMP=/c/Users/<you>/Downloads/csfr-prod-<stamp>.dump.age
+   time (docker run --rm -i --user root --entrypoint age -v "$KEYDIR:/k:ro" csfr-backup:restore -d -i /k/age-identity.txt < "$DUMP" \
+     | ssh ccfr 'docker exec -i csfr-drill-db pg_restore -U postgres -d csfr --no-owner --no-privileges --exit-on-error')
+   ```
+   Success: no output except the `time` lines. Any `pg_restore: error` means the drill **failed**: note the message, do step 5,
+   and tell the lead. To run it again, do step 5 and start over from step 2 (restoring twice into the same database fails).
+4. **Compare row counts** (read-only on prod):
+   ```bash
+   ssh ccfr bash -s <<'EOF'
+   Q="SELECT 'tables', count(*) FROM information_schema.tables WHERE table_schema='public'
+   UNION ALL SELECT 'migrations', count(*) FROM django_migrations
+   UNION ALL SELECT 'users', count(*) FROM accounts_user
+   UNION ALL SELECT 'enrolments', count(*) FROM batches_enrolment
+   UNION ALL SELECT 'questions', count(*) FROM questions_question
+   UNION ALL SELECT 'attempts', count(*) FROM assessments_attempt
+   UNION ALL SELECT 'attempt items', count(*) FROM assessments_attemptitem
+   UNION ALL SELECT 'certificates', count(*) FROM certificates_certificate"
+   echo "== restored copy";        docker exec csfr-drill-db psql -U postgres -d csfr -tA -F ' | ' -c "$Q"
+   echo "== live prod, read only"; docker exec csfr-prod-db-1 psql -U postgres -d csfr -tA -F ' | ' -c "$Q"
+   EOF
+   ```
+   **Pass:** `tables` and `migrations` are the same in both (unless a deployment ran since the dump), every count in the copy is
+   above 0 where prod's is, and none is higher than prod's. Prod may be a little higher: rows added since the dump's `<stamp>`.
+   **And** the dump `<stamp>` is at most one hour before the time you started step 3. An older newest dump means the hourly
+   backups have stopped: the drill fails, tell the lead. Safe to rerun.
+5. **Delete the throwaway database** (and its data volume), then check it is gone:
+   ```bash
+   ssh ccfr 'docker rm -f -v csfr-drill-db; docker ps -a --filter name=csfr-drill --format "{{.Names}}"'
+   ```
+   Success: `csfr-drill-db` once (from `rm`), then nothing. Safe to rerun ("No such container" is fine). On the PC, delete the
+   downloaded `.dump.age` file. Nothing decrypted was written to the PC's disk.
+6. Record the date, who, the dump `<stamp>`, the step 3 time and the counts (numbers only, no names) in `docs/history/` and tick it
+   in STATUS.md. The full drill with a server rebuild is still 3.1.
 
 ---
 
@@ -332,8 +399,11 @@ E2E_HTTP_USER=ccfr-team E2E_HTTP_PASSWORD='<staging login>' BASE_URL=https://sta
 "${MANAGE[@]}" e2e_clean; rm -f /tmp/e2e-manifest.json   # and delete e2e/manifest.json on your PC
 ```
 
-Journeys 2 and 3 read e-mails from Mailpit and are skipped on staging (real mail is sent): do those two by hand once (register, open
-the verification link, and for a 16 or 17-year-old the guardian link), or set `MAILPIT_URL`. A failed journey leaves a screenshot and a
+Journeys 2 and 3 read e-mails from Mailpit and are skipped unless `MAILPIT_URL` is set. **Staging sends no real mail:** every
+staging e-mail lands in the staging stack's Mailpit (`deploy.sh staging` turns it on; nothing goes to Brevo). To run the two
+journeys, open a tunnel in a second window, `ssh -N -L 8025:127.0.0.1:8025 ccfr`, and add `MAILPIT_URL=http://127.0.0.1:8025` to
+the command above; the same address in a browser shows the mails. Or do the two by hand once (register, open the verification link
+from Mailpit, and for a 16 or 17-year-old the guardian link). A failed journey leaves a screenshot and a
 trace in `e2e/test-results/`. Record the result in `docs/history/`. Details: `e2e/README.md`.
 
 ### 8.2 The 60-learner load test (`loadtest/`)
@@ -364,6 +434,83 @@ runs. If it fails, do not raise the line: send the numbers back for a fix PR. De
 
 A ping sends nothing but a GET to the secret URL; no personal data. A failed run pings `<url>/fail`, a dead service sends nothing,
 and the heartbeat service alerts in both cases.
+
+### 9.1 Setting it up, click by click (once; about 45 minutes)
+
+Three free accounts: **UptimeRobot** (is the site up), **Healthchecks.io** (did the jobs run) and **Sentry** (errors). Sign up
+with a team address that reaches more than one person (e.g. `support@cyberfirstresponse.io`, forwarded by ImprovMX), not a personal
+one, and keep the logins in the team's password manager. Every URL and key below is a secret: paste it only into the file named,
+never into chat, git or a ticket.
+
+**A. UptimeRobot: two monitors on `/healthz/`** (nothing goes on the server)
+
+1. Go to `uptimerobot.com` → **Register for FREE** → confirm the e-mail → sign in.
+2. **+ New monitor** → Monitor type **HTTP(s)** → Friendly name `CCFR prod` → URL `https://cyberfirstresponse.io/healthz/` →
+   Monitoring interval **5 minutes** → under "How will we notify you?" tick the team e-mail → **Create monitor**.
+3. Again: **+ New monitor** → HTTP(s) → `CCFR staging` → `https://staging.cyberfirstresponse.io/healthz/` → 5 minutes → the same
+   e-mail → **Create monitor**. (`/healthz/` is the one staging path without the login, so no password is needed.)
+4. Success: both monitors turn green ("Up") within 5 minutes.
+
+**B. Healthchecks.io: seven heartbeat checks**
+
+1. Go to `healthchecks.io` → **Sign Up** → confirm the e-mail → it creates a project; rename it `CCFR` (**Settings** → Project name).
+2. **Integrations** → the e-mail integration is already there for your address; add the second team member's address with
+   **Add Integration → Email** if you want two people alerted.
+3. Make each check with **+ Add Check** → set **Name**, then **Change Schedule…** → **Simple** → **Period** and **Grace Time** as
+   in the table → **Save**. Copy its **ping URL** (`https://hc-ping.com/<uuid>`) from the check's page.
+
+   | Name | Period | Grace | Goes into |
+   | --- | --- | --- | --- |
+   | `prod tasks` | 10 minutes | 20 minutes | `TASKS_PING_URL=` in `/srv/csfr/prod/app.env` |
+   | `prod db backup` | 1 hour | 30 minutes | `BACKUP_DB_PING_URL=` in `/srv/csfr/prod/app.env` |
+   | `prod media backup` | 1 day | 2 hours | `BACKUP_MEDIA_PING_URL=` in `/srv/csfr/prod/app.env` |
+   | `staging tasks` | 10 minutes | 20 minutes | `TASKS_PING_URL=` in `/srv/csfr/staging/app.env` |
+   | `staging db backup` | 1 hour | 30 minutes | `BACKUP_DB_PING_URL=` in `/srv/csfr/staging/app.env` |
+   | `staging media backup` | 1 day | 2 hours | `BACKUP_MEDIA_PING_URL=` in `/srv/csfr/staging/app.env` |
+   | `server disk` | 15 minutes | 30 minutes | `DISK_PING_URL=` in `/srv/csfr/monitoring.env` |
+
+4. Put the six app URLs on the server. For each environment: `ssh ccfr`, then `nano /srv/csfr/prod/app.env` (then the same for
+   staging). Each of the three names already has an empty line (`TASKS_PING_URL=` …): paste the URL after the `=` on that line,
+   don't add a second line. Save (Ctrl+O, Enter, Ctrl+X). Check without printing the URLs:
+   `grep -c '^TASKS_PING_URL=https' /srv/csfr/prod/app.env` prints `1`; the same for `BACKUP_DB_PING_URL` and
+   `BACKUP_MEDIA_PING_URL`. If a name prints `0` and the line is missing, add it.
+5. Restart so the containers read the file (per environment; safe to rerun):
+   ```bash
+   cd /srv/csfr/prod/src/deploy
+   export CSFR_ENV=prod CSFR_ENV_FILE=/srv/csfr/prod/app.env CSFR_DB_ENV_FILE=/srv/csfr/prod/db.env
+   docker compose -f compose.yml up -d web tasks cron
+   ```
+   (For staging: `staging` in all four places.) Success: `docker compose -f compose.yml ps` shows web, tasks and cron "Up".
+6. The disk check:
+   ```bash
+   nano /srv/csfr/monitoring.env          # one line: DISK_PING_URL=https://hc-ping.com/<uuid>
+   chmod 600 /srv/csfr/monitoring.env
+   bash /srv/csfr/edge/src/deploy/server/disk-check.sh; echo "exit $?"   # exit 0 = under 80%, and it pinged
+   crontab -e                             # add the line below, save
+   #   */15 * * * * bash /srv/csfr/edge/src/deploy/server/disk-check.sh >/dev/null 2>&1
+   crontab -l | grep -c disk-check        # 1
+   ```
+7. Success: within the period each check turns green ("up") in Healthchecks.io. Tasks: within 10 minutes. DB backups: after the
+   next `:07`. Media backups: after the next 02:30 UTC (08:00 IST). Disk: within 15 minutes. A check that stays grey ("new") never
+   got a ping: recheck that environment's line in step 4 and restart (step 5).
+
+**C. Sentry: one project per environment**
+
+1. Go to `sentry.io` → **Sign up** (free "Developer" plan) → organisation name `ccfr`; choose the **EU** data region if offered.
+2. **Projects → Create Project** → platform **Django** → alert frequency "Alert me on every new issue" → project name `ccfr-prod` →
+   **Create Project**. Skip the install instructions (the code already has them); copy the **DSN** (`https://…@….ingest.sentry.io/…`,
+   also under **Settings → Projects → ccfr-prod → Client Keys (DSN)**).
+3. Repeat for `ccfr-staging`.
+4. On the server, `nano /srv/csfr/prod/app.env`: paste the prod DSN after `SENTRY_DSN=` on its line (add the line if the file has
+   none; never two) (staging: the staging DSN in the staging file). Check: `grep -c '^SENTRY_DSN=https' /srv/csfr/prod/app.env` prints `1`.
+5. Restart web and tasks as in B5 (the same command is fine). Success: no error in `docker compose -f compose.yml logs --since 5m web`;
+   the first real error will appear in Sentry under that project. Sentry receives no request bodies, cookies, user, e-mail addresses
+   or one-time links (scrubbed, architecture §16).
+
+**D. Afterwards**
+
+* Tick launch-checklist item 6 in `docs/STATUS.md` (in a PR) and note the date.
+* Keep an offline copy of each `app.env` / `db.env` and `monitoring.env` (section 4): the ping URLs and DSNs are now in them.
 
 ---
 

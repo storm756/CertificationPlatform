@@ -25,8 +25,9 @@
           {% url 'mentor_home' as mentor_url %}
           <li><a href="{{ mentor_url }}"{% if mentor_url in request.path %} aria-current="page"{% endif %}>{% icon "users" %}{% translate "My batches" %}</a></li>
           <li class="nav-staff">
-            <details data-staff-menu{% if '/staff/' in request.path %} open{% endif %}>
-              <summary>{% icon "list" %}{% translate "Staff tools" %}</summary>
+            {# Starts closed on every page (it used to open itself on /staff/ pages and cover the content). #}
+            <details data-staff-menu>
+              <summary aria-expanded="false">{% icon "list" %}{% translate "Staff tools" %}</summary>
               <ul>
                 <li><a href="{% url 'staff_questions' %}"{% if '/staff/questions' in request.path %} aria-current="page"{% endif %}>{% translate "Questions" %}</a></li>
                 {% if user.role == 'admin' %}
@@ -49,6 +50,7 @@
         <li><a href="{{ privacy_url }}"{% if request.path == privacy_url %} aria-current="page"{% endif %}>{% icon "shield" %}{% translate "Privacy" %}</a></li>
       </ul>
       <div class="nav-actions">
+        {% if SHOW_LANGUAGE_SWITCHER %}
         <form class="lang-form" method="post" action="{% url 'set_language' %}" data-lang-form>
           {% csrf_token %}
           <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -58,6 +60,7 @@
             </select>{% icon "chevron" "sm" %}</label>
           <noscript><button class="btn btn-outline btn-sm" type="submit">{% translate "Change" %}</button></noscript>
         </form>
+        {% endif %}
         {% if user.is_authenticated %}
           <a class="user-chip" href="{% if user.role == 'learner' %}{% url 'start' %}{% else %}{% url 'mentor_home' %}{% endif %}">
             <span class="avatar" aria-hidden="true">{% if user.profile %}{{ user.profile.certificate_name|initials }}{% else %}{{ user.email|initials }}{% endif %}</span>

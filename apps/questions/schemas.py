@@ -87,6 +87,8 @@ def publish_errors(fmt: str, data: dict) -> list[str]:
     if not body.hint.strip():
         errors.append("hint: a hint is required before a question can go live")
     errors += _gate_errors(fmt, body)
+    if fmt == "build":
+        errors += _build_gate_errors(body)
     if fmt == "hotspot" and body.image_id is None:
         errors.append("image_id: upload the picture for this hotspot before it can go live")
     return errors
@@ -100,6 +102,19 @@ def _has_gate(node) -> bool:
     if isinstance(node, list):
         return any(_has_gate(x) for x in node)
     return False
+
+
+def _build_gate_errors(body) -> list[str]:
+    """A Build chip marked as a safety gate (D25) can never be a slot's right answer: placing it
+    would both score and void the attempt. Checked at publish time only, so older drafts still
+    load."""
+    gated = {i for i, chip in enumerate(body.chips) if chip.gate}
+    return [
+        f"slots.{n}.answer: chip {i} is a safety-gate chip and cannot be a right answer"
+        for n, slot in enumerate(body.slots)
+        for i in slot.answer
+        if i in gated
+    ]
 
 
 def _gate_errors(fmt: str, body) -> list[str]:

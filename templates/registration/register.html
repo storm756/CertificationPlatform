@@ -41,10 +41,14 @@
             <div class="pw-meter" data-pw-meter data-score="0" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
             <p class="hint" aria-live="polite" data-pw-text data-short="{% translate 'Too short' %}" data-levels="{% translate 'Too simple' %}|{% translate 'Getting there' %}|{% translate 'Good' %}|{% translate 'Strong' %}">{% translate "At least 10 characters. A short sentence works well." %}</p>
           </div>
+          {% if form.preferred_language.is_hidden %}
+            {% include "components/field.html" with field=form.date_of_birth %}{{ form.preferred_language }}
+          {% else %}
           <div class="grid-2">
             {% include "components/field.html" with field=form.date_of_birth %}
             {% include "components/field.html" with field=form.preferred_language label_text=_("Preferred language") %}
           </div>
+          {% endif %}
           <p class="hint">{% translate "You must be 16 or older. If you are 16 or 17, your guardian must agree." %}</p>
         </fieldset>
 

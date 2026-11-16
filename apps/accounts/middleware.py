@@ -16,6 +16,8 @@ from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.translation import gettext as _
 
+from apps.core import languages
+
 from .models import UserStatus
 from .rules import requires_mfa
 
@@ -100,13 +102,21 @@ class ProfileLanguageMiddleware:
 
     def __call__(self, request):
         chosen = None
+        saved_switched_off = False
         user = request.user
         if user.is_authenticated and request.path != reverse("set_language"):
             profile = getattr(user, "profile", None)
-            if profile and profile.preferred_language in dict(settings.LANGUAGES):
+            if profile and languages.is_enabled(profile.preferred_language):
                 chosen = profile.preferred_language
                 translation.activate(chosen)
                 request.LANGUAGE_CODE = chosen
+            elif profile and profile.preferred_language:
+                saved_switched_off = True  # English, not whatever an old cookie says
+        if saved_switched_off or not languages.is_enabled(translation.get_language()):
+            # A cookie, a saved profile or the browser asked for a language that is switched off
+            # (LANGUAGES_ENABLED): serve English. Their choice is kept for when it is switched on.
+            translation.activate(settings.LANGUAGE_CODE)
+            request.LANGUAGE_CODE = settings.LANGUAGE_CODE
         response = self.get_response(request)
         if chosen and request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME) != chosen:
             response.set_cookie(

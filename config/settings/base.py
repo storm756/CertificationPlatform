@@ -197,6 +197,15 @@ SERVER_EMAIL = DEFAULT_FROM_EMAIL
 # --- i18n ---
 LANGUAGE_CODE = "en"
 LANGUAGES = [("en", "English"), ("hi", "हिन्दी"), ("mr", "मराठी"), ("gu", "ગુજરાતી")]
+# Which of LANGUAGES visitors may use (pilot hardening). LANGUAGES stays complete so Rosetta and the
+# translation review keep every language; only the site itself is limited. "en" alone hides the
+# switcher and serves English only (prod for Batch 1, while hi/mr/gu are unreviewed drafts).
+# Unknown codes are ignored and English is always kept, so a typo can't take the site offline.
+LANGUAGES_ENABLED = [LANGUAGE_CODE] + [
+    code
+    for code in env_list("LANGUAGES_ENABLED", "en,hi,mr,gu")
+    if code in dict(LANGUAGES) and code != LANGUAGE_CODE
+]
 # Our own catalogues. Django ships none for Gujarati, and without one it ignores "gu" entirely.
 LOCALE_PATHS = [BASE_DIR / "locale"]
 
@@ -239,7 +248,11 @@ UNFOLD = {
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    # One-time links (/reset/<token>/ and the like) are masked in every line (security audit L2).
+    "filters": {"redact_tokens": {"()": "apps.core.redact.RedactTokensFilter"}},
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "filters": ["redact_tokens"]},
+    },
     "root": {"handlers": ["console"], "level": env("LOG_LEVEL", "INFO")},
     # WeasyPrint and fontTools log every rendering step at INFO; keep only their warnings.
     "loggers": {

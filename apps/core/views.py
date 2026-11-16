@@ -8,7 +8,7 @@ from django.shortcuts import render
 from django.views.decorators.http import require_POST
 from django.views.i18n import set_language as django_set_language
 
-from . import people
+from . import languages, people
 from .faq import FAQ
 
 PUBLIC_CACHE = "public, max-age=300"
@@ -82,11 +82,17 @@ def healthz(request):
 
 @require_POST
 def set_language(request):
-    """Django's set_language (cookie for guests) plus Profile.preferred_language when signed in."""
-    response = django_set_language(request)
+    """Django's set_language (cookie for guests) plus Profile.preferred_language when signed in.
+
+    A language that is switched off (LANGUAGES_ENABLED) is refused: the cookie gets English and
+    the profile keeps its saved choice, so it comes back when the language is switched on again."""
     code = request.POST.get("language", "")
+    if not languages.is_enabled(code):
+        request.POST = request.POST.copy()
+        request.POST["language"] = settings.LANGUAGE_CODE
+    response = django_set_language(request)
     profile = getattr(request.user, "profile", None) if request.user.is_authenticated else None
-    if profile and code in dict(settings.LANGUAGES) and profile.preferred_language != code:
+    if profile and languages.is_enabled(code) and profile.preferred_language != code:
         profile.preferred_language = code
         profile.save(update_fields=["preferred_language"])
     return response

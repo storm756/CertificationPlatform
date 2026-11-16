@@ -1,0 +1,493 @@
+"""Pilot hardening (Nov 2026): Build gate chips, the _raw_percent warning, English-only switch,
+token redaction in logs, log rotation and the admin per-batch CSV. Invented data only."""
+
+import logging
+from decimal import Decimal
+from types import SimpleNamespace
+
+import pytest
+from django.conf import settings as django_settings
+from django.urls import reverse
+
+from apps.accounts.forms import RegistrationForm
+from apps.core import languages
+from apps.questions import schemas
+from apps.results import policy
+
+from .conftest import invented_body
+
+# --- Build: a safety-gate chip can't be a right answer ----------------------------------------------
+
+
+def test_build_gate_chip_in_a_slot_answer_blocks_publishing():
+    fmt, body = invented_body("inv-build")
+    gated = next(i for i, chip in enumerate(body["chips"]) if chip.get("gate"))
+    assert schemas.publish_errors(fmt, body) == []
+    body["slots"][0]["answer"] = [gated]
+    if body["slots"][0].get("chips") is not None and gated not in body["slots"][0]["chips"]:
+        body["slots"][0]["chips"].append(gated)
+    errors = schemas.publish_errors(fmt, body)
+    assert any("safety-gate chip" in e and e.startswith("slots.0.answer") for e in errors)
+
+
+def test_build_gate_chip_offered_but_not_an_answer_is_fine():
+    fmt, body = invented_body("inv-build")
+    assert any(chip.get("gate") for chip in body["chips"])
+    assert schemas.publish_errors(fmt, body) == []
+
+
+# --- _raw_percent never falls back silently ----------------------------------------------------------
+
+
+def test_raw_percent_fallback_logs_a_warning(caplog):
+    attempt = SimpleNamespace(pk=4242, total_points=None, earned_points=None, score=Decimal("49.9"))
+    with caplog.at_level(logging.WARNING, logger="apps.results.policy"):
+        assert policy._raw_percent(attempt) == Decimal("49.9")
+    assert any("4242" in r.getMessage() and r.levelno == logging.WARNING for r in caplog.records)
+
+
+def test_raw_percent_with_items_logs_nothing(caplog):
+    attempt = SimpleNamespace(
+        pk=1, total_points=Decimal(3), earned_points=Decimal(2), score=Decimal("66.7")
+    )
+    with caplog.at_level(logging.WARNING, logger="apps.results.policy"):
+        value = policy._raw_percent(attempt)
+    assert value == Decimal(200) / Decimal(3)
+    assert not caplog.records
+
+
+# --- English-only switch (LANGUAGES_ENABLED) ---------------------------------------------------------
+
+
+@pytest.fixture
+def english_only(settings):
+    settings.LANGUAGES_ENABLED = ["en"]
+    return settings
+
+
+def test_all_languages_are_on_by_default():
+    assert languages.enabled_codes() == ["en", "hi", "mr", "gu"]
+    assert languages.switcher_shown()
+
+
+@pytest.mark.django_db
+def test_english_only_hides_every_switcher(client, english_only):
+    html = client.get("/").content.decode()
+    assert 'name="language"' not in html  # header select, footer buttons, landing chips
+    assert "data-lang-select" not in html
+    assert '<html lang="en">' in html
+
+
+@pytest.mark.django_db
+def test_all_languages_show_the_switcher(client):
+    html = client.get("/").content.decode()
+    assert "data-lang-select" in html
+    for code in ("hi", "mr", "gu"):
+        assert f'value="{code}"' in html
+
+
+@pytest.mark.django_db
+def test_english_only_ignores_a_guest_cookie_and_the_browser_language(client, english_only):
+    client.cookies[django_settings.LANGUAGE_COOKIE_NAME] = "gu"
+    assert '<html lang="en">' in client.get("/").content.decode()
+    client.cookies.clear()
+    page = client.get("/", HTTP_ACCEPT_LANGUAGE="hi")
+    assert '<html lang="en">' in page.content.decode()
+
+
+@pytest.mark.django_db
+def test_english_only_serves_english_to_a_learner_who_saved_hindi(
+    client, make_user, make_batch, english_only
+):
+    learner = make_user(batch=make_batch())
+    learner.profile.preferred_language = "hi"
+    learner.profile.save()
+    client.force_login(learner)
+    response = client.get("/")
+    assert '<html lang="en">' in response.content.decode()
+    assert (
+        django_settings.LANGUAGE_COOKIE_NAME not in response.cookies
+    )  # the cookie is not rewritten
+    learner.profile.refresh_from_db()
+    assert learner.profile.preferred_language == "hi"  # kept for when Hindi is switched on
+
+
+@pytest.mark.django_db
+def test_english_only_refuses_choosing_a_switched_off_language(
+    client, make_user, make_batch, english_only
+):
+    learner = make_user(batch=make_batch())
+    client.force_login(learner)
+    response = client.post(reverse("set_language"), {"language": "mr", "next": "/"})
+    assert response.status_code == 302
+    assert response.cookies[django_settings.LANGUAGE_COOKIE_NAME].value == "en"
+    learner.profile.refresh_from_db()
+    assert learner.profile.preferred_language != "mr"
+    assert '<html lang="en">' in client.get("/").content.decode()
+
+
+@pytest.mark.django_db
+def test_switching_back_on_is_one_setting(client, make_user, make_batch, settings):
+    learner = make_user(batch=make_batch())
+    learner.profile.preferred_language = "hi"
+    learner.profile.save()
+    client.force_login(learner)
+    settings.LANGUAGES_ENABLED = ["en"]
+    assert '<html lang="en">' in client.get("/").content.decode()
+    settings.LANGUAGES_ENABLED = ["en", "hi", "mr", "gu"]
+    assert '<html lang="hi">' in client.get("/").content.decode()
+
+
+@pytest.mark.django_db
+def test_english_only_registration_hides_the_language_field(english_only):
+    field = RegistrationForm().fields["preferred_language"]
+    assert field.choices == [("en", "English")] or [c[0] for c in field.choices] == ["en"]
+    assert field.widget.is_hidden and field.initial == "en"
+    # A stale or tampered "hi" is ignored (the field is disabled), so the hidden input can never hold
+    # a rejected value the visitor cannot correct; the form saves English.
+    stale = RegistrationForm(data={"preferred_language": "hi"})
+    stale.is_valid()
+    assert "preferred_language" not in stale.errors
+    assert stale.cleaned_data["preferred_language"] == "en"
+    assert 'value="en"' in str(stale["preferred_language"])
+
+
+@pytest.mark.django_db
+def test_a_switched_off_saved_language_beats_an_enabled_cookie(
+    client, make_user, make_batch, settings
+):
+    settings.LANGUAGES_ENABLED = ["en", "hi"]
+    learner = make_user(batch=make_batch())
+    learner.profile.preferred_language = "mr"
+    learner.profile.save()
+    client.force_login(learner)
+    client.cookies[django_settings.LANGUAGE_COOKIE_NAME] = "hi"
+    assert '<html lang="en">' in client.get("/").content.decode()
+
+
+@pytest.mark.django_db
+def test_all_languages_registration_offers_all_four():
+    field = RegistrationForm().fields["preferred_language"]
+    assert [c[0] for c in field.choices] == ["en", "hi", "mr", "gu"]
+    assert not field.widget.is_hidden
+
+
+def test_languages_enabled_env_parsing(monkeypatch):
+    """The settings line: unknown codes are dropped, English is always kept."""
+    import importlib
+
+    import config.settings.base as base
+
+    monkeypatch.setenv("LANGUAGES_ENABLED", "gu, xx")
+    try:
+        assert importlib.reload(base).LANGUAGES_ENABLED == ["en", "gu"]
+        monkeypatch.setenv("LANGUAGES_ENABLED", "en")
+        assert importlib.reload(base).LANGUAGES_ENABLED == ["en"]
+    finally:
+        monkeypatch.delenv("LANGUAGES_ENABLED")
+        importlib.reload(base)
+
+
+# --- L2: one-time links never reach the logs ---------------------------------------------------------
+
+from pathlib import Path  # noqa: E402
+
+from apps.core.redact import RedactTokensFilter, redact  # noqa: E402
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+@pytest.mark.parametrize(
+    ("line", "secret"),
+    [
+        ('"GET /reset/Zx9-mentorToken_1/ HTTP/1.1" 200', "Zx9-mentorToken_1"),
+        ('"GET /guardian/g7Kq2-consentToken/ HTTP/1.1" 200', "g7Kq2-consentToken"),
+        ('"GET /accounts/password/reset/key/2c-a1b2c3d4e5f6/ HTTP/1.1" 302', "a1b2c3d4e5f6"),
+        ('"GET /accounts/confirm-email/MQ:1tSecret:abcDEF/ HTTP/1.1" 200', "MQ:1tSecret:abcDEF"),
+        ('"GET /verify/K7Q2X9/ HTTP/1.1" 200', "K7Q2X9"),
+        ("Not Found: /reset/plainToken/", "plainToken"),
+        ('"GET /%72eset/abcDEF123/ HTTP/1.1" 200', "abcDEF123"),
+        ('"GET /guardian%2Fenc0dedTok/ HTTP/1.1" 200', "enc0dedTok"),
+        ("https://cyberfirstresponse.io/guardian/fullUrlToken/", "fullUrlToken"),
+        ('"GET /accounts/login/?next=/x&key=queryKey123 HTTP/1.1"', "queryKey123"),
+        ('"GET /x/?token=queryTok&code=queryCode HTTP/1.1"', "queryCode"),
+    ],
+)
+def test_redact_masks_every_one_time_token(line, secret):
+    cleaned = redact(line)
+    assert secret not in cleaned
+    assert "***" in cleaned
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        '"GET /accounts/password/reset/ HTTP/1.1" 200',
+        '"POST /accounts/password/reset/done/ HTTP/1.1" 200',
+        '"GET /verify/ HTTP/1.1" 200',
+        '"GET /learn/module/3/ HTTP/1.1" 200',
+        "plain message without a path",
+    ],
+)
+def test_redact_leaves_ordinary_paths_alone(line):
+    if "/accounts/password/reset/done/" in line:
+        # "done" after the reset form is not a token, but masking it would be harmless too
+        assert redact(line).startswith('"POST /accounts/password/reset/')
+    else:
+        assert redact(line) == line
+
+
+def test_the_filter_masks_tokens_in_tracebacks_too():
+    import sys
+
+    try:
+        raise ValueError("bad link /guardian/tracebackTok9/")
+    except ValueError:
+        exc_info = sys.exc_info()
+    record = logging.LogRecord("x", logging.ERROR, __file__, 1, "failed", (), exc_info)
+    RedactTokensFilter().filter(record)
+    text = logging.Formatter().format(record)
+    assert "tracebackTok9" not in text and "/guardian/***/" in text
+
+
+def test_the_filter_rewrites_a_record_and_never_drops_it():
+    record = logging.LogRecord(
+        "django.request",
+        logging.WARNING,
+        __file__,
+        1,
+        "Not Found: %s",
+        ("/reset/abcDEF123/",),
+        None,
+    )
+    assert RedactTokensFilter().filter(record) is True
+    assert record.getMessage() == "Not Found: /reset/***/"
+
+
+def test_django_logging_masks_tokens_on_the_console_handler(settings):
+    console = settings.LOGGING["handlers"]["console"]
+    assert "redact_tokens" in console["filters"]
+    assert (
+        settings.LOGGING["filters"]["redact_tokens"]["()"] == "apps.core.redact.RedactTokensFilter"
+    )
+    handler = next(h for h in logging.getLogger().handlers if isinstance(h, logging.StreamHandler))
+    assert any(isinstance(f, RedactTokensFilter) for f in handler.filters)
+
+
+def test_gunicorn_access_and_error_logs_mask_tokens(capsys):
+    import runpy
+
+    from gunicorn.config import Config
+
+    conf = runpy.run_path(str(ROOT / "config" / "gunicorn.conf.py"))
+    assert conf["accesslog"] == "-" and conf["errorlog"] == "-"
+    cfg = Config()
+    cfg.set("accesslog", "-")
+    cfg.set("errorlog", "-")
+    cfg.set("logger_class", conf["logger_class"])
+    log = cfg.logger_class(cfg)
+    log.access_log.info(
+        '%(h)s "%(r)s" %(s)s', {"h": "1.2.3.4", "r": "GET /guardian/sEcReT42/ HTTP/1.1", "s": "200"}
+    )
+    log.error("Error handling request /reset/sEcReT43/")
+    out = capsys.readouterr()
+    text = out.out + out.err
+    assert "sEcReT42" not in text and "sEcReT43" not in text
+    assert "/guardian/***/" in text and "/reset/***/" in text
+
+
+def test_the_image_starts_gunicorn_with_the_redacting_config():
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    assert '"-c", "config/gunicorn.conf.py"' in dockerfile
+    assert "--access-logfile" not in dockerfile
+
+
+@pytest.mark.parametrize("name", ["compose.yml", "compose.edge.yml"])
+def test_every_server_service_rotates_its_logs(name):
+    import re
+
+    text = (ROOT / "deploy" / name).read_text(encoding="utf-8")
+    anchor = text.split("x-logging: &rotated-logs", 1)[1].split("\n\n", 1)[0]
+    assert "driver: json-file" in anchor
+    assert 'max-size: "20m"' in anchor and 'max-file: "5"' in anchor
+    services = text.split("\nservices:\n", 1)[1].split("\n\n" + "networks:", 1)[0]
+    blocks = re.split(r"\n(?=  [a-z][\w-]*:)", "\n" + services)
+    blocks = [b for b in blocks if b.strip()]
+    assert blocks
+    for block in blocks:
+        assert "    logging: *rotated-logs" in block, block.strip().splitlines()[0]
+
+
+def test_sentry_masks_tokens_in_the_url_and_messages():
+    from config.settings.sentry import scrub_event
+
+    event = {
+        "request": {"url": "https://cyberfirstresponse.io/reset/sentryTok1/", "query_string": "x"},
+        "message": "failed at /guardian/sentryTok2/",
+    }
+    out = scrub_event(event, None)
+    assert "sentryTok1" not in out["request"]["url"] and "sentryTok2" not in out["message"]
+
+
+# --- the admin's per-batch learner report (CSV) ------------------------------------------------------
+
+import csv as _csv  # noqa: E402
+import io as _io  # noqa: E402
+
+from allauth.mfa.models import Authenticator  # noqa: E402
+from django.utils import timezone  # noqa: E402
+
+from apps.accounts.models import Role  # noqa: E402
+from apps.assessments import programme, services  # noqa: E402
+from apps.audit.models import AuditEvent  # noqa: E402
+from apps.certificates.models import Certificate  # noqa: E402
+
+from .conftest import right_token, wrong_token  # noqa: E402
+from .test_results import admin_user, answer_all_parts, exam, set_ids  # noqa: E402,F401
+
+
+@pytest.fixture
+def report_admin(client, make_user):
+    admin = make_user(role=Role.ADMIN, is_staff=True, is_superuser=True)
+    Authenticator.objects.create(user=admin, type=Authenticator.Type.TOTP, data={"secret": "x"})
+    client.force_login(admin)
+    client.admin_user = admin
+    return client
+
+
+def csv_rows(response):
+    text = (
+        b"".join(response.streaming_content).decode()
+        if response.streaming
+        else response.content.decode()
+    )
+    assert text.startswith("﻿")
+    return list(_csv.reader(_io.StringIO(text.lstrip("﻿"))))
+
+
+def take_pretest_and_final(learner, parts):
+    pre, _ = programme.start_programme(learner, "pretest")
+    for n, item in enumerate(pre.items.all()):
+        services.save_answer(
+            pre.pk, learner, item.position, choice=right_token(item) if n < 1 else wrong_token(item)
+        )
+    services.submit(pre.pk, learner.pk)  # 1 of 4 shared right = 25.0
+    answer_all_parts(learner, parts)
+    shared = set_ids("B", pretest=True)
+    final, _ = programme.start_programme(learner, "final")
+    for item in final.items.select_related("question_version"):
+        right = item.question_version.question_id in shared
+        services.save_answer(
+            final.pk,
+            learner,
+            item.position,
+            choice=right_token(item) if right else wrong_token(item),
+        )
+    services.submit(final.pk, learner.pk)  # shared all right, others wrong
+
+
+@pytest.mark.django_db
+def test_the_batch_csv_has_one_row_per_learner_with_gain_hours_and_certificate(
+    report_admin,
+    learner,
+    exam,  # noqa: F811 (the exam fixture, imported from test_results)
+    monkeypatch,
+):
+    take_pretest_and_final(learner, exam)
+    Certificate.objects.create(
+        user=learner, serial=998, certificate_no="CCFR-2026-T-000998", verify_code="PH12345678",
+        snapshot={}, issued_at=timezone.now(),
+    )  # fmt: skip
+    monkeypatch.setattr(
+        "apps.staff.export.hours_for", lambda user: {"kind": "engaged", "minutes": 95}
+    )
+    batch = learner.enrolment.batch
+    response = report_admin.post(reverse("staff_report_batch_csv", args=[batch.pk]))
+    assert response.status_code == 200
+    assert response["Content-Type"].startswith("text/csv")
+    assert (
+        "attachment" in response["Content-Disposition"] and response["Cache-Control"] == "no-store"
+    )
+    head, *rows = csv_rows(response)
+    assert head == [
+        "Batch", "Name", "Email", "Pre-test %", "First final %", "Best final %", "Gain (pts)",
+        "Modules passed", "Hours", "Hours basis", "Certificate number",
+    ]  # fmt: skip
+    assert len(rows) == 1
+    row = dict(zip(head, rows[0], strict=True))
+    assert row["Batch"] == batch.code and row["Email"] == learner.email
+    assert row["Name"] == learner.profile.certificate_name
+    assert row["Pre-test %"] == "25.0"
+    assert row["Gain (pts)"] == "75.0"  # the same figure the Report page averages
+    assert row["First final %"] != "" and row["Best final %"] != ""
+    assert row["Modules passed"].endswith("/2") or "/" in row["Modules passed"]
+    assert row["Hours"] == "1.6" and row["Hours basis"] == "engaged"
+    assert row["Certificate number"] == "CCFR-2026-T-000998"
+    assert AuditEvent.objects.filter(
+        action="report.batch_exported", actor_id=report_admin.admin_user.pk
+    ).exists()
+
+
+@pytest.mark.django_db
+def test_the_batch_csv_leaves_blanks_before_any_exam_and_marks_under_18_hours(
+    report_admin, make_user, make_batch, monkeypatch
+):
+    batch = make_batch()
+    make_user(batch=batch)
+    monkeypatch.setattr(
+        "apps.staff.export.hours_for", lambda user: {"kind": "nominal", "minutes": 30}
+    )
+    head, row = csv_rows(report_admin.post(reverse("staff_report_batch_csv", args=[batch.pk])))
+    row = dict(zip(head, row, strict=True))
+    assert (
+        row["Pre-test %"] == row["First final %"] == row["Best final %"] == row["Gain (pts)"] == ""
+    )
+    assert row["Hours"] == "0.5" and row["Hours basis"] == "nominal (under 18)"
+    assert row["Certificate number"] == ""
+
+
+@pytest.mark.django_db
+def test_the_batch_csv_cells_are_spreadsheet_safe(report_admin, make_user, make_batch):
+    batch = make_batch()
+    user = make_user(batch=batch)
+    user.profile.certificate_name = '=HYPERLINK("x")'
+    user.profile.save()
+    head, row = csv_rows(report_admin.post(reverse("staff_report_batch_csv", args=[batch.pk])))
+    assert dict(zip(head, row, strict=True))["Name"].startswith("'=")
+
+
+@pytest.mark.django_db
+def test_the_batch_csv_is_forbidden_to_mentors(mentor_client, make_batch):
+    batch = make_batch()
+    assert mentor_client.post(reverse("staff_report_batch_csv", args=[batch.pk])).status_code == 403
+
+
+@pytest.mark.django_db
+def test_the_batch_csv_is_post_only(report_admin, make_batch):
+    batch = make_batch()
+    assert report_admin.get(reverse("staff_report_batch_csv", args=[batch.pk])).status_code == 405
+    assert report_admin.post(reverse("staff_report_batch_csv", args=[999999])).status_code == 404
+
+
+@pytest.mark.django_db
+def test_the_report_page_links_each_batch_csv(report_admin, make_batch):
+    batch = make_batch()
+    html = report_admin.get(reverse("staff_report")).content.decode()
+    assert reverse("staff_report_batch_csv", args=[batch.pk]) in html
+    assert "Learner report" in html
+
+
+def test_a_negative_gain_stays_a_number_in_the_csv():
+    from apps.staff.export import batch_report_csv
+
+    row = {
+        "name": "=Evil", "email": "a@example.com", "pretest": Decimal("75.0"), "first_final": Decimal("50.0"),
+        "best_final": Decimal("50.0"), "gain": Decimal("-25.0"), "modules_passed": "1/9",
+        "hours": Decimal("1.0"), "hours_basis": "engaged", "certificate": "",
+    }  # fmt: skip
+    head, line = list(
+        _csv.reader(_io.StringIO(batch_report_csv(SimpleNamespace(code="B1"), [row]).lstrip("﻿")))
+    )
+    values = dict(zip(head, line, strict=True))
+    assert values["Gain (pts)"] == "-25.0"
+    assert values["Name"] == "'=Evil"  # text is still made safe

@@ -2,6 +2,8 @@ from django.conf import settings
 from django.urls import reverse
 from django.utils.translation import get_language
 
+from . import languages
+
 
 def programme(request):
     """Programme name and language list for every page (D23: never hard-coded in templates)."""
@@ -17,8 +19,10 @@ def programme(request):
         "PROGRAMME_SHORT": settings.PROGRAMME_SHORT,
         "SUPPORT_EMAIL": settings.SUPPORT_EMAIL,
         # The header select shows short labels, like the prototype: EN, हिन्दी, मराठी, ગુજરાતી.
+        # Only the enabled languages (LANGUAGES_ENABLED); with one, every switcher is hidden.
         "LANGUAGE_CHOICES": [
-            (code, "EN" if code == "en" else name) for code, name in settings.LANGUAGES
+            (code, "EN" if code == "en" else name) for code, name in languages.enabled_languages()
         ],
+        "SHOW_LANGUAGE_SWITCHER": languages.switcher_shown(),
         "CURRENT_LANGUAGE": get_language() or settings.LANGUAGE_CODE,
     }

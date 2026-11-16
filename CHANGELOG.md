@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-16: Pilot hardening (before Batch 1)
+
+- **The Staff tools menu closes** on an outside click or tap, Escape (focus back to its button), choosing an item and page scroll, and no longer opens itself on `/staff/` pages; `aria-expanded` follows. Why: it stayed open over the page.
+- **One-time links are masked in logs** (gunicorn access and error logs, Django logs, Sentry): reset, guardian, password-reset, email-confirm and verify tokens become `***`. **Docker logs rotate** (20 MB × 5) for every service. Why: anyone with `docker logs` could read live links, and logs never rotated (security audit L2).
+- **`LANGUAGES_ENABLED` setting:** `en` alone hides every language switcher and serves English only; prod's example says `en`, staging's all four. One env line switches the languages back on. Why: the Hindi, Marathi and Gujarati text is an unreviewed draft, and Batch 1 runs in English while translators review on staging.
+- **Admin per-batch learner CSV** on the Report page: pre-test %, first and best final %, gain (pts), modules passed, hours, certificate number. Why: the HOD's programme brief needs knowledge gain (target ≥ 25) and hours per participant; neither page showed them per learner.
+- **A Build question can't be published with a safety-gate chip as a slot's answer.** Why: it would score and void the attempt at the same time.
+- **`_raw_percent` logs a warning** when it falls back to the rounded stored score. Why: the fallback could silently move a result at the pass mark.
+- **Runbook:** staging mail goes to Mailpit, not real inboxes (§8.1 was wrong); the edge `.env` single-quote gotcha for the login hash (§1.4); monitoring sign-ups click by click (§9.1); a restore drill into a throwaway database on the server (§3.4).
+
 ## 2026-11-15: Staging behind a login
 
 - **The staging site asks for one shared login** (Caddy `basic_auth`) on every page except `/healthz/`; prod is unchanged. The user name and bcrypt hash live only in `/srv/csfr/edge/.env`; `deploy.sh edge` refuses to install without them. The journeys and the load test pass the login from the environment. Why: staging is public with open sign-up and holds the real exam sets, so the final's answer key could be worked out there (security audit H3).

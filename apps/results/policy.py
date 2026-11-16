@@ -5,12 +5,15 @@ unlock state, eligibility and the blockers. The dashboard, the mentor pages and 
 preview all call it, so they cannot disagree.
 """
 
+import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from decimal import ROUND_HALF_UP, Decimal
 
 from django.db.models import DecimalField, ExpressionWrapper, F, Sum
 from django.utils.translation import gettext as _
+
+logger = logging.getLogger(__name__)
 
 PASS_MARK = Decimal("50")  # module and final pass mark, D2
 MODULE_PASS = PASS_MARK
@@ -231,11 +234,16 @@ def _raw_percent(attempt):
 
     Attempt.score is stored rounded to one decimal for display, so combining stored scores can
     push a result across the pass mark (13/15 and 5/38 average 49.91, not 50.0). Attempts that
-    have no saved items (none exist in practice) fall back to the stored score.
+    have no saved items (none should exist) fall back to the stored, rounded score, and that is
+    logged as a warning so it is seen rather than silently moving a result at the pass mark.
     """
     total = getattr(attempt, "total_points", None)
     if total:
         return HUNDRED * (attempt.earned_points or ZERO) / total
+    logger.warning(
+        "results: attempt %s has no question-level marks; using its rounded stored score",
+        getattr(attempt, "pk", None),
+    )
     return attempt.score
 
 

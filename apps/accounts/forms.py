@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.batches.models import Batch, BatchStatus
 from apps.batches.rules import accepting_batches
+from apps.core import languages
 
 from .models import Language, normalise_email
 from .rules import (
@@ -67,6 +68,15 @@ class RegistrationForm(forms.Form):
         super().__init__(*args, **kwargs)
         now = now or timezone.now()
         self.fields["batch"].choices = [(b.pk, str(b)) for b in accepting_batches(now)]
+        # Only the enabled languages (LANGUAGES_ENABLED); with just one the field is hidden.
+        language = self.fields["preferred_language"]
+        language.choices = [c for c in Language.choices if languages.is_enabled(c[0])]
+        if len(language.choices) == 1:
+            # Disabled: Django ignores what was posted (a stale "hi") and uses the initial value, so
+            # a hidden field can never hold a rejected choice the visitor cannot correct.
+            language.widget = forms.HiddenInput()
+            language.initial = language.choices[0][0]
+            language.disabled = True
 
     def keep_posted_batch_choice(self):
         """After a refusal, keep the chosen (now closed) batch visible so the input is kept."""
