@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-17: www redirect loop fixed
+
+- **`https://www.cyberfirstresponse.io` now redirects once to `https://cyberfirstresponse.io`** (same path), and the redirect no longer sends a `Server` header. Why: the rule built its target from `{$SCHEME}`, which is empty on the server, so the target was the relative path `cyberfirstresponse.io/` and the browser looped (`/cyberfirstresponse.io/cyberfirstresponse.io/…`) until it gave up. It now uses the request's own scheme (`{scheme}`). Needs `deploy.sh edge`.
+
 ## 2026-11-16: Pilot hardening (before Batch 1)
 
 - **The Staff tools menu closes** on an outside click or tap, Escape (focus back to its button), choosing an item and page scroll, and no longer opens itself on `/staff/` pages; `aria-expanded` follows. Why: it stayed open over the page.

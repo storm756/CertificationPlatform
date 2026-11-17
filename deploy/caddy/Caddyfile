@@ -47,7 +47,11 @@
 }
 
 {$SCHEME}www.{$PROD_DOMAIN} {
-	redir {$SCHEME}{$PROD_DOMAIN}{uri} permanent
+	# The target takes the scheme from the request ({scheme}: https on the server, http in a local test).
+	# Never {$SCHEME} here: it is empty on the server, which made the target a relative path
+	# ("cyberfirstresponse.io/") that the browser appended to www again and again, in an endless loop.
+	header -Server
+	redir {scheme}://{$PROD_DOMAIN}{uri} permanent
 }
 
 {$SCHEME}{$STAGING_DOMAIN} {
