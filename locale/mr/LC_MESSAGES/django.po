@@ -508,8 +508,8 @@ msgstr "प्राचार्य, SAKEC"
 # draft: needs review
 #: apps/core/people.py:19
 #| msgid "Head, Department of Cyber Security, SAKEC"
-msgid "HOD Cyber Security, SAKEC"
-msgstr "विभागप्रमुख, सायबर सिक्युरिटी, SAKEC"
+msgid "Professor, Lead Instructor"
+msgstr "प्राध्यापक, मुख्य प्रशिक्षक"
 
 # draft: needs review
 #: apps/core/people.py:21

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-17: Dr. Nilakshi Jain's designation
+
+- **Her title is now "Professor, Lead Instructor"** on the landing page's people card (`apps/core/people.py`) and on the certificate signatory line (`CERTIFICATE_SIGNATORIES` in `config/settings/base.py`). It was "HOD". Why: the lead asked for it. Certificates already issued keep their snapshot (D36); the Hindi, Marathi and Gujarati wording for the people card is blank until a reviewer adds it, so those pages show English. After deploy, re-run `manage.py certificate_sample --out static/img/certificate-sample.png` so the landing page's sample matches.
+
 ## 2026-11-17: www redirect loop fixed
 
 - **`https://www.cyberfirstresponse.io` now redirects once to `https://cyberfirstresponse.io`** (same path), and the redirect no longer sends a `Server` header. Why: the rule built its target from `{$SCHEME}`, which is empty on the server, so the target was the relative path `cyberfirstresponse.io/` and the browser looped (`/cyberfirstresponse.io/cyberfirstresponse.io/…`) until it gave up. It now uses the request's own scheme (`{scheme}`). Needs `deploy.sh edge`.

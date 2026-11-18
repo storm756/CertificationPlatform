@@ -1,7 +1,9 @@
+import json
+
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from unfold.admin import ModelAdmin
+from unfold.admin import ModelAdmin, TabularInline
 
 from . import examsets, rules, services
 from .models import AssessmentPart, Attempt, AttemptItem, ExamSet, ExamSetItem, ProgrammeAssessment
@@ -77,14 +79,55 @@ def _save_with_audited_limit(request, obj, change):
         services.audit_limit_change(obj, old, actor=request.user, request=request)
 
 
-class ItemInline(admin.TabularInline):
-    """Read-only. The option map and responses hold the key mapping, so they are not shown."""
+class ItemInline(TabularInline):
+    """Read-only details of questions answered during the attempt."""
 
     model = AttemptItem
     extra = 0
-    fields = ("position", "question_version", "points", "score", "gate_flag")
+    fields = (
+        "position",
+        "question_text",
+        "learner_answer",
+        "score_display",
+    )
     readonly_fields = fields
     can_delete = False
+
+    @admin.display(description="Question")
+    def question_text(self, obj):
+        if obj.question_version and obj.question_version.body:
+            stem = obj.question_version.body.get("stem", "")
+            if stem:
+                return f"{obj.question_version.question.stable_id}: {stem}"
+        return str(obj.question_version)
+
+    @admin.display(description="Learner's Answer")
+    def learner_answer(self, obj):
+        if not obj.question_version or not obj.question_version.body:
+            return "-"
+        body = obj.question_version.body
+        response = obj.response or {}
+        if not response:
+            return "-"
+        token = response.get("choice")
+        if token:  # single-choice format: show the option text behind the token
+            opt_key = (obj.option_map or {}).get("tokens", {}).get(token, token)
+            for opt in body.get("options", []):
+                if opt.get("id") == opt_key:
+                    return opt.get("text", opt_key)
+            return opt_key
+        # Other formats (sort, match, ...): show the stored response as recorded.
+        return json.dumps(response, ensure_ascii=False, sort_keys=True)
+
+    @admin.display(description="Result")
+    def score_display(self, obj):
+        if obj.score is None:
+            return "-"
+        if obj.score <= 0:
+            return f"{obj.score} / {obj.points} (Incorrect)"
+        if obj.score >= obj.points:
+            return f"{obj.score} / {obj.points} (Correct)"
+        return f"{obj.score} / {obj.points} (Partial credit)"
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -94,16 +137,56 @@ class ItemInline(admin.TabularInline):
 class AttemptAdmin(ModelAdmin):
     list_display = (
         "user",
-        "part",
+        "assessment_target",
         "number",
         "status",
         "score",
+        "time_taken",
         "counted",
         "all_answered",
         "last_saved_at",
     )
     list_filter = ("status", "counted", "gate_breached")
+    search_fields = ("user__email", "user__first_name", "user__last_name")
+    readonly_fields = (
+        "user",
+        "assessment_target",
+        "number",
+        "status",
+        "score",
+        "time_taken",
+        "started_at",
+        "submitted_at",
+        "last_saved_at",
+        "all_answered",
+        "gate_breached",
+        "counted",
+    )
     inlines = [ItemInline]
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("user", "part__module", "programme_assessment")
+        )
+
+    @admin.display(description="Assessment / Part")
+    def assessment_target(self, obj):
+        if obj.part:
+            return obj.part
+        if obj.programme_assessment:
+            return obj.programme_assessment.get_kind_display()
+        return "-"
+
+    @admin.display(description="Time Taken")
+    def time_taken(self, obj):
+        if obj.started_at and obj.submitted_at:
+            delta = obj.submitted_at - obj.started_at
+            total_seconds = max(0, int(delta.total_seconds()))
+            mins, secs = divmod(total_seconds, 60)
+            return f"{mins}m {secs:02d}s"
+        return "-"
 
     def has_add_permission(self, request):
         return False
@@ -112,7 +195,7 @@ class AttemptAdmin(ModelAdmin):
         return False
 
 
-class ExamSetItemInline(admin.TabularInline):
+class ExamSetItemInline(TabularInline):
     """Membership only: which questions are in the paper, held in reserve or rejected. Rows are
     never deleted (question history stays) and a released set is read-only. Question text and keys
     live on the question, which is admin-only for the final pool."""
