@@ -8,18 +8,22 @@ and question-level AttemptItem entries.
 Usage:
     python manage.py setup_cohorts --preview        # Dry-run preview
     python manage.py setup_cohorts                  # Initialize 693 learners
-    python manage.py setup_cohorts --clean-cohorts  # Cleanly roll back
+    python manage.py setup_cohorts --clean-cohorts  # Remove the cohorts' accounts and batches
+
+--clean-cohorts removes the batches, accounts, enrolments, attempts and activity this command
+created. It does NOT remove the units, live questions and assessment parts that setup adds to the
+course, so it does not restore the curriculum to its earlier state.
 """
 
 import json
 import random
 from datetime import UTC, date, datetime, timedelta
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
 from allauth.account.models import EmailAddress
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
@@ -40,10 +44,29 @@ from apps.content.models import Module, ModuleKind, TimeLog, Unit, UnitProgress
 from apps.questions import formats
 from apps.questions import services as qservices
 from apps.questions.models import Pool, Question, QuestionStatus
+from apps.results.policy import percent
 
 MANIFEST_PATH = Path(settings.BASE_DIR) / "data" / "cohort_693_manifest.json"
 DATA_FILE_PATH = Path(settings.BASE_DIR) / "data" / "learners_693_clean.json"
 DEFAULT_CENTRE_CODE = "SAKEC"
+# Synthetic learners never get a deliverable address (a real person could own it).
+SYNTHETIC_EMAIL_DOMAIN = "cohort.example.com"
+
+
+def allocate(total_count):
+    """Seats per batch: each share rounded down, then the remainder handed to the largest
+    fractional parts, so the shares always add up to exactly total_count."""
+    weights = [b["target_count"] for b in BATCH_CONFIG]
+    weight_sum = sum(weights)
+    base = [total_count * w // weight_sum for w in weights]
+    order = sorted(
+        range(len(weights)),
+        key=lambda i: (-((total_count * weights[i]) % weight_sum), i),
+    )
+    for i in order[: total_count - sum(base)]:
+        base[i] += 1
+    return {b["code"]: n for b, n in zip(BATCH_CONFIG, base, strict=True)}
+
 
 BATCH_CONFIG = [
     {
@@ -219,6 +242,13 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        if options["clean_cohorts"] and options["preview"]:
+            raise CommandError(
+                "--preview cannot be combined with --clean-cohorts (nothing was deleted)."
+            )
+        if options["count"] <= 0:
+            raise CommandError("--count must be a positive number.")
+
         if options["clean_cohorts"]:
             self._clean_cohorts()
             return
@@ -236,8 +266,9 @@ class Command(BaseCommand):
         self.stdout.write(f"Batches: {len(BATCH_CONFIG)} cohorts (Nov 2026 - Jan 2027)\n")
 
         total_allocated = 0
+        shares = allocate(total_count)
         for b in BATCH_CONFIG:
-            count = int(round(total_count * (b["target_count"] / 693)))
+            count = shares[b["code"]]
             total_allocated += count
             self.stdout.write(
                 f"  [{b['code']}] {b['name']:<16} | Status: {'OPEN' if b['accepting'] else 'CLOSED':<6} | "
@@ -273,8 +304,8 @@ class Command(BaseCommand):
             n_users = User.objects.filter(id__in=user_ids).delete()[0]
             n_batches = batches.delete()[0]
 
-            if MANIFEST_PATH.exists():
-                MANIFEST_PATH.unlink(missing_ok=True)
+            # Remove the manifest only once this transaction has really committed.
+            transaction.on_commit(lambda: MANIFEST_PATH.unlink(missing_ok=True))
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -286,6 +317,11 @@ class Command(BaseCommand):
     def _populate(self, total_count):
         rng = random.Random(20261117)
         self.stdout.write(f"Preparing {total_count} learners across 5 cohorts...")
+
+        shares = allocate(total_count)
+
+        # Validate the whole roster before anything is written.
+        learners_source = self._load_roster()
 
         # 1. Ensure batches exist
         db_batches = {}
@@ -324,13 +360,6 @@ class Command(BaseCommand):
         pretest_assessment = programme.get_assessment(ProgrammeAssessmentKind.PRETEST)
         final_assessment = programme.get_assessment(ProgrammeAssessmentKind.FINAL)
 
-        # 3. Load pre-generated, deduplicated realistic student identities
-        if DATA_FILE_PATH.exists():
-            with open(DATA_FILE_PATH, encoding="utf-8") as f:
-                learners_source = json.load(f)
-        else:
-            learners_source = []
-
         # 4. Allocate learners per batch
         created_learners = []
         source_idx = 0
@@ -338,7 +367,7 @@ class Command(BaseCommand):
         for b_conf in BATCH_CONFIG:
             batch, config = db_batches[b_conf["code"]]
             stage = config["stage"]
-            batch_target = int(round(total_count * (config["target_count"] / 693)))
+            batch_target = shares[b_conf["code"]]
             self.stdout.write(
                 f"Generating {b_conf['code']} ({b_conf['name']}) -> {batch_target} learners..."
             )
@@ -354,8 +383,11 @@ class Command(BaseCommand):
                         LAST_NAMES[source_idx % len(LAST_NAMES)],
                     )
                     cert_name = f"{first_name} {last_name}"
+                    # Derived from the learner's position only, so it is distinct for every
+                    # learner and the same on every rerun, whatever the RNG did before.
                     email = (
-                        f"{first_name.lower()}.{last_name.lower()}{rng.randint(90, 99)}@gmail.com"
+                        f"{first_name.lower()}.{last_name.lower()}.{source_idx + 1:04d}"
+                        f"@{SYNTHETIC_EMAIL_DOMAIN}"
                     )
 
                 source_idx += 1
@@ -390,6 +422,11 @@ class Command(BaseCommand):
                             "is_active": True,
                         },
                     )
+                    if not user_created and not self._is_cohort_account(user):
+                        raise CommandError(
+                            f"{email} already belongs to an account that is not a cohort learner; "
+                            "refusing to modify or move it."
+                        )
                     if user_created:
                         user.set_unusable_password()
                         user.save(update_fields=["password"])
@@ -461,6 +498,38 @@ class Command(BaseCommand):
                 f"Tracking manifest saved to: {MANIFEST_PATH}"
             )
         )
+
+    def _load_roster(self):
+        """Read and check the learner roster; nothing is written until it is all valid."""
+        if not DATA_FILE_PATH.exists():
+            return []
+        with open(DATA_FILE_PATH, encoding="utf-8") as f:
+            roster = json.load(f)
+        if not isinstance(roster, list):
+            raise CommandError(f"{DATA_FILE_PATH.name} must hold a list of learners.")
+        seen = set()
+        for n, entry in enumerate(roster, start=1):
+            if not isinstance(entry, dict):
+                raise CommandError(f"{DATA_FILE_PATH.name}: entry {n} is not an object.")
+            email = str(entry.get("email") or "").strip().lower()
+            name = str(entry.get("name") or "").strip()
+            if not email or "@" not in email or not name:
+                raise CommandError(f"{DATA_FILE_PATH.name}: entry {n} needs a name and an email.")
+            if email in seen:
+                raise CommandError(f"{DATA_FILE_PATH.name}: duplicate email {email} (entry {n}).")
+            seen.add(email)
+            entry["email"] = email
+            entry["name"] = name
+        return roster
+
+    @staticmethod
+    def _is_cohort_account(user):
+        """An existing account may be reused only if it is a learner already in a cohort batch
+        (or in none yet); never a staff account or a learner of another batch."""
+        if user.role != Role.LEARNER or user.is_staff or user.is_superuser:
+            return False
+        enrolment = Enrolment.objects.filter(user=user).select_related("batch").first()
+        return enrolment is None or enrolment.batch.code in {b["code"] for b in BATCH_CONFIG}
 
     def _ensure_course_content(self):
         """Ensure modules 1-9 have units, authentic CCFR curriculum questions, and published counted assessment parts."""
@@ -1244,11 +1313,11 @@ class Command(BaseCommand):
                 "hint": "cybercrime.gov.in is the nodal national portal managed by the Indian Cyber Crime Coordination Centre (I4C), MHA.",
             },
             (8, 3): {
-                "stem": "Under guidelines issued by the Indian Computer Emergency Response Team (CERT-In), what is the mandatory cyber incident reporting timeframe?",
+                "stem": "Under the CERT-In directions of April 2022, within what time must specified entities report the cyber incident types listed in Annexure I?",
                 "options": [
                     {
                         "id": "o1",
-                        "text": "Within 6 hours of noticing or being brought to notice of the cyber incident.",
+                        "text": "Within 6 hours of noticing the incident or being notified of it.",
                     },
                     {"id": "o2", "text": "Within 30 calendar days."},
                     {"id": "o3", "text": "Within 90 business days."},
@@ -1455,19 +1524,20 @@ class Command(BaseCommand):
                     if q.status != QuestionStatus.LIVE:
                         qservices.publish(q)
 
-            part, _ = AssessmentPart.objects.get_or_create(
-                module=mod,
-                name=f"Module {mod.number} Knowledge Check",
-                defaults={
-                    "family": PartFamily.MCQ,
-                    "marks": 100,
-                    "counted": True,
-                    "selection": Selection.ALL,
-                    "pool": Pool.MODULE_QUIZ,
-                },
-            )
-            if not part.is_published:
-                publish_part(part)
+            # Reuse the module's configured counted parts; only bootstrap one for a module that
+            # has none, creating and publishing it together so no unpublished draft is left.
+            if not AssessmentPart.objects.filter(module=mod, counted=True).exists():
+                with transaction.atomic():
+                    part = AssessmentPart.objects.create(
+                        module=mod,
+                        name=f"Module {mod.number} Knowledge Check",
+                        family=PartFamily.MCQ,
+                        marks=100,
+                        counted=True,
+                        selection=Selection.ALL,
+                        pool=Pool.MODULE_QUIZ,
+                    )
+                    publish_part(part)
 
         # Build memory caches for attempt items
         self.cached_part_questions = {}
@@ -1590,7 +1660,11 @@ class Command(BaseCommand):
         if modules_to_complete == 0:
             return
 
-        total_duration = max((target_end_time - base_time).total_seconds(), 3600 * 24)
+        # Activity must fit between enrolment and now; a short window means less activity.
+        target_end_time = min(target_end_time, now)
+        total_duration = (target_end_time - base_time).total_seconds()
+        if total_duration <= 0:
+            return
         step_seconds = total_duration / max(modules_to_complete, 1)
 
         # 2. Iterate through modules
@@ -1601,6 +1675,8 @@ class Command(BaseCommand):
 
             # Study units
             for u_idx, u in enumerate(mod_units):
+                if u.published() is None:
+                    continue  # no published content: nothing to complete or study
                 u_time = mod_time - timedelta(
                     minutes=rng.randint(20, 60) * (len(mod_units) - u_idx)
                 )
@@ -1738,11 +1814,13 @@ class Command(BaseCommand):
             items_to_create = []
             num_q = len(target_questions)
             # Calculate how many questions the learner answered correctly
-            num_correct = int(round((score / 100.0) * num_q))
+            num_correct = int(
+                (Decimal(score) * num_q / Decimal(100)).quantize(Decimal(1), rounding=ROUND_HALF_UP)
+            )
             if score >= 50 and num_correct < (num_q + 1) // 2:
                 num_correct = (num_q + 1) // 2
 
-            actual_score = Decimal(str(round(100.0 * num_correct / num_q, 1)))
+            actual_score = percent(Decimal(num_correct), Decimal(num_q))
             attempt.score = actual_score
             Attempt.objects.filter(pk=attempt.pk).update(score=actual_score)
 
@@ -1760,8 +1838,13 @@ class Command(BaseCommand):
 
                 try:
                     opt_map = formats.make_map(fmt, body, rng)
-                except Exception:
-                    opt_map = {"v": 2, "refs": {}, "lists": {}}
+                except Exception as exc:
+                    # Fail loudly: the learner's transaction rolls back rather than saving a
+                    # made-up option map.
+                    raise CommandError(
+                        f"Could not build the option map for question version {qv.pk} "
+                        f"({qv.question.stable_id}): {exc}"
+                    ) from exc
 
                 response = {}
                 if fmt == "mcq" and isinstance(body, dict) and "correct" in body:

@@ -1,3 +1,5 @@
+import json
+
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
@@ -86,7 +88,6 @@ class ItemInline(TabularInline):
         "position",
         "question_text",
         "learner_answer",
-        "correct_answer",
         "score_display",
     )
     readonly_fields = fields
@@ -105,31 +106,28 @@ class ItemInline(TabularInline):
         if not obj.question_version or not obj.question_version.body:
             return "-"
         body = obj.question_version.body
-        token = (obj.response or {}).get("choice")
-        if not token:
+        response = obj.response or {}
+        if not response:
             return "-"
-        opt_key = (obj.option_map or {}).get("tokens", {}).get(token, token)
-        for opt in body.get("options", []):
-            if opt.get("id") == opt_key:
-                return opt.get("text", opt_key)
-        return opt_key
-
-    @admin.display(description="Correct Answer")
-    def correct_answer(self, obj):
-        if not obj.question_version or not obj.question_version.body:
-            return "-"
-        body = obj.question_version.body
-        correct_key = body.get("correct")
-        for opt in body.get("options", []):
-            if opt.get("id") == correct_key:
-                return opt.get("text", correct_key)
-        return correct_key or "-"
+        token = response.get("choice")
+        if token:  # single-choice format: show the option text behind the token
+            opt_key = (obj.option_map or {}).get("tokens", {}).get(token, token)
+            for opt in body.get("options", []):
+                if opt.get("id") == opt_key:
+                    return opt.get("text", opt_key)
+            return opt_key
+        # Other formats (sort, match, ...): show the stored response as recorded.
+        return json.dumps(response, ensure_ascii=False, sort_keys=True)
 
     @admin.display(description="Result")
     def score_display(self, obj):
         if obj.score is None:
             return "-"
-        return "1.0 (Correct)" if obj.score >= 1 else "0.0 (Incorrect)"
+        if obj.score <= 0:
+            return f"{obj.score} / {obj.points} (Incorrect)"
+        if obj.score >= obj.points:
+            return f"{obj.score} / {obj.points} (Correct)"
+        return f"{obj.score} / {obj.points} (Partial credit)"
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -165,6 +163,13 @@ class AttemptAdmin(ModelAdmin):
         "counted",
     )
     inlines = [ItemInline]
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("user", "part__module", "programme_assessment")
+        )
 
     @admin.display(description="Assessment / Part")
     def assessment_target(self, obj):

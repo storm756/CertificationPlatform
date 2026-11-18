@@ -10,6 +10,8 @@
 *.sql.gz
 content-data/
 data/
+# ...but the course content data (handout PDFs) is tracked
+!apps/content/data/
 *.key
 age-identity*
 
