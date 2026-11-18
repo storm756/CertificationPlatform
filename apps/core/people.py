@@ -16,7 +16,7 @@ PEOPLE = [
         "nilakshi-jain",
         "nilakshi-jain.webp",
         "Dr. Nilakshi Jain",
-        _("HOD Cyber Security, SAKEC"),
+        _("Professor, Lead Instructor"),
     ),
     ("vineet-kumar", "vineet-kumar.webp", "Maj. Vineet Kumar", _("Founder, CyberPeace Foundation")),
 ]

@@ -9,6 +9,7 @@
 *.sql
 *.sql.gz
 content-data/
+data/
 *.key
 age-identity*
 

@@ -335,7 +335,7 @@ def test_the_people_photos_are_webp_and_have_alt_text(client, tmp_path, settings
     settings.PEOPLE_PHOTO_DIR = tmp_path
     settings.PEOPLE_CONSENT_GIVEN = True
     html = client.get("/").content.decode()
-    assert "Photo of Dr. Nilakshi Jain, HOD Cyber Security, SAKEC" in html
+    assert "Photo of Dr. Nilakshi Jain, Professor, Lead Instructor" in html
 
 
 def test_preview_keeps_the_scene_and_options_of_an_mc_question():
