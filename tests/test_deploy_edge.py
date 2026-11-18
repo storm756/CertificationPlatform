@@ -64,6 +64,18 @@ def test_the_login_comes_from_the_server_never_from_git():
     assert "STAGING_AUTH_HASH: ${STAGING_AUTH_HASH:-}" in compose
 
 
+def test_www_redirects_to_an_absolute_url_on_the_apex():
+    # 17 Nov 2026: `redir {$SCHEME}{$PROD_DOMAIN}{uri}` became the relative path "cyberfirstresponse.io/" on
+    # the server (SCHEME is empty there), so https://www.cyberfirstresponse.io/ redirected to itself forever.
+    caddyfile = (DEPLOY / "caddy" / "Caddyfile").read_text(encoding="utf-8")
+    start = caddyfile.index("{$SCHEME}www.{$PROD_DOMAIN} {")
+    www = caddyfile[start : caddyfile.index("\n}\n", start)]
+    assert "redir {scheme}://{$PROD_DOMAIN}{uri} permanent" in www
+    # Never a scheme from the environment: it may be empty, which makes a relative target.
+    assert not re.search(r"redir\s+\{\$SCHEME\}", caddyfile)
+    assert "header -Server" in www
+
+
 def test_edge_refuses_to_install_without_the_login():
     edge = (DEPLOY / "edge.sh").read_text(encoding="utf-8")
     check = edge.index('[ -z "${STAGING_AUTH_HASH:-}" ]')
