@@ -258,7 +258,7 @@ def review(request, pk):
         items.append(
             {
                 "position": item.position,
-                "stem": formats.label(display_body(item.question_version, item.format)),
+                "stem": formats.display_label(display_body(item.question_version, item.format)),
                 "answered": item.answered,
                 "flagged": bool((item.response or {}).get("flag")),
             }
@@ -311,7 +311,7 @@ def result(request, pk):
         rows.append(
             {
                 "position": item.position,
-                "stem": formats.label(display_body(version, item.format)),
+                "stem": formats.display_label(display_body(version, item.format)),
                 "right": score == 1,
                 "partial": 0 < score < 1,
                 "answered": item.answered,

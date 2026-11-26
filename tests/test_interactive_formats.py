@@ -14,7 +14,8 @@ from .conftest import invented_body, invented_ids
 IDS = invented_ids()
 
 # The only keys the browser may ever receive, per format. Anything else is a leak.
-COMMON = {"format", "title", "ask", "scene", "response"}
+# scene_label is the heading over the scenario ("They say", "Case"), never an answer.
+COMMON = {"format", "title", "ask", "scene", "scene_label", "response"}
 ALLOWED = {
     "mc": COMMON | {"options", "triage"},
     "cards": COMMON | {"labels", "items"},
@@ -24,7 +25,7 @@ ALLOWED = {
     "match": COMMON | {"lefts", "rights", "left_label", "right_label"},
     "order": COMMON | {"items"},
     "pick": COMMON | {"items", "need", "check_label"},
-    "build": COMMON | {"slots", "chips", "scene_label"},
+    "build": COMMON | {"slots", "chips"},
     "settings": COMMON | {"rows", "device", "screen", "check_label"},
     "dial": COMMON | {"rows"},
     "chat": COMMON | {"who", "total_steps", "steps"},

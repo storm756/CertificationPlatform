@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-26: Interactive questions show their scenario
+
+- **The message, case or situation of an interactive question is now shown** above the question, under "Scenario" (or the question's own label, "They say" / "Case"), on the learner's question page, the staff question preview and the admin part preview. Why: the panel drew only the title and the ask, so 52 questions (Module 1, 4, 6 and 7 Part B, the Module 8 crosswords, six in the mixed set) showed "Verdict 1 / Is this safe, or risky?" with nothing to judge.
+- **Generic numbered titles lose their number for learners** ("Verdict 3" shows as "Verdict"); review and result pages name such a question by its scenario. Why: Part B is shuffled, so position 2 showed "Verdict 1". Stored questions are unchanged.
+- No migration and no data change: open attempts keep their questions, option order and saved answers.
+
 ## 2026-11-17: Dr. Nilakshi Jain's designation
 
 - **Her title is now "Professor, Lead Instructor"** on the landing page's people card (`apps/core/people.py`) and on the certificate signatory line (`CERTIFICATE_SIGNATORIES` in `config/settings/base.py`). It was "HOD". Why: the lead asked for it. Certificates already issued keep their snapshot (D36); the Hindi, Marathi and Gujarati wording for the people card is blank until a reviewer adds it, so those pages show English. After deploy, re-run `manage.py certificate_sample --out static/img/certificate-sample.png` so the landing page's sample matches.
