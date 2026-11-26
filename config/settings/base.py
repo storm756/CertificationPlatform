@@ -311,10 +311,10 @@ CERTIFICATE_NOTIONAL_HOURS = 60
 # Issued PDFs (certificates/) and signature images (signatures/). Inside the media volume, so the
 # nightly media backup covers them; nothing ever serves this folder directly (§16).
 CERTIFICATE_PRIVATE_ROOT = Path(env("CERTIFICATE_PRIVATE_ROOT", str(MEDIA_ROOT / "private")))
-# False while the certificate design and the CCFR emblem are placeholders. Mentors and admins see
-# a warning before approving (each PDF is fixed at issue). A person turns it on with the final
-# design.
-CERTIFICATE_DESIGN_FINAL = False
+# True since the final artwork landed: mentors and admins no longer see the placeholder warning
+# before approving. The CCFR emblem the warning also named is gone, not pending — the final page 1
+# carries the two partner logos and has no emblem slot at all.
+CERTIFICATE_DESIGN_FINAL = True
 CERTIFICATE_VERIFY_RATE = "30/10m"  # per client IP, on the public verify page
 CERTIFICATE_APPROVE_PER_REQUEST = 15  # "Approve all" issues at most this many per click
 

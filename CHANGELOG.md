@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-27: Certificates are ready to issue
+
+- **`CERTIFICATE_DESIGN_FINAL` is on.** Mentors and admins no longer see "Not ready for real certificates yet" before approving. Why: the warning named two things, and neither stands any more — the final artwork has landed, and the CCFR emblem it also named is gone rather than pending, since the new page 1 carries the two partner logos and has no emblem slot. The signature images are on the servers, so that half of the guard already passed.
+- The guard itself is unchanged and still fires if a signature image goes missing; its test now sets the flag explicitly rather than leaning on the shipped default.
+
 ## 2026-11-26: The certificate's final design
 
 - **Page 1 is now the approved artwork**, replacing the placeholder: the joint-offering header, the competency statement, the PREVENT · RECOGNISE · RESPOND · REPORT line, a date-of-issue column beside the three signatures, the achievement-category pill, and "Detailed scorecard overleaf". Why: the placeholder was always meant to be replaced by this one file (D36).
