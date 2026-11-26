@@ -1,5 +1,5 @@
-{% comment %}One question. `q` comes from client_projection(): the stem and the options as random
-  one-off tokens. Nothing else about the question reaches this template.{% endcomment %}
+{% comment %}One question. `q` comes from client_projection(): the stem (or title, scenario and ask)
+  and the options as random one-off tokens. Nothing else about the question reaches this template.{% endcomment %}
 {% load i18n ccfr %}
 {# No hx-post: attempt.js keeps each answer in an outbox and sends it for THIS question, even if the learner moves on or the connection drops. Without JavaScript the form posts normally. #}
 <form id="answer-form" class="qcard" method="post" action="{% url 'attempt_answer' attempt.pk %}" data-answer-form>
@@ -12,6 +12,7 @@
   </div>
   {% if interactive %}
     <h2 id="q-title" tabindex="-1">{{ q.title|default:q.ask }}</h2>
+    {% include "assessments/_scene.html" %}
     {% if q.title and q.ask %}<p class="qcard__ask">{{ q.ask }}</p>{% endif %}
     <input type="hidden" name="response" value="" data-response>
     {# The TypeScript renderer draws the question here from the projection in data-q (text and random tokens only). #}

@@ -270,6 +270,10 @@
 .qcard__format { display: inline-flex; gap: .45rem; align-items: center; color: var(--m, var(--teal)); font-weight: 700; font-size: .9rem; }
 .qcard h2 { font-size: clamp(1.3rem, 2.8vw, 1.7rem); line-height: 1.25; margin-bottom: .5rem; }
 .qcard__ask { color: var(--ink-muted); margin-bottom: 1.1rem; }
+/* A question's scenario (the message, case or situation to judge): set apart so it reads as the thing to look at. */
+.qcard__scene { margin: 0 0 1rem; padding: .85rem 1rem; border-left: 4px solid var(--m, var(--teal)); border-radius: var(--r-sm); background: var(--surface-2); }
+.qcard__scene-label { font-family: var(--font-display); font-weight: 700; font-size: .85rem; letter-spacing: .02em; text-transform: uppercase; color: var(--teal-ink); margin-bottom: .25rem; }
+.qcard__scene-text { font-size: 1.08rem; line-height: 1.5; color: var(--ink); overflow-wrap: anywhere; }
 .scene { margin-bottom: 1.1rem; padding: 1rem 1.1rem; border-radius: var(--r-md); background: var(--surface-2); border-left: 5px solid var(--m, var(--teal)); }
 .scene small { display: block; margin-bottom: .2rem; color: var(--ink-soft); font-weight: 700; font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; }
 .qnav { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem; margin-top: 1.25rem; }

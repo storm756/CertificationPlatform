@@ -8,6 +8,7 @@
   <form class="qcard">
     {% if interactive %}
       <h2>{{ q.title|default:q.ask }}</h2>
+      {% include "assessments/_scene.html" %}
       {% if q.title and q.ask %}<p class="qcard__ask">{{ q.ask }}</p>{% endif %}
       <input type="hidden" name="response" value="" data-response>
       <div class="engine" data-engine data-q="{{ q_json }}"></div>

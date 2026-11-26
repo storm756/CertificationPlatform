@@ -1,0 +1,6 @@
+{% load i18n %}{% comment %}A question's scenario: the message, case or situation the learner judges. Plain text, escaped.
+  `q` is a client projection (or a preview row with the same `scene` / `scene_label` keys).{% endcomment %}
+{% if q.scene %}<figure class="qcard__scene" aria-labelledby="q-scene-label">
+  <figcaption id="q-scene-label" class="qcard__scene-label">{% if q.scene_label %}{{ q.scene_label }}{% else %}{% translate "Scenario" %}{% endif %}</figcaption>
+  <p class="qcard__scene-text">{{ q.scene }}</p>
+</figure>{% endif %}

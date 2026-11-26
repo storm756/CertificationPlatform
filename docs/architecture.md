@@ -352,6 +352,9 @@ or score rule** is present.
 | sort / match / order | Items shuffled server-side, as tokens |
 | chat | Reply options per step as tokens. The next step is fetched only after the answer is saved. |
 
+Every interactive projection also carries `title`, `ask`, `scene` and `scene_label` (§36). The question panel draws the title, then the
+scenario (`scene`, plain escaped text, under `scene_label` or "Scenario"), then the ask, then the engine.
+
 ### 9.3 Answer, autosave, resume
 
 * `POST /attempt/<id>/answer {position, response}` validates the owner, `in_progress`, the position and the tokens, then saves the answer. **No score is returned.**
@@ -883,3 +886,21 @@ Where the build made a choice the design left open. Each is a one-line change if
 * **Admin learner report.** Report page → per batch **Download CSV** (`POST /staff/report/<batch>/csv/`, admin only, audited as `report.batch_exported`, `apps/staff/export.py`): Batch, Name, Email, Pre-test %, First final %, Best final % (stored one-decimal scores), Gain (pts) (the existing `knowledge_gain`: shared pre-test questions, pre-test vs first final, the figure the Report averages against the 25 target), Modules passed (`n/9`), Hours and Hours basis (`hours_for`: engaged time for adults, the nominal time of finished lessons for under-18s, D16), Certificate number (issued only). Cells are spreadsheet-safe, UTF-8 with BOM.
 * **Build questions.** `publish_errors()` refuses a Build question whose slot answer contains a chip marked `gate` (D25): it would score and void the attempt at once. Publish-time only; stored drafts still parse.
 * **Results.** `_raw_percent()` still falls back to the stored, rounded score for an attempt with no question-level marks, but logs a warning with the attempt id instead of doing so silently.
+
+## 36. Scene fix (26 Nov 2026)
+
+* **The scenario is shown.** `templates/assessments/_scene.html` draws a question's `scene` (escaped plain text, `.qcard__scene`) under its
+  `scene_label` ("They say", "Case") or "Scenario". It is included in the learner's question panel, the staff question preview and the
+  admin part / exam preview (`apps/assessments/preview.py::_project` now passes `scene` and `scene_label` for every format). Before this,
+  52 of the 104 legacy interactive questions (Module 1, 4, 6 and 7 Part B, the Module 8 crosswords, six in the mixed set) had their
+  whole case in `scene` and showed nothing to judge.
+* **`scene_label` is in every projection** (`Format.head()`), not only Build's; crosswords have it too. It is a heading, never an answer.
+* **Generic numbered titles lose the number for learners.** `formats.display_title()` turns "Verdict 3", "Case 10", "Situation 1" (one
+  to three words and a number, nothing else) into "Verdict", "Case", "Situation", because a shuffled part showed "Verdict 1" at position 2.
+  The stored body keeps the title. The review and result pages name such a question by its scenario (`formats.display_label()`);
+  `formats.label()` is unchanged because the publish checks and exam-set checks compare it.
+* **Data safety.** Template and projection only: no migration, no body change, no change to option maps, responses or scoring. An
+  attempt that is open during the deploy keeps its items, tokens and saved answers.
+* **Known gaps (not fixed here, they need a content re-import):** the two mixed-set Sort questions had a one-line description under
+  each bin (`d` in the legacy file) that `legacy_interactive.convert()` never kept. `check_label` (Pick, Settings) is projected but not
+  drawn on purpose: it was the legacy "Check" button, which the engine replaces with its "finished" toggle.

@@ -13,6 +13,7 @@ engine (tests/test_scorer_parity.py).
 """
 
 import random
+import re
 import secrets
 from decimal import Decimal
 
@@ -130,9 +131,10 @@ class Format:
     def head(self, body: dict, response) -> dict:
         return {
             "format": self.name,
-            "title": body.get("title", ""),
+            "title": display_title(body.get("title", "")),
             "ask": body.get("ask", ""),
             "scene": body.get("scene", ""),
+            "scene_label": body.get("scene_label", ""),
             "response": {k: v for k, v in (response or {}).items() if k != "flag"},
         }
 
@@ -545,7 +547,6 @@ class Build(Format):
     def project(self, body, m, response):
         slots, chips = by_index(m, "slots"), by_index(m, "chips")
         out = self.head(body, response)
-        out["scene_label"] = body.get("scene_label", "")
         out["slots"] = [
             {
                 "token": slots[i],
@@ -890,6 +891,31 @@ def get(fmt: str) -> Format:
         return FORMATS[fmt]
     except KeyError:
         raise ValueError(f"Unknown format {fmt!r}") from None
+
+
+# "Verdict 3", "Case 10", "Situation 1": a word or two and a number. A part is shuffled, so the
+# number is not the learner's position and only confuses them (it may also hint at the author's
+# order). Titles with anything else in them ("Mr Desai, 60") are left alone.
+GENERIC_TITLE = re.compile(r"^([^\W\d_][^\W\d_ '-]*(?:[ '-][^\W\d_]+){0,2})\s+\d{1,3}$")
+
+
+def display_title(title: str) -> str:
+    """The title a learner sees: a generic numbered title loses its number. The stored body keeps
+    it (it is the author's label)."""
+    match = GENERIC_TITLE.match(title or "")
+    return match.group(1) if match else (title or "")
+
+
+def display_label(body: dict) -> str:
+    """The line that names a question on a learner's review and result pages. Unlike `label()`
+    (which other code compares), a generic numbered title gives way to the scenario, so ten
+    "Verdict" questions can be told apart."""
+    title = body.get("title") or ""
+    if body.get("stem"):
+        return body["stem"]
+    if title and display_title(title) == title:
+        return title
+    return body.get("scene") or body.get("ask") or display_title(title) or "Question"
 
 
 def label(body: dict) -> str:
