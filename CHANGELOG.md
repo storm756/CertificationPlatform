@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-11-26: The certificate's final design
+
+- **Page 1 is now the approved artwork**, replacing the placeholder: the joint-offering header, the competency statement, the PREVENT · RECOGNISE · RESPOND · REPORT line, a date-of-issue column beside the three signatures, the achievement-category pill, and "Detailed scorecard overleaf". Why: the placeholder was always meant to be replaced by this one file (D36).
+- **Both pages carry the same furniture:** full-size partner logos, no ruled border, and the diagonal band along the foot. The scorecard's four-sided frame and corner flashes are gone, since the artwork has neither.
+- **The artwork's rosette seal is not reproduced.** Drawing it from primitives looked worse than leaving it out, and the achievement category is already stated in the pill above the footer, so nothing is lost by dropping it.
+- **The certificate states its own programme wording.** `CERTIFICATE_PROGRAMME_TITLE` ("Certificate in Cyber Incident First Response") and `CERTIFICATE_QUALIFICATION` ("Cyber Incident First Responder") are certificate-only. `PROGRAMME_NAME` is untouched and still names the site, the admin, the MFA issuer and the email sender, so nothing outside the printed certificate changes.
+- **Maj. Vineet Kumar is "Founder & Global President"**, per the artwork. Signatory order stays Jain · Patel · Kumar (D36); the artwork's Patel-first order was not adopted.
+- **The verify code is still printed under the QR.** The artwork shows only a certificate ID, but a certificate number never normalises to a verify code (`apps/certificates/codes.py`), so printing the number alone would have left the page verifiable by scanning only. The code line is kept, small, under "Scan to verify".
+- **This amends D36 further:** the prescribed "has successfully completed … conducted by the Department of Cyber Security …" sentence is replaced by the artwork's competency statement, and the Batch / Completed on / Certificate No. line leaves page 1 (all three remain on the scorecard).
+- **The designer's type and colour spec is applied**: sizes, weights, letter spacing and the certificate's own palette (navy `#0B2A5E`, blue `#1D4E89`, gold `#C9A24A`, slate `#4B5563`, greys `#5B6472` / `#6B7280`). This palette is deliberately not the site tokens in `static/css/tokens.css`; the certificate is its own artefact.
+- **The certificate's three fonts are bundled**: Bebas Neue (the two headings), Inter (everything else) and Roboto Mono (the certificate-number fields), latin subsets only (D37), each with its OFL licence beside it in `static/fonts/`. The renderer's `FONTS` allowlist is now exactly these four files; the certificate no longer uses the site's Baloo 2 and Hind. The weight mapped to 700 is **Inter SemiBold**, which the designer said reads closer to the artwork than Bold.
+- The one size not taken from the spec is the `CERTIFICATE` wordmark. The spec's 84pt comes from a Canva slide where it fills about 44% of the page; at 84pt on A4 landscape Bebas measures ~205mm, two thirds of the sheet, so it is set from the artwork's proportion instead. `DETAILED SCORECARD` uses the spec's 28pt unchanged.
+
 ## 2026-11-26: Certificate scorecard page
 
 - **The certificate PDF has a second page, the detailed scorecard**, in the look of `design-reference/frontend-prototype/assets/certificate/cert-back.jpg`: the candidate and certificate details, the final assessment marks, the QR code and the pass criterion. Why: learners and employers want the marks, which the snapshot has always stored and D36 kept off the page.

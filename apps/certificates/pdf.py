@@ -25,10 +25,12 @@ logger = logging.getLogger(__name__)
 SCHEME = "ccfr-asset:"
 TEMPLATE = "certificates/pdf/certificate.html"
 STATIC = Path(settings.BASE_DIR) / "static"
+# The certificate's own three families (the designer's spec), not the site's Baloo 2 / Hind.
 FONTS = [
-    "baloo2-latin.woff2",
-    "hind-latin-400.woff2",
-    "hind-latin-600.woff2",
+    "bebasneue-latin-400.woff2",
+    "inter-latin-400.woff2",
+    "inter-latin-600.woff2",
+    "robotomono-latin-400.woff2",
 ]
 LOGOS = {"sakec": "shah-anchor-logo.png", "cyberpeace": "cyberpeace-logo.png"}
 MIME = {".woff2": "font/woff2", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}

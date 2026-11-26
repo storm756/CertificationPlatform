@@ -36,6 +36,7 @@ def sample_snapshot() -> dict:
         "certificate_name": SAMPLE_NAME,
         "qualification": settings.CERTIFICATE_QUALIFICATION,
         "programme": settings.PROGRAMME_NAME,
+        "programme_title": settings.CERTIFICATE_PROGRAMME_TITLE,
         "programme_short": settings.PROGRAMME_SHORT,
         "batch": {"id": 0, "code": "SAMPLE", "name": "Sample batch"},
         "centre_code": "SAKEC",

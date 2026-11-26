@@ -25,13 +25,14 @@ def test_sample_pdf_uses_the_real_template_and_invented_details(tmp_path):
     call_command("certificate_sample", "--out", str(out))
     text = _text(out)
     assert certificate_sample.SAMPLE_NAME in text
-    assert settings.PROGRAMME_NAME in text
+    # the certificate states its own programme wording, not the site-wide PROGRAMME_NAME
+    assert settings.CERTIFICATE_PROGRAMME_TITLE in text
+    assert settings.CERTIFICATE_QUALIFICATION in text
     assert certificate_sample.SAMPLE_NUMBER in text
     assert "cyberfirstresponse.io/verify/" in text
     assert "localhost" not in text
-    # the old prototype wording must not come back
-    assert "Incident First Response" not in text
-    assert "AICTE" not in text
+    # accreditation marks we hold neither the files nor the right to print
+    assert "AICTE" not in text and "NCSRC" not in text
 
 
 def test_sample_never_loads_a_signature_image(tmp_path, monkeypatch):

@@ -319,21 +319,28 @@ def test_the_certificate_page_prints_the_grade_only_and_the_scorecard_carries_th
     assert len(pages) == 2  # the certificate, then the detailed scorecard
     text = " ".join(" ".join(pages).split())
     front = " ".join(pages[0].split())
-    assert "CERTIFICATE" in text and "Community Cyber First Responder (CCFR)" in text
-    assert "This is to certify that" in text and "Asha Invented Rao" in text
+    tight = front.replace(" ", "")  # letter-spaced headings extract as "J O I N T L Y ..."
+    assert "CERTIFICATE" in tight and "JOINTLYOFFEREDBY" in tight
+    assert "Certificate in Cyber Incident First Response" in front  # the programme it states
+    assert "Cyber Incident First Responder" in front  # the qualification
+    assert "This is to certify that" in front and "Asha Invented Rao" in front
     assert (
-        "Department of Cyber Security" in text
-        and "in collaboration with CyberPeace Foundation" in text
+        "Has demonstrated the competencies to identify and classify citizen cyber incidents"
+        in front
     )
-    assert "Grade A" in text and cert.certificate_no in text
+    assert "Achievement Category: Grade A" in front and cert.certificate_no in front
+    assert "Detailed scorecard overleaf" in front
     assert "NSQF level and credits shown after approval by the competent authority" in text
-    assert f"/verify/{cert.verify_code}" in text.replace(" ", "")  # the URL may wrap under the QR
+    # the code, not the certificate number: a number never normalises to a code, so without this
+    # the certificate could only be verified by scanning the QR
+    assert f"/verify/{cert.verify_code}" in front.replace(" ", "")  # the URL may wrap under the QR
     # D36 as amended: the certificate page itself still prints the grade and nothing numeric;
     # the percentages and the hours live on the scorecard page only.
     assert "%" not in front and "hour" not in front.lower()
-    names = [s["name"].upper() for s in cert.snapshot["signatories"]]
-    assert names == ["DR. NILAKSHI JAIN", "DR. BHAVESH PATEL", "MAJ. VINEET KUMAR"]
+    names = [s["name"] for s in cert.snapshot["signatories"]]
+    assert names == ["Dr. Nilakshi Jain", "Dr. Bhavesh Patel", "Maj. Vineet Kumar"]
     assert front.index(names[0]) < front.index(names[1]) < front.index(names[2])  # left to right
+    assert "Founder & Global President" in front  # Kumar's full title, which wraps to two lines
 
     score = " ".join(pages[1].split())
     assert "DETAILED SCORECARD" in score
@@ -713,7 +720,8 @@ def test_the_pdf_asks_only_for_latin_fonts(learner, course):
     )  # fmt: skip
     fonts = {u for u in fetcher.requested if "/font/" in u or u.startswith("ccfr-asset:font/")}
     assert fonts == {
-        "ccfr-asset:font/baloo2-latin.woff2",
-        "ccfr-asset:font/hind-latin-400.woff2",
-        "ccfr-asset:font/hind-latin-600.woff2",
+        "ccfr-asset:font/bebasneue-latin-400.woff2",
+        "ccfr-asset:font/inter-latin-400.woff2",
+        "ccfr-asset:font/inter-latin-600.woff2",
+        "ccfr-asset:font/robotomono-latin-400.woff2",
     }
