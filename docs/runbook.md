@@ -563,49 +563,45 @@ row records only IDs.
 Both are private (never in git) and live in the media volume. The lead connects with `ssh ccfr` (host, user `deploy` and key are in
 `~/.ssh/config`); `deploy` has no sudo, so copy to a folder it owns, then move the files into the volume with a one-off root container.
 
-**Signatures: staging only until the final design and the hi-res images exist.** Nothing in the app stops prod from using signature
-files that are on it: a certificate picks up whatever `media/private/signatures/signature-1..3.png` holds at the moment it is issued
-(each PDF is then fixed). The only protections are that auto-issue is off and a mentor must approve each certificate (and the warning
-shown while signatures are missing or `CERTIFICATE_DESIGN_FINAL` is off). So **do not copy signatures to prod early**; put them there
-together with the hi-res images and the final design.
+**Signatures go to both environments.** This said "staging only" until the final design existed, because a certificate picks up
+whatever `media/private/signatures/signature-1..3.png` holds at the moment it is issued and each PDF is then fixed. The design is
+final and `CERTIFICATE_DESIGN_FINAL` is on (27 Nov 2026), so prod needs them too: without them a real certificate prints the three
+names over blank lines for good, and the only remedy is to revoke and reissue under a new number.
 
 Photos go to staging and prod once all three people have consented (they have, 14 Nov 2026). Photos are `.webp`, the signatures `.png`.
 
-From the PC (PowerShell, in the repo folder):
+From the PC (PowerShell, in the repo folder). **`scp` runs here, not on the server**: run it from the server and the Windows paths
+arrive mangled (`content-datasignaturessignature-1.png`).
 
 ```powershell
 ssh ccfr "mkdir -p /srv/csfr/staging/incoming /srv/csfr/prod/incoming"
 scp content-data\signatures\signature-1.png content-data\signatures\signature-2.png content-data\signatures\signature-3.png ccfr:/srv/csfr/staging/incoming/
+scp content-data\signatures\signature-1.png content-data\signatures\signature-2.png content-data\signatures\signature-3.png ccfr:/srv/csfr/prod/incoming/
 scp content-data\people\bhavesh-patel.webp content-data\people\nilakshi-jain.webp content-data\people\vineet-kumar.webp ccfr:/srv/csfr/staging/incoming/
 scp content-data\people\bhavesh-patel.webp content-data\people\nilakshi-jain.webp content-data\people\vineet-kumar.webp ccfr:/srv/csfr/prod/incoming/
 ```
 
-Then on the server, once per environment (`ssh ccfr`, then `cd /srv/csfr/<env>/src/deploy` and the helper exports from the top of
-this file). Staging (signatures and photos):
+Then `ssh ccfr` and run one block per environment. Each block sets its own helper exports, because `compose.yml` refuses to
+interpolate without them (`required variable CSFR_ENV is missing a value`), and chains every step with `&&` so the `rm` at the end
+cannot wipe the upload after a failed copy. Staging:
 
 ```bash
-docker compose -f compose.yml run --rm --no-deps --user root --cap-add CHOWN --cap-add DAC_OVERRIDE --cap-add FOWNER -v /srv/csfr/staging/incoming:/incoming:ro web sh -c '
-  mkdir -p /app/media/private/signatures /app/media/private/people &&
-  cp /incoming/signature-*.png /app/media/private/signatures/ &&
-  cp /incoming/*.webp /app/media/private/people/ &&
-  chown -R 10001 /app/media/private/signatures /app/media/private/people &&
-  chmod 640 /app/media/private/signatures/* /app/media/private/people/* &&
-  ls -l /app/media/private/signatures /app/media/private/people'
-rm /srv/csfr/staging/incoming/*
+cd /srv/csfr/staging/src/deploy && \
+export CSFR_ENV=staging CSFR_ENV_FILE=/srv/csfr/staging/app.env CSFR_DB_ENV_FILE=/srv/csfr/staging/db.env && \
+docker compose -f compose.yml run --rm --no-deps --user root --cap-add CHOWN --cap-add DAC_OVERRIDE --cap-add FOWNER -v /srv/csfr/staging/incoming:/incoming:ro web sh -c 'mkdir -p /app/media/private/signatures /app/media/private/people /app/media/private/certificates && cp /incoming/signature-*.png /app/media/private/signatures/ && cp /incoming/*.webp /app/media/private/people/ && chown -R 10001 /app/media/private && chmod 640 /app/media/private/signatures/* /app/media/private/people/* && ls -ld /app/media/private /app/media/private/certificates && ls -l /app/media/private/signatures /app/media/private/people' && \
+rm -f /srv/csfr/staging/incoming/*
 ```
 
-Success: `ls` lists three `signature-N.png` and three `.webp` files owned by `10001`. Safe to rerun (it overwrites the same files).
-Prod (**photos only, no signatures**), with the prod helper exports from `/srv/csfr/prod/src/deploy`:
+Prod is the same block with `prod` in place of `staging` throughout.
 
-```bash
-docker compose -f compose.yml run --rm --no-deps --user root --cap-add CHOWN --cap-add DAC_OVERRIDE --cap-add FOWNER -v /srv/csfr/prod/incoming:/incoming:ro web sh -c '
-  mkdir -p /app/media/private/people &&
-  cp /incoming/*.webp /app/media/private/people/ &&
-  chown -R 10001 /app/media/private/people &&
-  chmod 640 /app/media/private/people/* &&
-  ls -l /app/media/private/people'
-rm /srv/csfr/prod/incoming/*
-```
+Success: `/app/media/private` and every folder under it is owned by `10001`, and `ls` lists three `signature-N.png` and three
+`.webp`. Safe to rerun (it overwrites the same files).
+
+**`chown -R` must cover `/app/media/private` itself, not just the leaf folders.** The app writes issued PDFs to
+`media/private/certificates/<year>/` and creates that folder on the first issue, as uid `10001`. If a root-run `mkdir` leaves the
+parent owned by root, the first approval dies with `PermissionError: '/app/media/private/certificates'`, the mentor sees
+"certificate(s) could not be issued" and the learner stays queued (27 Nov 2026). The `mkdir -p` above creates `certificates/`
+up front for the same reason.
 
 Then for each environment that has photos, add these two lines to `/srv/csfr/<env>/app.env` (edit with `nano`; never print the file)
 and restart:
