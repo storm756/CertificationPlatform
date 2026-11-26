@@ -324,7 +324,10 @@ def test_the_certificate_page_prints_the_grade_only_and_the_scorecard_carries_th
     assert "Certificate in Cyber Incident First Response" in front  # the programme it states
     assert "Cyber Incident First Responder" in front  # the qualification
     assert "This is to certify that" in front and "Asha Invented Rao" in front
-    assert "Has demonstrated the competencies to identify and classify citizen cyber incidents" in front
+    assert (
+        "Has demonstrated the competencies to identify and classify citizen cyber incidents"
+        in front
+    )
     assert "Achievement Category: Grade A" in front and cert.certificate_no in front
     assert "Detailed scorecard overleaf" in front
     assert "NSQF level and credits shown after approval by the competent authority" in text

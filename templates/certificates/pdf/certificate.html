@@ -46,24 +46,21 @@ Rules for whoever edits it:
   .jointly .who .x { color: #C9A24A; margin: 0 1.5mm; }
 
   .c-main { position: absolute; top: 36mm; left: 20mm; right: 20mm; text-align: center; }
-  /* The spec's 84pt comes from the Canva slide, where it sets a wordmark about 44% of the page
-     width. At 84pt here Bebas measures ~205mm, two thirds of the sheet, so the size is taken from
-     the artwork's proportion instead. Body sizes are as specified. */
-  .c-main h1 { margin: 0; font-size: 54pt; font-weight: 400; letter-spacing: .065em; line-height: 1; padding-left: .065em; }
+  .c-main h1 { margin: 0; font-size: 84pt; font-weight: 400; letter-spacing: .065em; line-height: 1; padding-left: .065em; }
   .c-main .of { margin-top: 2.4mm; color: #C9A24A; font-size: 9pt; font-weight: 700; letter-spacing: .722em; padding-left: .722em; }
-  .c-main .certify { margin-top: 5.5mm; color: #4B5563; font-size: 12pt; }
+  .c-main .certify { margin-top: 4.5mm; color: #4B5563; font-size: 12pt; }
   .c-main .name { display: inline-block; margin-top: 1.5mm; padding: 0 8mm 1.5mm; min-width: 118mm;
                   font-size: 25.5pt; font-weight: 700; line-height: 1.15; border-bottom: .5mm solid #C9A24A; }
   .c-main .name--long { font-size: 18pt; }
-  .c-main .lead { margin-top: 4.5mm; color: #5B6472; font-size: 11pt; }
+  .c-main .lead { margin-top: 3.5mm; color: #5B6472; font-size: 11pt; }
   .c-main .title { margin-top: 2mm; color: #1D4E89; font-size: 19pt; font-weight: 700; line-height: 1.15; }
   .c-main .qual { margin-top: 2.8mm; font-size: 10pt; font-weight: 700; }
   .c-main .qual .label { color: #C9A24A; font-size: 7pt; font-weight: 700; letter-spacing: .414em; margin-right: 2.4mm; }
   /* Kept clear of the QR block on the left (which ends at 60mm) so the paragraph cannot run over it. */
-  .c-main .about { margin: 3.5mm auto 0; max-width: 170mm; color: #5B6472; font-size: 10.5pt; line-height: 1.5; }
+  .c-main .about { margin: 3mm auto 0; max-width: 170mm; color: #5B6472; font-size: 10.5pt; line-height: 1.5; }
   .c-main .pillars { margin-top: 2.6mm; color: #C9A24A; font-size: 8pt; font-weight: 700; letter-spacing: .5375em; padding-left: .5375em; }
 
-  .c-verify { position: absolute; left: 18mm; bottom: 34mm; width: 42mm; text-align: center; }
+  .c-verify { position: absolute; left: 18mm; bottom: 30mm; width: 42mm; text-align: center; }
   .c-verify img { width: 26mm; height: 26mm; padding: 1.4mm; border: .35mm dashed #C9A24A; }
   .c-verify .cid { margin-top: 1.6mm; font-size: 8pt; letter-spacing: .04em; }
   .c-verify .lbl { margin-top: .7mm; font-size: 8pt; font-weight: 700; letter-spacing: .25em; }
@@ -71,7 +68,7 @@ Rules for whoever edits it:
      (apps/certificates/codes.py), so without this line the page can only be verified by scanning. */
   .c-verify .url { margin-top: .8mm; color: #5B6472; font-size: 6.4pt; line-height: 1.25; overflow-wrap: anywhere; }
 
-  .c-bottom { position: absolute; left: 63mm; right: 16mm; bottom: 34mm; }
+  .c-bottom { position: absolute; left: 63mm; right: 16mm; bottom: 30mm; }
   .c-col { display: inline-block; vertical-align: bottom; width: 24.6%; text-align: center; }
   .c-col .ink { height: 12mm; }
   .c-col .ink img { max-height: 12mm; max-width: 40mm; }
@@ -83,11 +80,11 @@ Rules for whoever edits it:
      the columns are bottom-aligned, so an uneven one would lift its own signature rule. */
   .c-col .role { margin-top: .4mm; height: 8.4mm; color: #5B6472; font-size: 9pt; line-height: 1.25; }
 
-  .cat-pill { position: absolute; left: 0; right: 0; bottom: 28mm; text-align: center; }
+  .cat-pill { position: absolute; left: 0; right: 0; bottom: 24mm; text-align: center; }
   .cat-pill span { display: inline-block; padding: 1.6mm 7mm; border-radius: 2mm; background: #4B5563;
                    color: #fff; font-size: 10pt; font-weight: 700; }
-  .overleaf { position: absolute; left: 0; right: 0; bottom: 21mm; text-align: center; font-size: 9pt; font-weight: 700; }
-  .band { position: absolute; left: 0; right: 0; bottom: 0; width: 297mm; height: 18mm; }
+  .overleaf { position: absolute; left: 0; right: 0; bottom: 18mm; text-align: center; font-size: 9pt; font-weight: 700; }
+  .band { position: absolute; left: 0; right: 0; bottom: 0; width: 297mm; height: 15mm; }
 
   /* --- Page 2: the detailed scorecard. Totals only: per-module marks stay off the certificate. */
   .sheet--score { page-break-before: always; }
@@ -129,7 +126,7 @@ Rules for whoever edits it:
   </div>
 
   <div class="c-main">
-    <h1>CERTIFICATE</h1>
+    <h1 class="display">CERTIFICATE</h1>
     <p class="of">OF COMPLETION</p>
 
     <p class="certify">This is to certify that</p>
