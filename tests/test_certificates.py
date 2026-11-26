@@ -78,8 +78,12 @@ def submit_part_a_through_the_page(client, user, part):
     return started
 
 
+def pdf_pages(data: bytes) -> list[str]:
+    return [page.extract_text() for page in PdfReader(io.BytesIO(data)).pages]
+
+
 def pdf_text(data: bytes) -> str:
-    return "\n".join(page.extract_text() for page in PdfReader(io.BytesIO(data)).pages)
+    return "\n".join(pdf_pages(data))
 
 
 @pytest.fixture
@@ -305,11 +309,16 @@ def test_the_fetcher_refuses_everything_off_the_allowlist():
     assert refused.refused == ["file:///etc/passwd"]
 
 
-def test_the_pdf_prints_the_wording_grade_and_number_but_no_percent_or_hours(learner, course):
+def test_the_certificate_page_prints_the_grade_only_and_the_scorecard_carries_the_marks(
+    learner, course
+):
     learner.profile.certificate_name = "Asha Invented Rao"
     learner.profile.save()
     cert = services.issue(eligible(learner, course))
-    text = " ".join(pdf_text(services.pdf_file(cert).read_bytes()).split())
+    pages = pdf_pages(services.pdf_file(cert).read_bytes())
+    assert len(pages) == 2  # the certificate, then the detailed scorecard
+    text = " ".join(" ".join(pages).split())
+    front = " ".join(pages[0].split())
     assert "CERTIFICATE" in text and "Community Cyber First Responder (CCFR)" in text
     assert "This is to certify that" in text and "Asha Invented Rao" in text
     assert (
@@ -319,10 +328,20 @@ def test_the_pdf_prints_the_wording_grade_and_number_but_no_percent_or_hours(lea
     assert "Grade A" in text and cert.certificate_no in text
     assert "NSQF level and credits shown after approval by the competent authority" in text
     assert f"/verify/{cert.verify_code}" in text.replace(" ", "")  # the URL may wrap under the QR
-    assert "%" not in text and "hour" not in text.lower()
+    # D36 as amended: the certificate page itself still prints the grade and nothing numeric;
+    # the percentages and the hours live on the scorecard page only.
+    assert "%" not in front and "hour" not in front.lower()
     names = [s["name"].upper() for s in cert.snapshot["signatories"]]
     assert names == ["DR. NILAKSHI JAIN", "DR. BHAVESH PATEL", "MAJ. VINEET KUMAR"]
-    assert text.index(names[0]) < text.index(names[1]) < text.index(names[2])  # left to right
+    assert front.index(names[0]) < front.index(names[1]) < front.index(names[2])  # left to right
+
+    score = " ".join(pages[1].split())
+    assert "DETAILED SCORECARD" in score
+    assert "Maximum marks" in score and "Marks obtained" in score
+    assert f"100 {cert.snapshot['overall']} {cert.snapshot['overall']}%" in score  # out of 100
+    assert f"Grade {cert.grade}" in score and cert.certificate_no in score
+    # a fixed property of the programme, never the learner's own recorded time
+    assert "60 Notional Learning Hours" in score
     # the snapshot still keeps the %s and hours for the record
     assert (
         cert.snapshot["overall"]
