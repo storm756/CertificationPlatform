@@ -29,19 +29,15 @@ def _project(version) -> dict:
             "text": projection["stem"],
             "options": [o["text"] for o in projection["options"]],
         }
-    extra = {}
-    if fmt == "mc":  # scene and option texts, never the tokens, tones or any control
-        extra = {
-            "scene": projection.get("scene", ""),
-            "options": [o["text"] for o in projection["options"]],
-        }
+    # Every format: the title, the scenario and the ask. For mc also the option texts; never the
+    # tokens, tones or any control.
     return {
         "format": fmt,
         "text": projection.get("title") or projection.get("ask") or "",
         "ask": projection.get("ask") if projection.get("title") else "",
-        "scene": "",
-        "options": [],
-        **extra,
+        "scene": projection.get("scene", ""),
+        "scene_label": projection.get("scene_label", ""),
+        "options": [o["text"] for o in projection["options"]] if fmt == "mc" else [],
     }
 
 

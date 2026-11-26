@@ -284,7 +284,7 @@ CERTIFICATE_QUALIFICATION = f"{PROGRAMME_NAME} ({PROGRAMME_SHORT})"
 CERTIFICATE_SIGNATORIES = [
     {
         "name": "Dr. Nilakshi Jain",
-        "designation": "HOD, Cyber Security Department",
+        "designation": "Professor, Lead Instructor",
         "organisation": "SAKEC",
         "image": "signature-1.png",
     },
