@@ -277,7 +277,11 @@ STALE_ATTEMPT_DAYS = 7
 # Number: <prefix>-<issue year>-<batch centre code>-<6-digit serial from one global DB sequence>.
 CERTIFICATE_PREFIX = "CCFR"
 CERTIFICATE_DEFAULT_CENTRE = "SAKEC"  # a new batch's centre code; admins change it per batch
-CERTIFICATE_QUALIFICATION = f"{PROGRAMME_NAME} ({PROGRAMME_SHORT})"
+# What the certificate itself states (the final artwork). Deliberately not PROGRAMME_NAME, which
+# names the site, the admin, the MFA issuer and the email sender and stays "Community Cyber First
+# Responder": only the printed certificate carries this wording.
+CERTIFICATE_PROGRAMME_TITLE = "Certificate in Cyber Incident First Response"
+CERTIFICATE_QUALIFICATION = "Cyber Incident First Responder"
 # Printed left to right. Signature images are never in git (D22, D36): each `image` is a file name
 # in CERTIFICATE_PRIVATE_ROOT/signatures/ on the server. A missing image prints the name and
 # designation over a blank signature line.
@@ -296,7 +300,7 @@ CERTIFICATE_SIGNATORIES = [
     },
     {
         "name": "Maj. Vineet Kumar",
-        "designation": "Founder",
+        "designation": "Founder & Global President",
         "organisation": "CyberPeace Foundation",
         "image": "signature-3.png",
     },

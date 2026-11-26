@@ -1,14 +1,15 @@
 {% comment %}
-The certificate PDF (Stage 7, D36). PLACEHOLDER DESIGN: a clean A4 landscape page in the look of
-design-reference/frontend-prototype/assets/certificate/cert-front.jpg and the site tokens. The
-final design replaces this one file.
+The certificate PDF (Stage 7, D36 as amended). Page 1 is the final artwork
+(design-reference/frontend-prototype/assets/certificate/cert-back.jpg's front), page 2 the
+detailed scorecard.
 
 Rules for whoever edits it:
 * Every resource is {{ asset }}<name> and must be on the allowlist in apps/certificates/pdf.py.
   Nothing else is fetched (no http, no file paths, no data: URLs).
 * Values come from the snapshot `s` and are autoescaped. Never put a value inside <style>, never
   mark a value safe.
-* English only (D10). Print the grade, never percentages or hours (D36).
+* English only (D10). Page 1 prints the achievement category, never a percentage or an hour count;
+  the numbers live on page 2.
 {% endcomment %}<!doctype html>
 <html lang="en">
 <head>
@@ -30,6 +31,63 @@ Rules for whoever edits it:
   body { font-family: "Hind", sans-serif; color: #071a3d; font-size: 10.5pt; line-height: 1.35; }
   p { margin: 0; }
   .sheet { position: relative; width: 297mm; height: 210mm; overflow: hidden; background: #fff; }
+  .display { font-family: "Baloo 2", sans-serif; }
+
+  /* --- Page 1: the certificate ------------------------------------------------------------- */
+  .jointly { position: absolute; top: 11mm; left: 16mm; right: 16mm; height: 20mm; text-align: center; }
+  .jointly img { position: absolute; top: 0; height: 18mm; width: auto; }
+  .jointly .l { left: 0; }
+  .jointly .r { right: 0; }
+  .jointly .by { margin-top: 2.5mm; color: #6b7890; font-size: 7.4pt; font-weight: 600; letter-spacing: .26em; padding-left: .26em; }
+  .jointly .who { margin-top: 1.2mm; font-size: 11pt; font-weight: 700; }
+  .jointly .who .x { color: #c99412; margin: 0 1.5mm; }
+
+  .seal { position: absolute; left: 17mm; top: 38mm; width: 42mm; height: 54mm; text-align: center; }
+  .seal svg { position: absolute; left: 0; top: 0; width: 42mm; height: 54mm; }
+  .seal .cat { position: absolute; left: 0; right: 0; top: 12.5mm; color: #ffc83d; font-size: 17pt;
+               font-weight: 800; line-height: 1.1; }
+
+  .c-main { position: absolute; top: 37mm; left: 20mm; right: 20mm; text-align: center; }
+  .c-main h1 { margin: 0; font-size: 44pt; font-weight: 700; letter-spacing: .09em; line-height: 1; padding-left: .09em; }
+  .c-main .of { margin-top: 2.2mm; color: #8f6508; font-size: 10.5pt; font-weight: 600; letter-spacing: .52em; padding-left: .52em; }
+  .c-main .certify { margin-top: 7mm; color: #4a5873; font-size: 11pt; }
+  .c-main .name { display: inline-block; margin-top: 1.5mm; padding: 0 8mm 1.5mm; min-width: 118mm;
+                  font-size: 27pt; font-weight: 700; line-height: 1.15; border-bottom: .5mm solid #c99412; }
+  .c-main .name--long { font-size: 19pt; }
+  .c-main .lead { margin-top: 4.5mm; color: #4a5873; font-size: 10.5pt; }
+  .c-main .title { margin-top: 2mm; color: #12366f; font-size: 17pt; font-weight: 700; line-height: 1.15; }
+  .c-main .qual { margin-top: 2.6mm; font-size: 11.5pt; font-weight: 700; }
+  .c-main .qual .label { color: #8f6508; font-size: 8pt; font-weight: 600; letter-spacing: .2em; margin-right: 2.4mm; }
+  .c-main .about { margin: 4mm auto 0; max-width: 168mm; color: #4a5873; font-size: 9.6pt; line-height: 1.5; }
+  .c-main .pillars { margin-top: 3mm; color: #8f6508; font-size: 8.6pt; font-weight: 600; letter-spacing: .24em; padding-left: .24em; }
+
+  .c-verify { position: absolute; left: 18mm; bottom: 41mm; width: 42mm; text-align: center; }
+  .c-verify img { width: 26mm; height: 26mm; padding: 1.4mm; border: .35mm dashed #c99412; }
+  .c-verify .cid { margin-top: 1.6mm; color: #4a5873; font-size: 7.4pt; letter-spacing: .04em; }
+  .c-verify .lbl { margin-top: .7mm; font-size: 7pt; font-weight: 700; letter-spacing: .2em; }
+  /* The verify code, not just the certificate number: a number never normalises to a code
+     (apps/certificates/codes.py), so without this line the page can only be verified by scanning. */
+  .c-verify .url { margin-top: .8mm; color: #4a5873; font-size: 6.4pt; line-height: 1.25; overflow-wrap: anywhere; }
+
+  .c-bottom { position: absolute; left: 63mm; right: 16mm; bottom: 41mm; }
+  .c-col { display: inline-block; vertical-align: bottom; width: 24.6%; text-align: center; }
+  .c-col .ink { height: 12mm; }
+  .c-col .ink img { max-height: 12mm; max-width: 40mm; }
+  .c-col .issued { height: 12mm; font-size: 11pt; font-weight: 700; line-height: 12mm; }
+  .c-col .rule { margin: 0 3mm; border-top: .35mm solid #9aa4b8; }
+  .c-col .who { margin-top: 1.4mm; font-size: 9.4pt; font-weight: 700; }
+  /* Fixed height so a role that wraps to two lines (Kumar's) keeps every column the same height:
+     the columns are bottom-aligned, so an uneven one would lift its own signature rule. */
+  .c-col .role { margin-top: .4mm; height: 8.4mm; color: #4a5873; font-size: 8pt; line-height: 1.25; }
+
+  .cat-pill { position: absolute; left: 0; right: 0; bottom: 28mm; text-align: center; }
+  .cat-pill span { display: inline-block; padding: 1.6mm 7mm; border-radius: 2mm; background: #4a5873;
+                   color: #fff; font-size: 9.4pt; font-weight: 700; }
+  .overleaf { position: absolute; left: 0; right: 0; bottom: 21mm; text-align: center; font-size: 8.6pt; font-weight: 700; }
+  .band { position: absolute; left: 0; right: 0; bottom: 0; width: 297mm; height: 18mm; }
+
+  /* --- Page 2: the detailed scorecard. Totals only: per-module marks stay off the certificate. */
+  .sheet--score { page-break-before: always; }
   .frame { position: absolute; top: 6mm; left: 6mm; right: 6mm; bottom: 6mm; border: 2.6mm solid #071a3d; }
   .frame-inner { position: absolute; top: 10.5mm; left: 10.5mm; right: 10.5mm; bottom: 10.5mm; border: .45mm solid #c99412; }
   .corner { position: absolute; width: 22mm; height: 22mm; }
@@ -37,54 +95,6 @@ Rules for whoever edits it:
   .corner--tr { top: 6mm; right: 6mm; }
   .corner--bl { bottom: 6mm; left: 6mm; }
   .corner--br { bottom: 6mm; right: 6mm; }
-
-  .content { position: absolute; top: 17mm; left: 24mm; right: 24mm; text-align: center; }
-  .display { font-family: "Baloo 2", sans-serif; }
-
-  .logos { height: 21mm; }
-  .logos img, .logos .emblem { display: inline-block; vertical-align: middle; margin: 0 9mm; }
-  .logos img { height: 19mm; width: auto; }
-  .emblem { width: 20mm; height: 20mm; border-radius: 50%; background: #071a3d; color: #ffc83d;
-            border: .9mm solid #ffc83d; box-sizing: border-box; line-height: 18.2mm; font-size: 12.5pt;
-            font-weight: 800; letter-spacing: .06em; text-align: center; }
-  .divider { position: relative; height: 4mm; margin: 2.5mm 10mm 0; }
-  .divider .line { position: absolute; left: 0; right: 0; top: 1.9mm; border-top: .35mm solid #c99412; }
-  .divider .gem { position: absolute; left: 50%; top: 0; width: 4mm; height: 4mm; margin-left: -2mm; }
-
-  h1 { margin: 5mm 0 0; font-size: 32pt; font-weight: 600; letter-spacing: .32em; line-height: 1; padding-left: .32em; }
-  .of { margin-top: 1.6mm; color: #8f6508; font-size: 10.5pt; font-weight: 600; letter-spacing: .62em; padding-left: .62em; }
-  .qualification { margin-top: 5mm; color: #12366f; font-size: 17pt; font-weight: 700; line-height: 1.1; }
-  .certify { margin-top: 6mm; color: #4a5873; font-size: 11pt; }
-  .name { display: inline-block; margin-top: 1mm; padding: 0 8mm 1mm; min-width: 120mm; font-size: 29pt;
-          font-weight: 700; line-height: 1.15; border-bottom: .45mm solid #c99412; }
-  .name--long { font-size: 20pt; }
-  .statement { margin: 4.5mm auto 0; max-width: 222mm; font-size: 11pt; line-height: 1.45; }
-  .statement strong { font-weight: 700; }
-  .meta { margin-top: 5mm; font-size: 9.5pt; }
-  .meta .label { color: #8f6508; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; font-size: 7.6pt; margin-right: 1.4mm; }
-  .meta .sep { color: #c99412; margin: 0 3mm; }
-  .nsqf { margin-top: 1.6mm; color: #6b7890; font-size: 8.4pt; }
-
-  .bottom { position: absolute; left: 22mm; right: 22mm; bottom: 15mm; height: 40mm; }
-  .verify { position: absolute; left: 0; bottom: 0; width: 46mm; text-align: center; }
-  .verify img { width: 25mm; height: 25mm; padding: 1.5mm; border: .35mm solid #c99412; }
-  .verify .label { margin-top: 1.4mm; color: #071a3d; font-size: 7pt; font-weight: 600; letter-spacing: .2em; }
-  .verify .url { margin-top: .6mm; color: #4a5873; font-size: 6.6pt; line-height: 1.2; overflow-wrap: anywhere; }
-  .signatures { position: absolute; left: 52mm; right: 46mm; bottom: 0; }
-  .sig { display: inline-block; vertical-align: bottom; width: 32.5%; text-align: center; }
-  .sig .ink { height: 13mm; }
-  .sig .ink img { max-height: 13mm; max-width: 44mm; }
-  .sig .rule { margin: 0 4mm; border-top: .35mm solid #c99412; }
-  .sig .who { margin-top: 1.4mm; font-size: 9pt; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
-  .sig .role { margin-top: .4mm; color: #4a5873; font-size: 8pt; line-height: 1.25; }
-  .grade { position: absolute; right: 0; bottom: 3mm; width: 34mm; height: 34mm; text-align: center; }
-  .grade svg { position: absolute; left: 0; top: 0; width: 34mm; height: 34mm; }
-  .grade .inner { position: absolute; left: 0; right: 0; top: 9mm; color: #fff; }
-  .grade .word { font-size: 7pt; font-weight: 600; letter-spacing: .26em; color: #ffc83d; padding-left: .26em; }
-  .grade .letter { font-size: 21pt; font-weight: 800; line-height: 1.05; }
-
-  /* Page 2, the detailed scorecard. Totals only: the per-module marks stay off the certificate. */
-  .sheet--score { page-break-before: always; }
   .sc { position: absolute; top: 15mm; left: 20mm; right: 20mm; }
   .sc-head { position: relative; height: 19mm; text-align: center; }
   .sc-head img { position: absolute; top: 0; height: 16mm; width: auto; }
@@ -113,51 +123,66 @@ Rules for whoever edits it:
 </head>
 <body>
 <div class="sheet">
-  <div class="frame"></div>
-  <div class="frame-inner"></div>
-  <svg class="corner corner--tl" viewBox="0 0 22 22"><polygon points="0,0 22,0 0,22" fill="#071a3d"/><line x1="22" y1="0" x2="0" y2="22" stroke="#c99412" stroke-width="1.3"/></svg>
-  <svg class="corner corner--tr" viewBox="0 0 22 22"><polygon points="0,0 22,0 22,22" fill="#071a3d"/><line x1="0" y1="0" x2="22" y2="22" stroke="#c99412" stroke-width="1.3"/></svg>
-  <svg class="corner corner--bl" viewBox="0 0 22 22"><polygon points="0,0 22,22 0,22" fill="#071a3d"/><line x1="0" y1="0" x2="22" y2="22" stroke="#c99412" stroke-width="1.3"/></svg>
-  <svg class="corner corner--br" viewBox="0 0 22 22"><polygon points="22,0 22,22 0,22" fill="#071a3d"/><line x1="22" y1="0" x2="0" y2="22" stroke="#c99412" stroke-width="1.3"/></svg>
+  <div class="jointly">
+    <img class="l" src="{{ asset }}img/cyberpeace" alt="CyberPeace Foundation">
+    <p class="by">JOINTLY OFFERED BY</p>
+    <p class="who">CyberPeace Foundation<span class="x">&#215;</span>Shah &amp; Anchor Kutchhi Engineering College, Mumbai</p>
+    <img class="r" src="{{ asset }}img/sakec" alt="Shah &amp; Anchor Kutchhi Engineering College">
+  </div>
 
-  <div class="content">
-    <div class="logos">
-      <img src="{{ asset }}img/sakec" alt="Shah &amp; Anchor Kutchhi Engineering College">
-      <span class="emblem display" data-emblem>{{ s.programme_short }}</span>
-      <img src="{{ asset }}img/cyberpeace" alt="CyberPeace Foundation">
-    </div>
-    <div class="divider"><div class="line"></div><svg class="gem" viewBox="0 0 10 10"><polygon points="2.5,0.7 7.5,0.7 10,5 7.5,9.3 2.5,9.3 0,5" fill="#c99412"/></svg></div>
+  <div class="seal">
+    <svg viewBox="0 0 42 54">
+      <polygon points="12,34 12,50 16.5,45.5 21,50 21,34" fill="#0d2a5c"/>
+      <polygon points="21,34 21,50 25.5,45.5 30,50 30,34" fill="#c99412"/>
+      <circle cx="21" cy="19" r="18.4" fill="#c99412"/>
+      <circle cx="21" cy="19" r="15.4" fill="#0d2a5c"/>
+      <circle cx="21" cy="19" r="12.6" fill="none" stroke="#c99412" stroke-width=".7"/>
+    </svg>
+    <p class="cat display">{{ s.grade }}</p>
+  </div>
 
-    <h1 class="display">CERTIFICATE</h1>
+  <div class="c-main">
+    <h1>CERTIFICATE</h1>
     <p class="of">OF COMPLETION</p>
-    <p class="qualification display">{{ s.qualification }}</p>
 
     <p class="certify">This is to certify that</p>
     <div class="name display{% if s.certificate_name|length > 34 %} name--long{% endif %}">{{ s.certificate_name }}</div>
-    <p class="statement">has successfully completed the {{ s.programme }} programme, conducted by the Department of Cyber Security,
-      Shah&nbsp;&amp;&nbsp;Anchor Kutchhi Engineering College (SAKEC), in collaboration with CyberPeace Foundation,
-      and is awarded <strong>Grade {{ s.grade }}</strong>.</p>
-    <p class="meta"><span class="label">Batch</span>{{ s.batch.name }}<span class="sep">&#9670;</span><span class="label">Completed on</span>{{ completed_on }}<span class="sep">&#9670;</span><span class="label">Certificate No.</span>{{ certificate_no }}</p>
-    <p class="nsqf">{{ s.nsqf.line }}</p>
+    <p class="lead">has successfully completed the programme</p>
+    <p class="title display">{{ s.programme_title }}</p>
+    <p class="qual"><span class="label">QUALIFICATION</span>{{ s.qualification }}</p>
+    <p class="about">Has demonstrated the competencies to identify and classify citizen cyber incidents, judge their
+      urgency, preserve digital evidence, guide affected citizens to the right reporting channels and promote cyber
+      safety in their communities.</p>
+    <p class="pillars">PREVENT &#183; RECOGNISE &#183; RESPOND &#183; REPORT</p>
   </div>
 
-  <div class="bottom">
-    <div class="verify">
-      <img src="{{ asset }}qr" alt="QR code to verify this certificate">
-      <p class="label">SCAN TO VERIFY</p>
-      <p class="url">Verify at {{ verify_text }}</p>
-    </div>
-    <div class="signatures">{% for sig in signatories %}<div class="sig">
-        <div class="ink">{% if sig.asset %}<img src="{{ asset }}{{ sig.asset }}" alt="Signature of {{ sig.name }}">{% endif %}</div>
-        <div class="rule"></div>
-        <p class="who">{{ sig.name }}</p>
-        <p class="role">{{ sig.designation }}{% if sig.organisation %}<br>{{ sig.organisation }}{% endif %}</p>
-      </div>{% endfor %}</div>
-    <div class="grade">
-      <svg viewBox="0 0 34 34"><polygon points="8.5,1.5 25.5,1.5 33,17 25.5,32.5 8.5,32.5 1,17" fill="#071a3d" stroke="#c99412" stroke-width="1.6"/></svg>
-      <div class="inner display"><div class="word">GRADE</div><div class="letter">{{ s.grade }}</div></div>
-    </div>
+  <div class="c-verify">
+    <img src="{{ asset }}qr" alt="QR code to verify this certificate">
+    <p class="cid">{{ certificate_no }}</p>
+    <p class="lbl">SCAN TO VERIFY</p>
+    <p class="url">{{ verify_text }}</p>
   </div>
+
+  <div class="c-bottom"><div class="c-col">
+      <div class="issued">{{ issued_on }}</div>
+      <div class="rule"></div>
+      <p class="who">Date of issue</p>
+      <p class="role"></p>
+    </div>{% for sig in signatories %}<div class="c-col">
+      <div class="ink">{% if sig.asset %}<img src="{{ asset }}{{ sig.asset }}" alt="Signature of {{ sig.name }}">{% endif %}</div>
+      <div class="rule"></div>
+      <p class="who">{{ sig.name }}</p>
+      <p class="role">{{ sig.designation }}{% if sig.organisation %}, {{ sig.organisation }}{% endif %}</p>
+    </div>{% endfor %}</div>
+
+  <div class="cat-pill"><span>Achievement Category: Grade {{ s.grade }}</span></div>
+  <p class="overleaf">Detailed scorecard overleaf</p>
+  <svg class="band" viewBox="0 0 297 18" preserveAspectRatio="none">
+    <polygon points="0,18 92,18 0,3" fill="#9aa4b8"/>
+    <polygon points="0,18 66,18 0,8" fill="#0d2a5c"/>
+    <polygon points="297,18 205,18 297,3" fill="#c99412"/>
+    <polygon points="297,18 231,18 297,8" fill="#0d2a5c"/>
+  </svg>
 </div>
 
 <div class="sheet sheet--score">
@@ -172,7 +197,7 @@ Rules for whoever edits it:
     <div class="sc-head">
       <img class="l" src="{{ asset }}img/cyberpeace" alt="CyberPeace Foundation">
       <h2 class="display">DETAILED SCORECARD</h2>
-      <p class="sub">{{ s.qualification }}</p>
+      <p class="sub">{{ s.programme_title }}</p>
       <img class="r" src="{{ asset }}img/sakec" alt="Shah &amp; Anchor Kutchhi Engineering College">
     </div>
     <div class="sc-rule"></div>
@@ -182,7 +207,7 @@ Rules for whoever edits it:
         <p class="sc-h3">Certificate details</p>
         <table class="sc-t">
           <tr><th>Candidate name</th><td>{{ s.certificate_name }}</td></tr>
-          <tr><th>Programme</th><td>{{ s.programme }}</td></tr>
+          <tr><th>Programme</th><td>{{ s.programme_title }}</td></tr>
           <tr><th>Qualification</th><td>{{ s.qualification }}</td></tr>
           <tr><th>Batch</th><td>{{ s.batch.name }}</td></tr>
           <tr><th>Programme duration</th><td>{{ notional_hours }} Notional Learning Hours</td></tr>

@@ -78,6 +78,7 @@ def build_snapshot(user, result, batch, issued_local) -> dict:
         "certificate_name": user.profile.certificate_name,
         "qualification": settings.CERTIFICATE_QUALIFICATION,
         "programme": settings.PROGRAMME_NAME,
+        "programme_title": settings.CERTIFICATE_PROGRAMME_TITLE,
         "programme_short": settings.PROGRAMME_SHORT,
         "batch": {"id": batch.pk, "code": batch.code, "name": batch.name},
         "centre_code": batch.centre_code,

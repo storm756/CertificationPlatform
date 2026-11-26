@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-26: The certificate's final design
+
+- **Page 1 is now the approved artwork**, replacing the placeholder: the joint-offering header, the gold seal carrying the achievement category, the competency statement, the PREVENT · RECOGNISE · RESPOND · REPORT line, a date-of-issue column beside the three signatures, and "Detailed scorecard overleaf". Why: the placeholder was always meant to be replaced by this one file (D36).
+- **The certificate states its own programme wording.** `CERTIFICATE_PROGRAMME_TITLE` ("Certificate in Cyber Incident First Response") and `CERTIFICATE_QUALIFICATION` ("Cyber Incident First Responder") are certificate-only. `PROGRAMME_NAME` is untouched and still names the site, the admin, the MFA issuer and the email sender, so nothing outside the printed certificate changes.
+- **Maj. Vineet Kumar is "Founder & Global President"**, per the artwork. Signatory order stays Jain · Patel · Kumar (D36); the artwork's Patel-first order was not adopted.
+- **The verify code is still printed under the QR.** The artwork shows only a certificate ID, but a certificate number never normalises to a verify code (`apps/certificates/codes.py`), so printing the number alone would have left the page verifiable by scanning only. The code line is kept, small, under "Scan to verify".
+- **This amends D36 further:** the prescribed "has successfully completed … conducted by the Department of Cyber Security …" sentence is replaced by the artwork's competency statement, and the Batch / Completed on / Certificate No. line leaves page 1 (all three remain on the scorecard).
+- Known gaps against the artwork: the seal is a plain disc rather than a toothed rosette, and the wordmark uses Hind rather than the artwork's condensed grotesque, which is not among the bundled fonts.
+
 ## 2026-11-26: Certificate scorecard page
 
 - **The certificate PDF has a second page, the detailed scorecard**, in the look of `design-reference/frontend-prototype/assets/certificate/cert-back.jpg`: the candidate and certificate details, the final assessment marks, the QR code and the pass criterion. Why: learners and employers want the marks, which the snapshot has always stored and D36 kept off the page.
