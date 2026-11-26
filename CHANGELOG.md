@@ -9,7 +9,8 @@
 - **Maj. Vineet Kumar is "Founder & Global President"**, per the artwork. Signatory order stays Jain · Patel · Kumar (D36); the artwork's Patel-first order was not adopted.
 - **The verify code is still printed under the QR.** The artwork shows only a certificate ID, but a certificate number never normalises to a verify code (`apps/certificates/codes.py`), so printing the number alone would have left the page verifiable by scanning only. The code line is kept, small, under "Scan to verify".
 - **This amends D36 further:** the prescribed "has successfully completed … conducted by the Department of Cyber Security …" sentence is replaced by the artwork's competency statement, and the Batch / Completed on / Certificate No. line leaves page 1 (all three remain on the scorecard).
-- Known gap against the artwork: the wordmark is set in Hind, not the artwork's condensed grotesque, which is not among the bundled fonts. Closing it needs that font file added to `static/fonts/` and to the renderer's allowlist.
+- **The designer's type and colour spec is applied**: sizes, weights, letter spacing and the certificate's own palette (navy `#0B2A5E`, blue `#1D4E89`, gold `#C9A24A`, slate `#4B5563`, greys `#5B6472` / `#6B7280`). This palette is deliberately not the site tokens in `static/css/tokens.css`; the certificate is its own artefact.
+- Known gap against the artwork: it is set in **Bebas Neue** (headings), **Inter** (everything else) and **Roboto Mono** (certificate IDs), none of which we bundle, so the page uses Hind throughout. The two headline sizes are therefore held at the value that matches the artwork's printed width rather than the spec's point size, because Bebas is far narrower than Hind and 84pt would run off the page. Closing the gap means adding those three `.woff2` files (plus their licences) to `static/fonts/` and to the renderer's `FONTS` allowlist.
 
 ## 2026-11-26: Certificate scorecard page
 

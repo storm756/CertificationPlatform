@@ -25,10 +25,12 @@ Rules for whoever edits it:
   @font-face { font-family: "Hind"; src: url("{{ asset }}font/hind-latin-600.woff2"); font-weight: 600; }
   @font-face { font-family: "Hind"; src: url("{{ asset }}font/hind-latin-600.woff2"); font-weight: 700; }
 
-  /* Colours are the site tokens (static/css/tokens.css): navy, mustard, ink-muted, mustard-deep. */
+  /* Colours and sizes are the designer's certificate spec, which is deliberately its own palette
+     and not the site tokens in static/css/tokens.css: navy #0B2A5E, blue #1D4E89, gold #C9A24A,
+     slate #4B5563, grey #5B6472 / #6B7280. */
   @page { size: A4 landscape; margin: 0; }
   html, body { margin: 0; padding: 0; }
-  body { font-family: "Hind", sans-serif; color: #071a3d; font-size: 10.5pt; line-height: 1.35; }
+  body { font-family: "Hind", sans-serif; color: #0B2A5E; font-size: 10.5pt; line-height: 1.35; }
   p { margin: 0; }
   .sheet { position: relative; width: 297mm; height: 210mm; overflow: hidden; background: #fff; }
   .display { font-family: "Baloo 2", sans-serif; }
@@ -38,75 +40,81 @@ Rules for whoever edits it:
   .jointly img { position: absolute; top: 0; height: 26mm; width: auto; }
   .jointly .l { left: 0; }
   .jointly .r { right: 0; }
-  .jointly .by { margin-top: 6.5mm; color: #6b7890; font-size: 7.4pt; font-weight: 600; letter-spacing: .26em; padding-left: .26em; }
-  .jointly .who { margin-top: 1.2mm; font-size: 11pt; font-weight: 700; }
-  .jointly .who .x { color: #c99412; margin: 0 1.5mm; }
+  .jointly .by { margin-top: 6.5mm; color: #6B7280; font-size: 8pt; font-weight: 700; letter-spacing: .325em; padding-left: .325em; }
+  .jointly .who { margin-top: 1.4mm; font-size: 10.5pt; font-weight: 700; }
+  .jointly .who .x { color: #C9A24A; margin: 0 1.5mm; }
 
-  .c-main { position: absolute; top: 37mm; left: 20mm; right: 20mm; text-align: center; }
-  .c-main h1 { margin: 0; font-size: 44pt; font-weight: 700; letter-spacing: .09em; line-height: 1; padding-left: .09em; }
-  .c-main .of { margin-top: 2.2mm; color: #8f6508; font-size: 10.5pt; font-weight: 600; letter-spacing: .52em; padding-left: .52em; }
-  .c-main .certify { margin-top: 7mm; color: #4a5873; font-size: 11pt; }
+  .c-main { position: absolute; top: 35mm; left: 20mm; right: 20mm; text-align: center; }
+  /* The spec sets this at 84pt in Bebas Neue. Bebas is far narrower than Hind, so at 84pt here the
+     word would run off the page: this is the size that matches the artwork's printed width. */
+  .c-main h1 { margin: 0; font-size: 44pt; font-weight: 700; letter-spacing: .065em; line-height: 1; padding-left: .065em; }
+  .c-main .of { margin-top: 2.4mm; color: #C9A24A; font-size: 9pt; font-weight: 700; letter-spacing: .722em; padding-left: .722em; }
+  .c-main .certify { margin-top: 7mm; color: #4B5563; font-size: 12pt; }
   .c-main .name { display: inline-block; margin-top: 1.5mm; padding: 0 8mm 1.5mm; min-width: 118mm;
-                  font-size: 27pt; font-weight: 700; line-height: 1.15; border-bottom: .5mm solid #c99412; }
-  .c-main .name--long { font-size: 19pt; }
-  .c-main .lead { margin-top: 4.5mm; color: #4a5873; font-size: 10.5pt; }
-  .c-main .title { margin-top: 2mm; color: #12366f; font-size: 17pt; font-weight: 700; line-height: 1.15; }
-  .c-main .qual { margin-top: 2.6mm; font-size: 11.5pt; font-weight: 700; }
-  .c-main .qual .label { color: #8f6508; font-size: 8pt; font-weight: 600; letter-spacing: .2em; margin-right: 2.4mm; }
-  .c-main .about { margin: 4mm auto 0; max-width: 168mm; color: #4a5873; font-size: 9.6pt; line-height: 1.5; }
-  .c-main .pillars { margin-top: 3mm; color: #8f6508; font-size: 8.6pt; font-weight: 600; letter-spacing: .24em; padding-left: .24em; }
+                  font-size: 25.5pt; font-weight: 700; line-height: 1.15; border-bottom: .5mm solid #C9A24A; }
+  .c-main .name--long { font-size: 18pt; }
+  .c-main .lead { margin-top: 4.5mm; color: #5B6472; font-size: 11pt; }
+  .c-main .title { margin-top: 2mm; color: #1D4E89; font-size: 19pt; font-weight: 700; line-height: 1.15; }
+  .c-main .qual { margin-top: 2.8mm; font-size: 10pt; font-weight: 700; }
+  .c-main .qual .label { color: #C9A24A; font-size: 7pt; font-weight: 700; letter-spacing: .414em; margin-right: 2.4mm; }
+  .c-main .about { margin: 4mm auto 0; max-width: 176mm; color: #5B6472; font-size: 10.5pt; line-height: 1.5; }
+  .c-main .pillars { margin-top: 3.4mm; color: #C9A24A; font-size: 8pt; font-weight: 700; letter-spacing: .5375em; padding-left: .5375em; }
 
   .c-verify { position: absolute; left: 18mm; bottom: 41mm; width: 42mm; text-align: center; }
-  .c-verify img { width: 26mm; height: 26mm; padding: 1.4mm; border: .35mm dashed #c99412; }
-  .c-verify .cid { margin-top: 1.6mm; color: #4a5873; font-size: 7.4pt; letter-spacing: .04em; }
-  .c-verify .lbl { margin-top: .7mm; font-size: 7pt; font-weight: 700; letter-spacing: .2em; }
+  .c-verify img { width: 26mm; height: 26mm; padding: 1.4mm; border: .35mm dashed #C9A24A; }
+  .c-verify .cid { margin-top: 1.6mm; font-size: 8pt; letter-spacing: .04em; }
+  .c-verify .lbl { margin-top: .7mm; font-size: 8pt; font-weight: 700; letter-spacing: .25em; }
   /* The verify code, not just the certificate number: a number never normalises to a code
      (apps/certificates/codes.py), so without this line the page can only be verified by scanning. */
-  .c-verify .url { margin-top: .8mm; color: #4a5873; font-size: 6.4pt; line-height: 1.25; overflow-wrap: anywhere; }
+  .c-verify .url { margin-top: .8mm; color: #5B6472; font-size: 6.4pt; line-height: 1.25; overflow-wrap: anywhere; }
 
   .c-bottom { position: absolute; left: 63mm; right: 16mm; bottom: 41mm; }
   .c-col { display: inline-block; vertical-align: bottom; width: 24.6%; text-align: center; }
   .c-col .ink { height: 12mm; }
   .c-col .ink img { max-height: 12mm; max-width: 40mm; }
   .c-col .issued { height: 12mm; font-size: 11pt; font-weight: 700; line-height: 12mm; }
-  .c-col .rule { margin: 0 3mm; border-top: .35mm solid #9aa4b8; }
-  .c-col .who { margin-top: 1.4mm; font-size: 9.4pt; font-weight: 700; }
+  .c-col .rule { margin: 0 3mm; border-top: .35mm solid #8A8F98; }
+  .c-col .who { margin-top: 1.4mm; font-size: 10pt; font-weight: 700; }
+  .c-col .who--date { font-size: 8.5pt; font-weight: 400; color: #5B6472; }
   /* Fixed height so a role that wraps to two lines (Kumar's) keeps every column the same height:
      the columns are bottom-aligned, so an uneven one would lift its own signature rule. */
-  .c-col .role { margin-top: .4mm; height: 8.4mm; color: #4a5873; font-size: 8pt; line-height: 1.25; }
+  .c-col .role { margin-top: .4mm; height: 8.4mm; color: #5B6472; font-size: 9pt; line-height: 1.25; }
 
   .cat-pill { position: absolute; left: 0; right: 0; bottom: 28mm; text-align: center; }
-  .cat-pill span { display: inline-block; padding: 1.6mm 7mm; border-radius: 2mm; background: #4a5873;
-                   color: #fff; font-size: 9.4pt; font-weight: 700; }
-  .overleaf { position: absolute; left: 0; right: 0; bottom: 21mm; text-align: center; font-size: 8.6pt; font-weight: 700; }
+  .cat-pill span { display: inline-block; padding: 1.6mm 7mm; border-radius: 2mm; background: #4B5563;
+                   color: #fff; font-size: 10pt; font-weight: 700; }
+  .overleaf { position: absolute; left: 0; right: 0; bottom: 21mm; text-align: center; font-size: 9pt; font-weight: 700; }
   .band { position: absolute; left: 0; right: 0; bottom: 0; width: 297mm; height: 18mm; }
 
   /* --- Page 2: the detailed scorecard. Totals only: per-module marks stay off the certificate. */
   .sheet--score { page-break-before: always; }
-  .sc { position: absolute; top: 13mm; left: 18mm; right: 18mm; }
-  .sc-head { position: relative; height: 26mm; text-align: center; }
-  .sc-head img { position: absolute; top: 0; height: 26mm; width: auto; }
+  .sc { position: absolute; top: 10mm; left: 18mm; right: 18mm; }
+  .sc-head { position: relative; height: 24mm; text-align: center; }
+  .sc-head img { position: absolute; top: 0; height: 24mm; width: auto; }
   .sc-head .l { left: 0; }
   .sc-head .r { right: 0; }
-  .sc-head h2 { margin: 4mm 0 0; font-size: 19pt; font-weight: 800; letter-spacing: .12em; padding-left: .12em; }
-  .sc-head .sub { margin-top: .8mm; color: #4a5873; font-size: 9.5pt; }
-  .sc-rule { margin: 1.5mm 0 4mm; border-top: .45mm solid #c99412; }
-  .sc-h3 { margin: 0 0 2mm; color: #12366f; font-size: 8.6pt; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+  /* As with page 1's headline, the spec's 28pt assumes Bebas Neue; this matches its printed width. */
+  .sc-head h2 { margin: 4mm 0 0; font-size: 19pt; font-weight: 800; letter-spacing: .054em; padding-left: .054em; }
+  .sc-head .sub { margin-top: 1mm; color: #4B5563; font-size: 10pt; font-weight: 700; }
+  .sc-rule { margin: 1.5mm 0 4.5mm; border-top: .45mm solid #C9A24A; }
+  .sc-h3 { margin: 0 0 2.4mm; color: #1D4E89; font-size: 13.5pt; font-weight: 700; }
   .sc-cols { position: relative; }
   .sc-main { margin-right: 60mm; }
   .sc-side { position: absolute; right: 0; top: 0; width: 52mm; text-align: center; }
-  .sc-side img { width: 31mm; height: 31mm; padding: 1.5mm; border: .35mm solid #c99412; }
+  .sc-side img { width: 31mm; height: 31mm; padding: 1.5mm; border: .35mm solid #C9A24A; }
   .sc-side .cid { margin-top: 1.6mm; font-size: 8pt; font-weight: 700; }
-  .sc-side .lbl { margin-top: .6mm; color: #4a5873; font-size: 6.8pt; font-weight: 600; letter-spacing: .18em; }
-  table.sc-t { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
-  table.sc-t th, table.sc-t td { border: .3mm solid #d7deea; padding: 1.75mm 3mm; text-align: left; }
-  table.sc-t th { width: 42%; background: #eef2f8; font-weight: 600; }
-  .sc-marks { margin-top: 5mm; }
+  .sc-side .lbl { margin-top: .7mm; font-size: 8.5pt; font-weight: 700; letter-spacing: .259em; padding-left: .259em; }
+  table.sc-t { width: 100%; border-collapse: collapse; font-size: 10pt; }
+  table.sc-t th, table.sc-t td { border: .3mm solid #d7deea; padding: 1.4mm 3mm; text-align: left; }
+  table.sc-t th { width: 42%; background: #eef2f8; font-weight: 700; }
+  table.sc-t td { color: #1F2937; font-weight: 400; }
+  table.sc-t td.cat-val { color: #C9A24A; font-weight: 700; }
+  .sc-marks { margin-top: 4mm; }
   table.sc-m { width: 100%; border-collapse: collapse; }
-  table.sc-m th { padding: 2.4mm; background: #071a3d; color: #fff; font-size: 9pt; font-weight: 600; letter-spacing: .08em; }
-  table.sc-m td { padding: 3.4mm; border: .3mm solid #d7deea; background: #eef2f8; text-align: center; font-size: 17pt; font-weight: 700; }
-  .sc-note { margin-top: 4mm; color: #4a5873; font-size: 8pt; line-height: 1.5; }
-  .sc-foot { position: absolute; left: 20mm; right: 20mm; bottom: 23mm; text-align: center; color: #8f6508; font-size: 8pt; font-weight: 600; letter-spacing: .22em; }
+  table.sc-m th { padding: 2.4mm; background: #0B2A5E; color: #fff; font-size: 10pt; font-weight: 700; letter-spacing: .06em; }
+  table.sc-m td { padding: 3.4mm; border: .3mm solid #d7deea; background: #eef2f8; text-align: center; font-size: 16.5pt; font-weight: 700; }
+  .sc-note { margin-top: 3.5mm; color: #6B7280; font-size: 9pt; line-height: 1.45; }
+  .sc-foot { position: absolute; left: 20mm; right: 20mm; bottom: 23mm; text-align: center; color: #C9A24A; font-size: 8.5pt; font-weight: 700; letter-spacing: .41em; padding-left: .41em; }
 </style>
 </head>
 <body>
@@ -143,7 +151,7 @@ Rules for whoever edits it:
   <div class="c-bottom"><div class="c-col">
       <div class="issued">{{ issued_on }}</div>
       <div class="rule"></div>
-      <p class="who">Date of issue</p>
+      <p class="who who--date">Date of issue</p>
       <p class="role"></p>
     </div>{% for sig in signatories %}<div class="c-col">
       <div class="ink">{% if sig.asset %}<img src="{{ asset }}{{ sig.asset }}" alt="Signature of {{ sig.name }}">{% endif %}</div>
@@ -155,10 +163,10 @@ Rules for whoever edits it:
   <div class="cat-pill"><span>Achievement Category: Grade {{ s.grade }}</span></div>
   <p class="overleaf">Detailed scorecard overleaf</p>
   <svg class="band" viewBox="0 0 297 18" preserveAspectRatio="none">
-    <polygon points="0,18 92,18 0,3" fill="#9aa4b8"/>
-    <polygon points="0,18 66,18 0,8" fill="#0d2a5c"/>
-    <polygon points="297,18 205,18 297,3" fill="#c99412"/>
-    <polygon points="297,18 231,18 297,8" fill="#0d2a5c"/>
+    <polygon points="0,18 92,18 0,3" fill="#8A8F98"/>
+    <polygon points="0,18 66,18 0,8" fill="#0B2A5E"/>
+    <polygon points="297,18 205,18 297,3" fill="#C9A24A"/>
+    <polygon points="297,18 231,18 297,8" fill="#0B2A5E"/>
   </svg>
 </div>
 
@@ -174,7 +182,7 @@ Rules for whoever edits it:
 
     <div class="sc-cols">
       <div class="sc-main">
-        <p class="sc-h3">Certificate details</p>
+        <p class="sc-h3">Certificate Details</p>
         <table class="sc-t">
           <tr><th>Candidate name</th><td>{{ s.certificate_name }}</td></tr>
           <tr><th>Programme</th><td>{{ s.programme_title }}</td></tr>
@@ -184,7 +192,7 @@ Rules for whoever edits it:
           <tr><th>Completion date</th><td>{{ completed_on }}</td></tr>
           <tr><th>Date of issue</th><td>{{ issued_on }}</td></tr>
           <tr><th>Certificate no.</th><td>{{ certificate_no }}</td></tr>
-          <tr><th>Achievement category</th><td><strong>Grade {{ s.grade }}</strong></td></tr>
+          <tr><th>Achievement category</th><td class="cat-val">Grade {{ s.grade }}</td></tr>
         </table>
       </div>
       <div class="sc-side">
@@ -196,7 +204,7 @@ Rules for whoever edits it:
 
     {% if s.overall %}
       <div class="sc-marks">
-        <p class="sc-h3">Final assessment marks</p>
+        <p class="sc-h3">Final Assessment Marks</p>
         <table class="sc-m">
           <tr><th>Maximum marks</th><th>Marks obtained</th><th>Percentage</th></tr>
           <tr><td>100</td><td>{{ s.overall }}</td><td>{{ s.overall }}%</td></tr>
@@ -209,10 +217,10 @@ Rules for whoever edits it:
   </div>
   <div class="sc-foot">PREVENT &#183; RECOGNISE &#183; RESPOND &#183; REPORT</div>
   <svg class="band" viewBox="0 0 297 18" preserveAspectRatio="none">
-    <polygon points="0,18 92,18 0,3" fill="#9aa4b8"/>
-    <polygon points="0,18 66,18 0,8" fill="#0d2a5c"/>
-    <polygon points="297,18 205,18 297,3" fill="#c99412"/>
-    <polygon points="297,18 231,18 297,8" fill="#0d2a5c"/>
+    <polygon points="0,18 92,18 0,3" fill="#8A8F98"/>
+    <polygon points="0,18 66,18 0,8" fill="#0B2A5E"/>
+    <polygon points="297,18 205,18 297,3" fill="#C9A24A"/>
+    <polygon points="297,18 231,18 297,8" fill="#0B2A5E"/>
   </svg>
 </div>
 </body>
