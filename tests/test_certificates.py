@@ -717,7 +717,8 @@ def test_the_pdf_asks_only_for_latin_fonts(learner, course):
     )  # fmt: skip
     fonts = {u for u in fetcher.requested if "/font/" in u or u.startswith("ccfr-asset:font/")}
     assert fonts == {
-        "ccfr-asset:font/baloo2-latin.woff2",
-        "ccfr-asset:font/hind-latin-400.woff2",
-        "ccfr-asset:font/hind-latin-600.woff2",
+        "ccfr-asset:font/bebasneue-latin-400.woff2",
+        "ccfr-asset:font/inter-latin-400.woff2",
+        "ccfr-asset:font/inter-latin-600.woff2",
+        "ccfr-asset:font/robotomono-latin-400.woff2",
     }

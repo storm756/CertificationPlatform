@@ -17,23 +17,24 @@ Rules for whoever edits it:
 <title>Certificate {{ certificate_no }}</title>
 <style>
   /* One @font-face per weight: WeasyPrint ignores weight ranges. Latin fonts only: certificate
-     names are in English letters (D37). */
-  @font-face { font-family: "Baloo 2"; src: url("{{ asset }}font/baloo2-latin.woff2"); font-weight: 600; }
-  @font-face { font-family: "Baloo 2"; src: url("{{ asset }}font/baloo2-latin.woff2"); font-weight: 700; }
-  @font-face { font-family: "Baloo 2"; src: url("{{ asset }}font/baloo2-latin.woff2"); font-weight: 800; }
-  @font-face { font-family: "Hind"; src: url("{{ asset }}font/hind-latin-400.woff2"); font-weight: 400; }
-  @font-face { font-family: "Hind"; src: url("{{ asset }}font/hind-latin-600.woff2"); font-weight: 600; }
-  @font-face { font-family: "Hind"; src: url("{{ asset }}font/hind-latin-600.woff2"); font-weight: 700; }
+     names are in English letters (D37). The designer's spec names these three; the file mapped to
+     700 is Inter SemiBold, which she said reads closer to the artwork than Bold. */
+  @font-face { font-family: "Bebas Neue"; src: url("{{ asset }}font/bebasneue-latin-400.woff2"); font-weight: 400; }
+  @font-face { font-family: "Inter"; src: url("{{ asset }}font/inter-latin-400.woff2"); font-weight: 400; }
+  @font-face { font-family: "Inter"; src: url("{{ asset }}font/inter-latin-600.woff2"); font-weight: 600; }
+  @font-face { font-family: "Inter"; src: url("{{ asset }}font/inter-latin-600.woff2"); font-weight: 700; }
+  @font-face { font-family: "Roboto Mono"; src: url("{{ asset }}font/robotomono-latin-400.woff2"); font-weight: 400; }
 
   /* Colours and sizes are the designer's certificate spec, which is deliberately its own palette
      and not the site tokens in static/css/tokens.css: navy #0B2A5E, blue #1D4E89, gold #C9A24A,
      slate #4B5563, grey #5B6472 / #6B7280. */
   @page { size: A4 landscape; margin: 0; }
   html, body { margin: 0; padding: 0; }
-  body { font-family: "Hind", sans-serif; color: #0B2A5E; font-size: 10.5pt; line-height: 1.35; }
+  body { font-family: "Inter", sans-serif; color: #0B2A5E; font-size: 10.5pt; line-height: 1.35; }
   p { margin: 0; }
   .sheet { position: relative; width: 297mm; height: 210mm; overflow: hidden; background: #fff; }
-  .display { font-family: "Baloo 2", sans-serif; }
+  .display { font-family: "Bebas Neue", sans-serif; }
+  .mono { font-family: "Roboto Mono", monospace; font-weight: 400; }
 
   /* --- Page 1: the certificate ------------------------------------------------------------- */
   .jointly { position: absolute; top: 10mm; left: 15mm; right: 15mm; height: 26mm; text-align: center; }
@@ -44,12 +45,13 @@ Rules for whoever edits it:
   .jointly .who { margin-top: 1.4mm; font-size: 10.5pt; font-weight: 700; }
   .jointly .who .x { color: #C9A24A; margin: 0 1.5mm; }
 
-  .c-main { position: absolute; top: 35mm; left: 20mm; right: 20mm; text-align: center; }
-  /* The spec sets this at 84pt in Bebas Neue. Bebas is far narrower than Hind, so at 84pt here the
-     word would run off the page: this is the size that matches the artwork's printed width. */
-  .c-main h1 { margin: 0; font-size: 44pt; font-weight: 700; letter-spacing: .065em; line-height: 1; padding-left: .065em; }
+  .c-main { position: absolute; top: 36mm; left: 20mm; right: 20mm; text-align: center; }
+  /* The spec's 84pt comes from the Canva slide, where it sets a wordmark about 44% of the page
+     width. At 84pt here Bebas measures ~205mm, two thirds of the sheet, so the size is taken from
+     the artwork's proportion instead. Body sizes are as specified. */
+  .c-main h1 { margin: 0; font-size: 54pt; font-weight: 400; letter-spacing: .065em; line-height: 1; padding-left: .065em; }
   .c-main .of { margin-top: 2.4mm; color: #C9A24A; font-size: 9pt; font-weight: 700; letter-spacing: .722em; padding-left: .722em; }
-  .c-main .certify { margin-top: 7mm; color: #4B5563; font-size: 12pt; }
+  .c-main .certify { margin-top: 5.5mm; color: #4B5563; font-size: 12pt; }
   .c-main .name { display: inline-block; margin-top: 1.5mm; padding: 0 8mm 1.5mm; min-width: 118mm;
                   font-size: 25.5pt; font-weight: 700; line-height: 1.15; border-bottom: .5mm solid #C9A24A; }
   .c-main .name--long { font-size: 18pt; }
@@ -57,10 +59,11 @@ Rules for whoever edits it:
   .c-main .title { margin-top: 2mm; color: #1D4E89; font-size: 19pt; font-weight: 700; line-height: 1.15; }
   .c-main .qual { margin-top: 2.8mm; font-size: 10pt; font-weight: 700; }
   .c-main .qual .label { color: #C9A24A; font-size: 7pt; font-weight: 700; letter-spacing: .414em; margin-right: 2.4mm; }
-  .c-main .about { margin: 4mm auto 0; max-width: 176mm; color: #5B6472; font-size: 10.5pt; line-height: 1.5; }
-  .c-main .pillars { margin-top: 3.4mm; color: #C9A24A; font-size: 8pt; font-weight: 700; letter-spacing: .5375em; padding-left: .5375em; }
+  /* Kept clear of the QR block on the left (which ends at 60mm) so the paragraph cannot run over it. */
+  .c-main .about { margin: 3.5mm auto 0; max-width: 170mm; color: #5B6472; font-size: 10.5pt; line-height: 1.5; }
+  .c-main .pillars { margin-top: 2.6mm; color: #C9A24A; font-size: 8pt; font-weight: 700; letter-spacing: .5375em; padding-left: .5375em; }
 
-  .c-verify { position: absolute; left: 18mm; bottom: 41mm; width: 42mm; text-align: center; }
+  .c-verify { position: absolute; left: 18mm; bottom: 34mm; width: 42mm; text-align: center; }
   .c-verify img { width: 26mm; height: 26mm; padding: 1.4mm; border: .35mm dashed #C9A24A; }
   .c-verify .cid { margin-top: 1.6mm; font-size: 8pt; letter-spacing: .04em; }
   .c-verify .lbl { margin-top: .7mm; font-size: 8pt; font-weight: 700; letter-spacing: .25em; }
@@ -68,7 +71,7 @@ Rules for whoever edits it:
      (apps/certificates/codes.py), so without this line the page can only be verified by scanning. */
   .c-verify .url { margin-top: .8mm; color: #5B6472; font-size: 6.4pt; line-height: 1.25; overflow-wrap: anywhere; }
 
-  .c-bottom { position: absolute; left: 63mm; right: 16mm; bottom: 41mm; }
+  .c-bottom { position: absolute; left: 63mm; right: 16mm; bottom: 34mm; }
   .c-col { display: inline-block; vertical-align: bottom; width: 24.6%; text-align: center; }
   .c-col .ink { height: 12mm; }
   .c-col .ink img { max-height: 12mm; max-width: 40mm; }
@@ -93,8 +96,7 @@ Rules for whoever edits it:
   .sc-head img { position: absolute; top: 0; height: 24mm; width: auto; }
   .sc-head .l { left: 0; }
   .sc-head .r { right: 0; }
-  /* As with page 1's headline, the spec's 28pt assumes Bebas Neue; this matches its printed width. */
-  .sc-head h2 { margin: 4mm 0 0; font-size: 19pt; font-weight: 800; letter-spacing: .054em; padding-left: .054em; }
+  .sc-head h2 { margin: 4mm 0 0; font-size: 28pt; font-weight: 400; letter-spacing: .054em; padding-left: .054em; }
   .sc-head .sub { margin-top: 1mm; color: #4B5563; font-size: 10pt; font-weight: 700; }
   .sc-rule { margin: 1.5mm 0 4.5mm; border-top: .45mm solid #C9A24A; }
   .sc-h3 { margin: 0 0 2.4mm; color: #1D4E89; font-size: 13.5pt; font-weight: 700; }
@@ -131,9 +133,9 @@ Rules for whoever edits it:
     <p class="of">OF COMPLETION</p>
 
     <p class="certify">This is to certify that</p>
-    <div class="name display{% if s.certificate_name|length > 34 %} name--long{% endif %}">{{ s.certificate_name }}</div>
+    <div class="name{% if s.certificate_name|length > 34 %} name--long{% endif %}">{{ s.certificate_name }}</div>
     <p class="lead">has successfully completed the programme</p>
-    <p class="title display">{{ s.programme_title }}</p>
+    <p class="title">{{ s.programme_title }}</p>
     <p class="qual"><span class="label">QUALIFICATION</span>{{ s.qualification }}</p>
     <p class="about">Has demonstrated the competencies to identify and classify citizen cyber incidents, judge their
       urgency, preserve digital evidence, guide affected citizens to the right reporting channels and promote cyber
@@ -143,7 +145,7 @@ Rules for whoever edits it:
 
   <div class="c-verify">
     <img src="{{ asset }}qr" alt="QR code to verify this certificate">
-    <p class="cid">{{ certificate_no }}</p>
+    <p class="cid mono">{{ certificate_no }}</p>
     <p class="lbl">SCAN TO VERIFY</p>
     <p class="url">{{ verify_text }}</p>
   </div>
@@ -191,13 +193,13 @@ Rules for whoever edits it:
           <tr><th>Programme duration</th><td>{{ notional_hours }} Notional Learning Hours</td></tr>
           <tr><th>Completion date</th><td>{{ completed_on }}</td></tr>
           <tr><th>Date of issue</th><td>{{ issued_on }}</td></tr>
-          <tr><th>Certificate no.</th><td>{{ certificate_no }}</td></tr>
+          <tr><th>Certificate no.</th><td class="mono">{{ certificate_no }}</td></tr>
           <tr><th>Achievement category</th><td class="cat-val">Grade {{ s.grade }}</td></tr>
         </table>
       </div>
       <div class="sc-side">
         <img src="{{ asset }}qr" alt="QR code to verify this certificate">
-        <p class="cid">{{ certificate_no }}</p>
+        <p class="cid mono">{{ certificate_no }}</p>
         <p class="lbl">SCAN TO VERIFY</p>
       </div>
     </div>
