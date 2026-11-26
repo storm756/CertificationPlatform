@@ -596,6 +596,8 @@ def test_guard_a_warns_while_signatures_or_the_final_design_are_missing(
     batch_mentor_client, settings, learner
 ):
     batch = learner.enrolment.batch
+    # Set explicitly: the guard is what is under test, not the shipped default, which is now True.
+    settings.CERTIFICATE_DESIGN_FINAL = False
     html = batch_mentor_client.get(reverse("mentor_batch", args=[batch.pk])).content.decode()
     assert "Not ready for real certificates yet" in html and "Dr. Nilakshi Jain" in html
     assert "still placeholders" in html
@@ -615,7 +617,7 @@ def test_the_admin_revokes_through_the_admin_action(admin_client, learner, cours
     cert = services.issue(eligible(learner, course))
     url = reverse("admin:certificates_certificate_changelist")
     page = admin_client.get(url)
-    assert page.status_code == 200 and "still placeholders" in page.content.decode()
+    assert page.status_code == 200
     confirm = admin_client.post(url, {"action": "revoke_selected", "_selected_action": [cert.pk]})
     assert confirm.status_code == 200 and b"Revoke certificates" in confirm.content
     admin_client.post(url, {"action": "revoke_selected", "_selected_action": [cert.pk], "apply": "1", "reason": "Invented reason"})  # fmt: skip
