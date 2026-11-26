@@ -301,6 +301,9 @@ CERTIFICATE_SIGNATORIES = [
         "image": "signature-3.png",
     },
 ]
+# Printed as the programme duration on the scorecard page. A fixed property of the programme, the
+# same on every certificate, not the learner's own study hours.
+CERTIFICATE_NOTIONAL_HOURS = 60
 # Issued PDFs (certificates/) and signature images (signatures/). Inside the media volume, so the
 # nightly media backup covers them; nothing ever serves this folder directly (§16).
 CERTIFICATE_PRIVATE_ROOT = Path(env("CERTIFICATE_PRIVATE_ROOT", str(MEDIA_ROOT / "private")))

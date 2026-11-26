@@ -125,6 +125,8 @@ def render(
                 "s": snapshot,
                 "certificate_no": certificate_no,
                 "completed_on": long_date(snapshot["completed_on"]),
+                "issued_on": long_date(snapshot["issued_on"]),
+                "notional_hours": settings.CERTIFICATE_NOTIONAL_HOURS,
                 "verify_text": verify_url(verify_code).split("://", 1)[1].rstrip("/"),
                 "signatories": signatories,
                 "asset": SCHEME,

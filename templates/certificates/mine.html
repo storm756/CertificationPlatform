@@ -26,6 +26,20 @@
         </div>
       </div>
     </div>
+
+    {% if cert.snapshot.overall %}
+      <section class="stack">
+        <h2>{% translate "Your marks" %}</h2>
+        <dl class="part-card cert-details">
+          <div><dt>{% translate "Maximum marks" %}</dt><dd>100</dd></div>
+          <div><dt>{% translate "Marks obtained" %}</dt><dd>{{ cert.snapshot.overall }}</dd></div>
+          <div><dt>{% translate "Percentage" %}</dt><dd>{{ cert.snapshot.overall }}%</dd></div>
+          <div><dt>{% translate "Modules average" %}</dt><dd>{{ cert.snapshot.modules_mean }}%</dd></div>
+          <div><dt>{% translate "Final exam" %}</dt><dd>{{ cert.snapshot.final }}%</dd></div>
+        </dl>
+        <p class="muted">{% translate "These marks are printed on the scorecard page of your certificate PDF." %}</p>
+      </section>
+    {% endif %}
   {% elif state == "awaiting" %}
     <div class="state-panel tone--mustard"><span class="big-icon">{% icon "clock" %}</span>
       <h2>{% translate "You are eligible" %}</h2>

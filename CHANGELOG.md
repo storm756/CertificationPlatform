@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-26: Certificate scorecard page
+
+- **The certificate PDF has a second page, the detailed scorecard**, in the look of `design-reference/frontend-prototype/assets/certificate/cert-back.jpg`: the candidate and certificate details, the final assessment marks, the QR code and the pass criterion. Why: learners and employers want the marks, which the snapshot has always stored and D36 kept off the page.
+- **The learner's `/certificate/` page shows the same marks** under "Your marks", with the modules average, the final-exam score and the learning hours. Nothing new is stored: every figure comes from the snapshot fixed at issue, so the page and the PDF can never disagree.
+- **Marks are shown out of 100**, which is how grading actually works (`overall` is a percentage). No raw-marks total is stored or invented.
+- **This amends D36** ("one page, English" and "the grade only: no percentages and no hours are printed"). Marks are deliberately **not** added to the public verification page, which still shows only name, qualification, grade and issue date: the code is enough to open it, so anyone holding it would otherwise see a stranger's marks.
+- The design's **Registration No.** row is not printed: no such identifier exists (there is the certificate number and the verify code). **Programme duration** is a fixed property of the programme, `CERTIFICATE_NOTIONAL_HOURS = 60`, printed as "60 Notional Learning Hours" on every certificate; it is deliberately not the learner's own recorded study hours, which vary per person and stay off the certificate.
+- Certificates issued before this change keep their own fixed PDF, and their scorecard would show only what their snapshot holds; the page guards each value so a missing one leaves the row out rather than printing an empty cell.
+
 ## 2026-11-26: Interactive questions show their scenario
 
 - **The message, case or situation of an interactive question is now shown** above the question, under "Scenario" (or the question's own label, "They say" / "Case"), on the learner's question page, the staff question preview and the admin part preview. Why: the panel drew only the title and the ask, so 52 questions (Module 1, 4, 6 and 7 Part B, the Module 8 crosswords, six in the mixed set) showed "Verdict 1 / Is this safe, or risky?" with nothing to judge.
